@@ -1,0 +1,301 @@
+:root {
+  --color-bg: #f4f5f7;
+  --color-panel: #ffffff;
+  --color-text: #1f2430;
+  --color-border: #c9ccd4;
+  --color-border-strong: #40465a;
+  --color-given: #1f2430;
+  --color-filled: #2563eb;
+  --color-hint: #7c3aed;
+  --color-conflict-bg: #fde2e1;
+  --color-conflict-text: #c0392b;
+  --color-wrong-bg: #fdeef0;
+  --color-selected-bg: #dbeafe;
+  --color-peer-bg: #eef2ff;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #14161c;
+    --color-panel: #1d2029;
+    --color-text: #e7e9ee;
+    --color-border: #383e4d;
+    --color-border-strong: #9aa2b8;
+    --color-given: #e7e9ee;
+    --color-filled: #7aa2ff;
+    --color-hint: #c299ff;
+    --color-conflict-bg: #4a2323;
+    --color-conflict-text: #ff8a80;
+    --color-wrong-bg: #3a2530;
+    --color-selected-bg: #2a3a5c;
+    --color-peer-bg: #232a3d;
+    --color-accent: #4f7fff;
+    --color-accent-hover: #6f97ff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 4px 0;
+}
+
+.toolbar {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.btn {
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+/* iOS Safari auto-zooms the page when focusing a form control smaller than
+   16px — keep the select's actual font at 16px to avoid that jarring zoom,
+   independent of .btn's visual font-size used elsewhere. */
+select.btn {
+  font-size: 16px;
+}
+
+.btn:hover {
+  border-color: var(--color-accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn[aria-pressed="true"] {
+  background: var(--color-selected-bg);
+  border-color: var(--color-accent);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  min-width: 72px;
+}
+
+.info-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.board-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  width: min(92vw, 90vh, 500px);
+  height: min(92vw, 90vh, 500px);
+  background: var(--color-border-strong);
+  border: 2px solid var(--color-border-strong);
+  border-radius: 6px;
+  gap: 1px;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+.cell {
+  background: var(--color-panel);
+  color: var(--color-filled);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 3.2vmin, 1.6rem);
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+}
+
+.cell.given {
+  color: var(--color-given);
+  cursor: default;
+}
+
+.cell.hinted {
+  color: var(--color-hint);
+}
+
+.cell.selected {
+  background: var(--color-selected-bg);
+}
+
+.cell.peer {
+  background: var(--color-peer-bg);
+}
+
+.cell.conflict {
+  background: var(--color-conflict-bg);
+  color: var(--color-conflict-text);
+}
+
+.cell.wrong {
+  background: var(--color-wrong-bg);
+}
+
+.cell:nth-child(3n) {
+  border-right: 2px solid var(--color-border-strong);
+}
+
+.cell:nth-child(9n) {
+  border-right: none;
+}
+
+.cell.box-bottom {
+  border-bottom: 2px solid var(--color-border-strong);
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  font-weight: 400;
+}
+
+.notes-grid span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.5rem, 1.4vmin, 0.75rem);
+  color: var(--color-text);
+  opacity: 0.75;
+}
+
+.numpad {
+  width: min(92vw, 90vh, 500px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.num-btn {
+  min-height: 44px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.num-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.erase-btn {
+  grid-column: span 2;
+  font-size: 0.95rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: var(--color-panel);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .toolbar {
+    justify-content: space-between;
+  }
+  .info {
+    min-width: 60px;
+  }
+}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>數獨 Sudoku</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+  <h1>數獨 Sudoku</h1>
+
+  <div class="toolbar">
+    <button id="newGameBtn" class="btn btn-primary">新遊戲</button>
+
+    <select id="difficultySelect" class="btn">
+      <option value="easy">簡單</option>
+      <option value="medium" selected>中等</option>
+      <option value="hard">困難</option>
+      <option value="expert">專家</option>
+    </select>
+
+    <button id="notesToggleBtn" class="btn" aria-pressed="false">筆記模式</button>
+
+    <button id="hintBtn" class="btn">提示 (<span id="hintCount">3</span>/3)</button>
+
+    <div class="info">
+      <span class="info-label">時間</span>
+      <span id="timerDisplay" class="info-value">00:00</span>
+    </div>
+
+    <div class="info">
+      <span class="info-label">最佳紀錄</span>
+      <span id="bestTimeDisplay" class="info-value">--:--</span>
+    </div>
+  </div>
+
+  <div class="board-area">
+    <div id="board" class="board" role="grid" aria-label="數獨棋盤"></div>
+
+    <div id="numpad" class="numpad">
+      <button class="num-btn" data-digit="1">1</button>
+      <button class="num-btn" data-digit="2">2</button>
+      <button class="num-btn" data-digit="3">3</button>
+      <button class="num-btn" data-digit="4">4</button>
+      <button class="num-btn" data-digit="5">5</button>
+      <button class="num-btn" data-digit="6">6</button>
+      <button class="num-btn" data-digit="7">7</button>
+      <button class="num-btn" data-digit="8">8</button>
+      <button class="num-btn" data-digit="9">9</button>
+      <button class="num-btn erase-btn" data-digit="0">清除</button>
+    </div>
+  </div>
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>🎉 完成！</h2>
+    <p id="winMessage"></p>
+    <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+  </div>
+</div>
+
+<script src="js/sudoku.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
