@@ -1,4 +1,7 @@
 :root {
+  /* Fallback values only — overridden by [data-theme] below once JS applies
+     the persisted theme. Kept so the page isn't unstyled for the brief
+     instant before script runs. */
   --color-bg: #f4f5f7;
   --color-panel: #ffffff;
   --color-text: #1f2430;
@@ -6,7 +9,7 @@
   --color-border-strong: #40465a;
   --color-given: #1f2430;
   --color-filled: #2563eb;
-  --color-hint: #7c3aed;
+  --color-hint: #15803d;
   --color-conflict-bg: #fde2e1;
   --color-conflict-text: #c0392b;
   --color-wrong-bg: #fdeef0;
@@ -16,25 +19,48 @@
   --color-accent-hover: #1d4ed8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #14161c;
-    --color-panel: #1d2029;
-    --color-text: #e7e9ee;
-    --color-border: #383e4d;
-    --color-border-strong: #9aa2b8;
-    --color-given: #e7e9ee;
-    --color-filled: #7aa2ff;
-    --color-hint: #c299ff;
-    --color-conflict-bg: #4a2323;
-    --color-conflict-text: #ff8a80;
-    --color-wrong-bg: #3a2530;
-    --color-selected-bg: #2a3a5c;
-    --color-peer-bg: #232a3d;
-    --color-accent: #4f7fff;
-    --color-accent-hover: #6f97ff;
-  }
+/* Two independent axes, matching the desktop app's separation of concerns:
+   appearance (light/dark) drives the board's semantic colors, accent
+   (blue/green) only drives interactive chrome. Unlike the CustomTkinter
+   desktop app, both switch instantly here — no restart needed. */
+[data-theme="blue_light"],
+[data-theme="green_light"] {
+  --color-bg: #f4f5f7;
+  --color-panel: #ffffff;
+  --color-text: #1f2430;
+  --color-border: #c9ccd4;
+  --color-border-strong: #40465a;
+  --color-given: #1f2430;
+  --color-filled: #2563eb;
+  --color-hint: #15803d;
+  --color-conflict-bg: #fde2e1;
+  --color-conflict-text: #c0392b;
+  --color-wrong-bg: #fdeef0;
+  --color-selected-bg: #dbeafe;
+  --color-peer-bg: #eef2ff;
 }
+
+[data-theme="blue_dark"],
+[data-theme="green_dark"] {
+  --color-bg: #14161c;
+  --color-panel: #1d2029;
+  --color-text: #e7e9ee;
+  --color-border: #383e4d;
+  --color-border-strong: #9aa2b8;
+  --color-given: #e7e9ee;
+  --color-filled: #7aa2ff;
+  --color-hint: #4ade80;
+  --color-conflict-bg: #4a2323;
+  --color-conflict-text: #ff8a80;
+  --color-wrong-bg: #3a2530;
+  --color-selected-bg: #2a3a5c;
+  --color-peer-bg: #232a3d;
+}
+
+[data-theme="blue_light"] { --color-accent: #2563eb; --color-accent-hover: #1d4ed8; }
+[data-theme="blue_dark"]  { --color-accent: #4f7fff; --color-accent-hover: #6f97ff; }
+[data-theme="green_light"] { --color-accent: #16a34a; --color-accent-hover: #15803d; }
+[data-theme="green_dark"]  { --color-accent: #4ade80; --color-accent-hover: #22c55e; }
 
 * {
   box-sizing: border-box;
@@ -64,10 +90,142 @@ body {
   gap: 12px;
 }
 
+.hidden {
+  display: none !important;
+}
+
 h1 {
   font-size: 1.4rem;
   margin: 4px 0;
 }
+
+/* -- home view ---------------------------------------------------------- */
+
+.view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.home-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-card-btn {
+  flex: 1 1 200px;
+  min-height: 64px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.daily-card {
+  flex: 1 1 220px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-panel);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.daily-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.daily-status {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.section-title {
+  width: 100%;
+  font-size: 1rem;
+  margin: 4px 0 0;
+}
+
+.difficulty-grid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.difficulty-btn {
+  flex: 1 1 100px;
+  min-height: 56px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.difficulty-item {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.difficulty-recommended .difficulty-btn {
+  width: 100%;
+}
+
+.super-easy-input {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.super-easy-input input {
+  width: 56px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.home-nav-row {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.home-nav-row .btn {
+  flex: 1;
+  min-height: 46px;
+}
+
+/* -- shared toolbar/board (game view) ------------------------------------ */
 
 .toolbar {
   width: 100%;
@@ -80,6 +238,24 @@ h1 {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 10px;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-selected-bg);
+}
+
+.difficulty-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 8px;
 }
 
 .btn {
@@ -149,6 +325,7 @@ select.btn {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  position: relative;
 }
 
 .board {
@@ -185,10 +362,6 @@ select.btn {
   cursor: default;
 }
 
-.cell.hinted {
-  color: var(--color-hint);
-}
-
 .cell.selected {
   background: var(--color-selected-bg);
 }
@@ -197,13 +370,20 @@ select.btn {
   background: var(--color-peer-bg);
 }
 
+.cell.wrong {
+  background: var(--color-wrong-bg);
+}
+
 .cell.conflict {
   background: var(--color-conflict-bg);
   color: var(--color-conflict-text);
 }
 
-.cell.wrong {
-  background: var(--color-wrong-bg);
+/* Declared last so it wins the text-color tie against .cell.conflict when a
+   hinted cell also happens to conflict with a later duplicate entry —
+   hinted-green must always win over conflict-red. */
+.cell.hinted {
+  color: var(--color-hint);
 }
 
 .cell:nth-child(3n) {
@@ -236,11 +416,44 @@ select.btn {
   opacity: 0.75;
 }
 
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 120, 130, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 10px;
+  z-index: 5;
+}
+
+.pause-card {
+  background: var(--color-panel);
+  color: var(--color-text);
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.pause-card h2 {
+  margin-top: 0;
+}
+
 .numpad {
   width: min(92vw, 90vh, 500px);
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
+}
+
+.numpad.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .num-btn {
@@ -263,6 +476,66 @@ select.btn {
   font-size: 0.95rem;
 }
 
+/* -- history / career views ----------------------------------------------- */
+
+.record-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-row {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-panel);
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.record-row .record-tag {
+  font-weight: 600;
+}
+
+.empty-state {
+  opacity: 0.7;
+  padding: 16px;
+  text-align: center;
+}
+
+.career-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.career-table th,
+.career-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.career-table tr:last-child td {
+  border-bottom: none;
+}
+
+.career-table th {
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+/* -- win modal ------------------------------------------------------------- */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -271,10 +544,6 @@ select.btn {
   align-items: center;
   justify-content: center;
   z-index: 10;
-}
-
-.modal-overlay.hidden {
-  display: none;
 }
 
 .modal {
@@ -289,6 +558,30 @@ select.btn {
 
 .modal h2 {
   margin-top: 0;
+}
+
+.win-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.win-stats .win-stat-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.win-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.win-actions .btn {
+  flex: 1;
 }
 
 @media (max-width: 480px) {
