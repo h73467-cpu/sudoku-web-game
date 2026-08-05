@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>打磚塊</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🧱 打磚塊</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="instructionsBtn" class="btn btn-primary home-card-btn">📖 玩法說明</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（3 排磚塊）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（4 排磚塊）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（5 排磚塊）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（6 排磚塊）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">分數</span>
+        <span id="scoreDisplay" class="info-value">0</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">生命</span>
+        <span id="livesDisplay" class="info-value">❤️❤️❤️</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <button id="pauseBtn" class="btn">暫停 (Esc)</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="board-area">
+      <canvas id="board" width="400" height="560"></canvas>
+
+      <div id="canvasOverlay" class="canvas-overlay hidden">
+        <div class="canvas-overlay-card">
+          <h2 id="overlayTitle"></h2>
+          <p id="overlayText"></p>
+          <button id="overlayActionBtn" class="btn btn-primary"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-hint-text">滑鼠移動或手指拖曳板子；也可以用左右方向鍵</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳分數</th><th>最快通關</th><th>通關次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">🎉 過關！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">再玩一次</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>用滑鼠移動、手指拖曳、或左右方向鍵控制畫面下方的板子。</li>
+        <li>球會黏在板子上，點擊畫面或按空白鍵發射球。</li>
+        <li>球碰到板子會反彈，打中磚塊即消除並得分；把所有磚塊打完就過關。</li>
+        <li>球掉出畫面下方會扣一命，生命歸零遊戲結束；可隨時按「暫停」休息一下。</li>
+        <li>難度差異：排數越多、球速越快、板子越窄、生命越少，「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

@@ -720,6 +720,182 @@ if (typeof window !== "undefined") {
   window.GuessStorage = GuessStorage;
 }
 
+// ---------------------------------------------------------------------------
+// BreakoutStorage — same shape again, adapted for a real-time arcade game:
+// career tracks best score + fastest clear time + clear count; history logs
+// both wins and losses with a result field. No currentGame is ever written
+// by breakout/js/game.js (a real-time round isn't meaningfully resumable
+// across a page reload), but loadCurrentGame/saveCurrentGame are still
+// exposed for API symmetry with the other games.
+// ---------------------------------------------------------------------------
+var BreakoutStorage = (function () {
+  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+
+  function defaultCareerEntry() {
+    return { bestScore: null, bestTime: null, cleared: 0 };
+  }
+
+  function defaultData() {
+    const career = {};
+    for (const d of DIFFICULTIES) career[d] = defaultCareerEntry();
+    return {
+      currentGame: null,
+      history: [],
+      career,
+      settings: { superEasyPercent: 30 },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (data.currentGame && typeof data.currentGame === "object") {
+      merged.currentGame = data.currentGame;
+    }
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      for (const d of DIFFICULTIES) {
+        merged.career[d] = Object.assign(defaultCareerEntry(), data.career[d] || {});
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("breakout", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- current game (unused by breakout today, kept for API symmetry) ------
+  function loadCurrentGame() {
+    try {
+      return loadAll().currentGame;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveCurrentGame(stateDict) {
+    try {
+      const data = loadAll();
+      data.currentGame = stateDict;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function clearCurrentGame() {
+    try {
+      const data = loadAll();
+      data.currentGame = null;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- history ------------------------------------------------------------
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // -- career ---------------------------------------------------------------
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+  function updateCareer(difficulty, score, elapsedSeconds, won) {
+    try {
+      const data = loadAll();
+      const entry = Object.assign(defaultCareerEntry(), data.career[difficulty] || {});
+      let isNewBestScore = false;
+      let isNewBestTime = false;
+      if (entry.bestScore == null || score > entry.bestScore) {
+        entry.bestScore = score;
+        isNewBestScore = true;
+      }
+      if (won) {
+        entry.cleared += 1;
+        if (entry.bestTime == null || elapsedSeconds < entry.bestTime) {
+          entry.bestTime = elapsedSeconds;
+          isNewBestTime = true;
+        }
+      }
+      data.career[difficulty] = entry;
+      saveAll(data);
+      return { isNewBestScore, isNewBestTime };
+    } catch (e) {
+      return { isNewBestScore: false, isNewBestTime: false };
+    }
+  }
+
+  // -- settings -------------------------------------------------------------
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    DIFFICULTIES,
+    loadCurrentGame,
+    saveCurrentGame,
+    clearCurrentGame,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    updateCareer,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.BreakoutStorage = BreakoutStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { GameHubStorage, SudokuStorage, MemoryStorage, GuessStorage };
+  module.exports = { GameHubStorage, SudokuStorage, MemoryStorage, GuessStorage, BreakoutStorage };
 }
