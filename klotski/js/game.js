@@ -32,17 +32,29 @@ var KlotskiGame = (function () {
   // with Cao Cao already at the exit — used as the seed for scrambling
   // easier tiers (scrambling backward from a solved state guarantees the
   // result is solvable).
+  //
+  // Deliberately different from CLASSIC_LAYOUT below: here Cao Cao's two
+  // side neighbors at the exit row are 1x1 soldiers (s1/s2), not tall
+  // vertical pieces. A first scrambling attempt flanked it with vertical
+  // generals identical in shape/role to CLASSIC_LAYOUT's, which pins those
+  // generals into their columns for the board's entire height with no
+  // slack — Cao Cao ends up structurally trapped in a 2-cell vertical
+  // corridor no matter how many random moves are applied (measured: even
+  // 400 uniform random moves left it within Manhattan distance ~1 of the
+  // exit on average). Soldiers are far more mobile (they can step into
+  // either of the two starting empty corners immediately), so scrambling
+  // can actually explore sideways moves within a reasonable move budget.
   const SOLVED_BASE = {
     caocao: { row: 3, col: 1 },
     vert1: { row: 0, col: 0 },
     vert2: { row: 0, col: 3 },
-    vert3: { row: 2, col: 0 },
-    vert4: { row: 2, col: 3 },
+    vert3: { row: 1, col: 1 },
+    vert4: { row: 1, col: 2 },
     horiz1: { row: 0, col: 1 },
-    s1: { row: 1, col: 1 },
-    s2: { row: 1, col: 2 },
-    s3: { row: 2, col: 1 },
-    s4: { row: 2, col: 2 },
+    s1: { row: 3, col: 0 },
+    s2: { row: 3, col: 3 },
+    s3: { row: 2, col: 0 },
+    s4: { row: 2, col: 3 },
   };
 
   // The authentic classic "橫刀立馬" starting layout, used for 專家
@@ -60,8 +72,16 @@ var KlotskiGame = (function () {
     s4: { row: 4, col: 3 },
   };
 
-  const SCRAMBLE_STEPS = { easy: 12, medium: 25, hard: 45 };
-  const SUPER_EASY_FLOOR_STEPS = 4;
+  // Total random legal moves applied to scramble each difficulty. On this
+  // small a board (4x5), Cao Cao's own Manhattan distance from the exit is
+  // capped at 4 and stays small under almost any scramble — even the real
+  // classic layout only sits 3 cells away despite needing 81 moves to
+  // solve. So step count here isn't chasing "distance"; it's scrambling
+  // the *other* nine pieces enough that reconstructing a path back takes
+  // real work, while the guard below (see scrambleFromSolved) is what
+  // actually guarantees the puzzle isn't trivially solvable.
+  const SCRAMBLE_STEPS = { easy: 40, medium: 90, hard: 180 };
+  const SUPER_EASY_FLOOR_STEPS = 15;
 
   let state = null;
   let timerInterval = null;
@@ -144,6 +164,26 @@ var KlotskiGame = (function () {
     return caocao.row === EXIT_ROW && caocao.col === EXIT_COL;
   }
 
+  // True if some single legal move would win immediately — the exact
+  // "just slide it down once" case reported as making every difficulty
+  // feel identical and trivial.
+  function hasWinningMove(pieces) {
+    const caocao = pieces.find((p) => p.id === "caocao");
+    const grid = buildOccupancy(pieces);
+    const dirs = [
+      { dr: -1, dc: 0 },
+      { dr: 1, dc: 0 },
+      { dr: 0, dc: -1 },
+      { dr: 0, dc: 1 },
+    ];
+    return dirs.some(
+      ({ dr, dc }) =>
+        caocao.row + dr === EXIT_ROW &&
+        caocao.col + dc === EXIT_COL &&
+        canMovePiece(pieces, grid, caocao, dr, dc)
+    );
+  }
+
   function scrambleFromSolved(steps) {
     let pieces = piecesFromPositions(SOLVED_BASE);
     let lastMove = null;
@@ -157,23 +197,23 @@ var KlotskiGame = (function () {
       applyMoveToPieces(pieces, move.pieceId, move.dr, move.dc);
       lastMove = move;
     }
-    // Guard against a (rare, low-step) scramble landing back on the exit —
-    // a puzzle that starts pre-solved isn't a puzzle. Prioritize a move
-    // that actually relocates Cao Cao: with ~10 pieces and 4 directions,
-    // a plain random pick among *all* legal moves is likely to spend every
-    // attempt nudging some other piece while Cao Cao sits still at the exit.
-    // Lightly-scrambled boards near SOLVED_BASE are heavily constrained
-    // (often only 3-6 total legal moves at any moment, since Cao Cao's own
-    // three neighbors are its main jailers), so a plain random walk can
-    // spend a long time oscillating a single unrelated piece before it
-    // happens to free Cao Cao. The cap is generous — this is cheap array
-    // bookkeeping on a 20-cell board, not real gameplay — chosen so the
-    // failure probability is negligible rather than merely "usually fine".
+
+    // Guarantee the puzzle isn't solvable in 0 or 1 moves — the exact
+    // "Cao Cao always parked right above the exit" complaint. When picking
+    // a move to escape this, Cao Cao's own winning move is explicitly
+    // excluded from the pool, since otherwise "prefer moving Cao Cao when
+    // possible" would just walk straight into the thing being avoided.
+    // Cheap array bookkeeping on a 20-cell board — generous cap costs
+    // nothing measurable even in the rare pathological case.
     let guard = 0;
-    while (isSolved(pieces) && guard < 3000) {
+    while ((isSolved(pieces) || hasWinningMove(pieces)) && guard < 3000) {
       const moves = allLegalMoves(pieces);
-      const caocaoMoves = moves.filter((m) => m.pieceId === "caocao");
-      const pool = caocaoMoves.length > 0 ? caocaoMoves : moves;
+      const nonWinning = moves.filter((m) => {
+        if (m.pieceId !== "caocao") return true;
+        const caocao = pieces.find((p) => p.id === "caocao");
+        return !(caocao.row + m.dr === EXIT_ROW && caocao.col + m.dc === EXIT_COL);
+      });
+      const pool = nonWinning.length > 0 ? nonWinning : moves;
       const move = pool[Math.floor(Math.random() * pool.length)];
       applyMoveToPieces(pieces, move.pieceId, move.dr, move.dc);
       guard++;
