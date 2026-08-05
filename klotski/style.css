@@ -1,0 +1,80 @@
+/* 華容道 specific styles. Shared tokens/components (buttons, toolbar,
+   modal shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.klotski-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 4px;
+  width: min(92vw, 360px);
+  aspect-ratio: 4 / 5;
+  background: var(--color-border-strong);
+  border: 3px solid var(--color-border-strong);
+  border-radius: 12px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.klotski-exit-marker {
+  border: 2px dashed var(--color-accent);
+  border-radius: 6px;
+  opacity: 0.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 4vw, 1.4rem);
+  pointer-events: none;
+}
+
+.klotski-empty-cell {
+  background: var(--color-panel);
+  border-radius: 6px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.klotski-piece {
+  border-radius: 8px;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 5.5vw, 2rem);
+  color: #ffffff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.klotski-piece.caocao {
+  background: #dc2626;
+}
+
+.klotski-piece.general {
+  background: #ea580c;
+}
+
+.klotski-piece.soldier {
+  background: #64748b;
+}
+
+.klotski-piece.selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px var(--color-accent);
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}

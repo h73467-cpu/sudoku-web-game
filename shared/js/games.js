@@ -12,7 +12,7 @@ var GAMES = [
   { id: "breakout", title: "打磚塊", icon: "🧱", path: "breakout/index.html", status: "ready" },
   { id: "fifteenPuzzle", title: "15 數字推盤", icon: "🔢", status: "planned" },
   { id: "jigsaw", title: "拼圖", icon: "🖼️", status: "planned" },
-  { id: "klotski", title: "華容道", icon: "🚗", status: "planned" },
+  { id: "klotski", title: "華容道", icon: "🚗", path: "klotski/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {
