@@ -3,148 +3,32 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>數獨 Sudoku</title>
-<link rel="stylesheet" href="style.css" />
+<title>益智遊戲集</title>
+<link rel="stylesheet" href="shared/style.css" />
 </head>
 <body>
 <div class="app">
 
-  <div id="homeView" class="view">
-    <div class="home-top">
-      <h1>數獨 Sudoku</h1>
-      <div class="theme-picker">
-        <label for="themeSelect" class="theme-label">背景主題</label>
-        <select id="themeSelect" class="btn">
-          <option value="blue_light">晴空藍（淺色模式）</option>
-          <option value="blue_dark">深邃夜藍（深色模式）</option>
-          <option value="green_light">森林綠（淺色模式）</option>
-          <option value="green_dark">暗夜森林（深色模式）</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="home-row">
-      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
-
-      <div class="daily-card">
-        <h3>📅 每日挑戰</h3>
-        <p id="dailyStatus" class="daily-status">開始你的每日挑戰紀錄</p>
-        <button id="dailyBtn" class="btn btn-primary">開始每日挑戰</button>
-      </div>
-    </div>
-
-    <h2 class="section-title">選擇難度開新局</h2>
-    <div class="difficulty-grid">
-      <div class="difficulty-item difficulty-recommended">
-        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
-        <label class="super-easy-input">
-          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
-        </label>
-      </div>
-      <button class="btn difficulty-btn" data-difficulty="easy">簡單</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家</button>
-    </div>
-
-    <div class="home-nav-row">
-      <button id="historyBtn" class="btn">遊玩紀錄</button>
-      <button id="careerBtn" class="btn">生涯總覽</button>
+  <div class="home-top">
+    <h1>🎮 益智遊戲集</h1>
+    <div class="theme-picker">
+      <label for="themeSelect" class="theme-label">背景主題</label>
+      <select id="themeSelect" class="btn">
+        <option value="blue_light">晴空藍（淺色模式）</option>
+        <option value="blue_dark">深邃夜藍（深色模式）</option>
+        <option value="green_light">森林綠（淺色模式）</option>
+        <option value="green_dark">暗夜森林（深色模式）</option>
+      </select>
     </div>
   </div>
 
-  <div id="gameView" class="view hidden">
-    <div class="toolbar">
-      <button id="backHomeBtn" class="btn">← 返回首頁</button>
-      <span id="dailyBadge" class="badge hidden"></span>
-      <span id="difficultyLabel" class="difficulty-label"></span>
-
-      <div class="info">
-        <span class="info-label">時間</span>
-        <span id="timerDisplay" class="info-value">00:00</span>
-      </div>
-
-      <div class="info">
-        <span class="info-label">最佳紀錄</span>
-        <span id="bestTimeDisplay" class="info-value">--:--</span>
-      </div>
-
-      <div class="info">
-        <span class="info-label">錯誤</span>
-        <span id="mistakesDisplay" class="info-value">0</span>
-      </div>
-
-      <button id="notesToggleBtn" class="btn" aria-pressed="false">筆記模式</button>
-      <button id="hintBtn" class="btn">提示 (<span id="hintCount">5</span>/5)</button>
-      <button id="undoBtn" class="btn">復原 (Ctrl+Z)</button>
-      <button id="pauseBtn" class="btn">暫停 (Esc)</button>
-    </div>
-
-    <div class="board-area">
-      <div id="board" class="board" role="grid" aria-label="數獨棋盤"></div>
-
-      <div id="pauseOverlay" class="pause-overlay hidden">
-        <div class="pause-card">
-          <h2>遊戲已暫停</h2>
-          <p>題目已隱藏，按 Esc 或下方按鈕繼續遊戲</p>
-          <button id="resumeBtn" class="btn btn-primary">繼續遊戲</button>
-        </div>
-      </div>
-
-      <div id="numpad" class="numpad">
-        <button class="num-btn" data-digit="1">1</button>
-        <button class="num-btn" data-digit="2">2</button>
-        <button class="num-btn" data-digit="3">3</button>
-        <button class="num-btn" data-digit="4">4</button>
-        <button class="num-btn" data-digit="5">5</button>
-        <button class="num-btn" data-digit="6">6</button>
-        <button class="num-btn" data-digit="7">7</button>
-        <button class="num-btn" data-digit="8">8</button>
-        <button class="num-btn" data-digit="9">9</button>
-        <button class="num-btn erase-btn" data-digit="0">清除</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="historyView" class="view hidden">
-    <div class="toolbar">
-      <button id="historyBackBtn" class="btn">← 返回首頁</button>
-      <h2 class="page-title">遊玩紀錄</h2>
-    </div>
-    <div id="historyList" class="record-list"></div>
-  </div>
-
-  <div id="careerView" class="view hidden">
-    <div class="toolbar">
-      <button id="careerBackBtn" class="btn">← 返回首頁</button>
-      <h2 class="page-title">生涯總覽</h2>
-    </div>
-    <table class="career-table">
-      <thead>
-        <tr><th>難度</th><th>最佳時間</th><th>完成次數</th><th>零錯誤完成</th></tr>
-      </thead>
-      <tbody id="careerTableBody"></tbody>
-    </table>
-  </div>
+  <h2 class="section-title">選擇遊戲</h2>
+  <div id="gameGrid" class="game-grid"></div>
 
 </div>
 
-<div id="winModal" class="modal-overlay hidden">
-  <div class="modal">
-    <h2 id="winTitle">🎉 完成！</h2>
-    <p id="winSubtitle"></p>
-    <div id="winStats" class="win-stats"></div>
-    <div class="win-actions">
-      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
-      <button id="winHomeBtn" class="btn">返回首頁</button>
-    </div>
-  </div>
-</div>
-
-<script src="js/rng.js"></script>
-<script src="js/sudoku.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/game.js"></script>
-<script src="js/ui.js"></script>
+<script src="shared/js/storage.js"></script>
+<script src="shared/js/games.js"></script>
+<script src="shared/js/hub.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# This repo is for the sudoku web game only (index.html/style.css/js/).
+# This repo is for the web game hub only (index.html/shared/, sudoku/, memory/, ...).
 # The Python desktop app living in the same folder is a separate project
 # and is intentionally kept out of this public repo.
 sudoku_app/
@@ -12,3 +12,6 @@ CLAUDE.md
 .claude/
 __pycache__/
 *.pyc
+
+# Local playwright-cli test artifacts (snapshots/console logs from manual QA)
+.playwright-cli/

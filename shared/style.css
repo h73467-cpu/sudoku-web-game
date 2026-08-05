@@ -1,0 +1,451 @@
+/* Shared design tokens + reusable components for the game hub, the sudoku
+   game agnostic parts (button/toolbar/modal shell) and Memory Match. Copied
+   from sudoku/style.css rather than imported from it, so sudoku/style.css
+   stays untouched and this file can evolve independently as more games
+   are added. */
+
+:root {
+  --color-bg: #f4f5f7;
+  --color-panel: #ffffff;
+  --color-text: #1f2430;
+  --color-border: #c9ccd4;
+  --color-border-strong: #40465a;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+}
+
+[data-theme="blue_light"],
+[data-theme="green_light"] {
+  --color-bg: #f4f5f7;
+  --color-panel: #ffffff;
+  --color-text: #1f2430;
+  --color-border: #c9ccd4;
+  --color-border-strong: #40465a;
+  --color-selected-bg: #dbeafe;
+}
+
+[data-theme="blue_dark"],
+[data-theme="green_dark"] {
+  --color-bg: #14161c;
+  --color-panel: #1d2029;
+  --color-text: #e7e9ee;
+  --color-border: #383e4d;
+  --color-border-strong: #9aa2b8;
+  --color-selected-bg: #2a3a5c;
+}
+
+[data-theme="blue_light"] { --color-accent: #2563eb; --color-accent-hover: #1d4ed8; }
+[data-theme="blue_dark"]  { --color-accent: #4f7fff; --color-accent-hover: #6f97ff; }
+[data-theme="green_light"] { --color-accent: #16a34a; --color-accent-hover: #15803d; }
+[data-theme="green_dark"]  { --color-accent: #4ade80; --color-accent-hover: #22c55e; }
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 4px 0;
+}
+
+.view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.home-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-card-btn {
+  flex: 1 1 200px;
+  min-height: 64px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.home-nav-row {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.home-nav-row .btn {
+  flex: 1;
+  min-height: 46px;
+}
+
+.section-title {
+  width: 100%;
+  font-size: 1rem;
+  margin: 4px 0 0;
+}
+
+.difficulty-grid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.difficulty-btn {
+  flex: 1 1 100px;
+  min-height: 56px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.difficulty-item {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.difficulty-recommended .difficulty-btn {
+  width: 100%;
+}
+
+.super-easy-input {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.super-easy-input input {
+  width: 56px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.toolbar {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-selected-bg);
+}
+
+.difficulty-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.btn {
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+select.btn {
+  font-size: 16px;
+}
+
+.btn:hover {
+  border-color: var(--color-accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn[aria-pressed="true"] {
+  background: var(--color-selected-bg);
+  border-color: var(--color-accent);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  min-width: 72px;
+}
+
+.info-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* -- history / career views ----------------------------------------------- */
+
+.record-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-row {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-panel);
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.record-row .record-tag {
+  font-weight: 600;
+}
+
+.empty-state {
+  opacity: 0.7;
+  padding: 16px;
+  text-align: center;
+}
+
+.career-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.career-table th,
+.career-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.career-table tr:last-child td {
+  border-bottom: none;
+}
+
+.career-table th {
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+/* -- modal shell ------------------------------------------------------------ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal {
+  background: var(--color-panel);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal.modal-wide {
+  max-width: 420px;
+  text-align: left;
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.win-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 12px 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.win-stats .win-stat-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.win-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.win-actions .btn {
+  flex: 1;
+}
+
+.instructions-body {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.instructions-body ul {
+  padding-left: 1.2em;
+  margin: 8px 0;
+}
+
+/* -- hub game cards --------------------------------------------------------- */
+
+.game-grid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.game-card {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-panel);
+  color: var(--color-text);
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  border-color: var(--color-accent);
+}
+
+.game-card-icon {
+  font-size: 1.8rem;
+}
+
+.game-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.game-card.planned {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.game-card-badge {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 480px) {
+  .toolbar {
+    justify-content: space-between;
+  }
+  .info {
+    min-width: 60px;
+  }
+}

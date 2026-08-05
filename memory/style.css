@@ -1,0 +1,69 @@
+/* Memory Match specific styles. Shared tokens/components (buttons, toolbar,
+   modal shell, difficulty grid) come from ../shared/style.css. */
+
+.mem-board {
+  width: min(94vw, 90vh, 520px);
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), 1fr);
+  gap: 8px;
+}
+
+.mem-card {
+  position: relative;
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  perspective: 600px;
+  touch-action: manipulation;
+}
+
+.mem-card:disabled {
+  cursor: default;
+}
+
+.mem-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.mem-card.revealed .mem-card-inner {
+  transform: rotateY(180deg);
+}
+
+.mem-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  font-size: clamp(1.2rem, 5vmin, 2.1rem);
+}
+
+.mem-card-back {
+  background: var(--color-accent);
+}
+
+.mem-card-front {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  transform: rotateY(180deg);
+}
+
+.mem-card.matched .mem-card-front {
+  border-color: var(--color-accent);
+  opacity: 0.55;
+}
+
+@media (max-width: 420px) {
+  .mem-board {
+    gap: 6px;
+  }
+}
