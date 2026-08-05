@@ -1,7 +1,8 @@
-// The only file that touches the DOM/canvas. Renders state -> canvas + DOM
-// and wires input events. Mirrors the structure of the other games' ui.js
-// files, but the render() callback fires every animation frame (not just
-// on discrete moves) since BreakoutGame's loop notifies every tick.
+// The only file that touches the DOM/canvas. Renders state -> canvas + DOM,
+// maps game events to sound effects, and wires input events. Mirrors the
+// structure of the other games' ui.js files, but the render() callback
+// fires every animation frame (not just on discrete moves) since
+// BreakoutGame's loop notifies every tick.
 (function () {
   const DIFFICULTY_LABELS = {
     superEasy: "超簡單",
@@ -13,6 +14,31 @@
   const DIFFICULTY_ORDER = ["superEasy", "easy", "medium", "hard", "expert"];
   const ROW_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7"];
   const KEYBOARD_STEP = 26;
+  const SOUND_EVENTS = new Set([
+    "wall",
+    "paddle",
+    "brick",
+    "brickBreak",
+    "powerupGood",
+    "powerupBad",
+    "lifeLost",
+    "levelClear",
+    "gameover",
+  ]);
+  const POWERUP_INFO = {
+    multiBall: { icon: "⚪", label: "分裂球", good: true },
+    paddleGrow: { icon: "↔️", label: "板變長", good: true },
+    machineGun: { icon: "🔫", label: "機關槍", good: true },
+    extraLife: { icon: "❤️", label: "多一命", good: true },
+    paddleShrink: { icon: "⚠️", label: "板變短", good: false },
+    fastBall: { icon: "⚡", label: "球變快", good: false },
+  };
+  const EFFECT_LABELS = {
+    paddleGrow: { icon: "↔️", label: "板變長" },
+    paddleShrink: { icon: "⚠️", label: "板變短" },
+    machineGun: { icon: "🔫", label: "機關槍" },
+    fastBall: { icon: "⚡", label: "球變快" },
+  };
 
   const { width: BOARD_W, height: BOARD_H } = BreakoutGame.getBoardSize();
   const brickGeom = BreakoutGame.getBrickGeometry();
@@ -22,6 +48,7 @@
   const homeViewEl = document.getElementById("homeView");
   const themeSelect = document.getElementById("themeSelect");
   const instructionsBtn = document.getElementById("instructionsBtn");
+  const soundToggleBtn = document.getElementById("soundToggleBtn");
   const superEasyPercentInput = document.getElementById("superEasyPercent");
   const difficultyButtons = Array.from(document.querySelectorAll(".difficulty-btn"));
   const historyBtn = document.getElementById("historyBtn");
@@ -30,12 +57,14 @@
   // -- game view elements -----------------------------------------------------
   const gameViewEl = document.getElementById("gameView");
   const backHomeBtn = document.getElementById("backHomeBtn");
-  const difficultyLabel = document.getElementById("difficultyLabel");
+  const levelLabel = document.getElementById("levelLabel");
   const scoreDisplay = document.getElementById("scoreDisplay");
   const livesDisplay = document.getElementById("livesDisplay");
   const timerDisplay = document.getElementById("timerDisplay");
   const pauseBtn = document.getElementById("pauseBtn");
+  const gameSoundToggleBtn = document.getElementById("gameSoundToggleBtn");
   const gameInstructionsBtn = document.getElementById("gameInstructionsBtn");
+  const activeEffectsBarEl = document.getElementById("activeEffectsBar");
   const boardCanvas = document.getElementById("board");
   const ctx = boardCanvas.getContext("2d");
   const canvasOverlay = document.getElementById("canvasOverlay");
@@ -87,11 +116,27 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
+  function applySoundButtonState(btn, compact) {
+    const on = BreakoutSound.isEnabled();
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = compact ? (on ? "🔊" : "🔇") : on ? "🔊 音效：開" : "🔇 音效：關";
+  }
+
+  function toggleSound() {
+    const next = !BreakoutSound.isEnabled();
+    BreakoutSound.setEnabled(next);
+    BreakoutStorage.saveSettings({ soundEnabled: next });
+    applySoundButtonState(soundToggleBtn, false);
+    applySoundButtonState(gameSoundToggleBtn, true);
+  }
+
   // -- home view rendering ----------------------------------------------------
   function renderHome() {
     const settings = BreakoutStorage.getSettings();
     superEasyPercentInput.value = settings.superEasyPercent;
     themeSelect.value = GameHubStorage.getTheme();
+    applySoundButtonState(soundToggleBtn, false);
+    applySoundButtonState(gameSoundToggleBtn, true);
   }
 
   function statRow(label, value) {
@@ -111,10 +156,9 @@
       row.className = "record-row";
       const date = entry.completedAt ? entry.completedAt.slice(0, 10) : "-";
       const label = DIFFICULTY_LABELS[entry.difficulty] || entry.difficulty;
-      const resultText = entry.result === "won" ? "🎉 過關" : "💥 失敗";
       row.innerHTML =
         `<span class="record-tag">${label}　${date}</span>` +
-        `<span>${resultText}　分數 ${entry.score}　用時 ${BreakoutGame.formatSeconds(entry.elapsedSeconds)}</span>`;
+        `<span>抵達第 ${entry.level} 關　分數 ${entry.score}　用時 ${BreakoutGame.formatSeconds(entry.elapsedSeconds)}</span>`;
       frag.appendChild(row);
     });
     historyList.appendChild(frag);
@@ -125,13 +169,13 @@
     careerTableBody.innerHTML = "";
     const frag = document.createDocumentFragment();
     DIFFICULTY_ORDER.forEach((code) => {
-      const entry = career[code] || { bestScore: null, bestTime: null, cleared: 0 };
+      const entry = career[code] || { bestScore: null, bestLevel: null, runs: 0 };
       const tr = document.createElement("tr");
       tr.innerHTML =
         `<td>${DIFFICULTY_LABELS[code]}</td>` +
         `<td>${entry.bestScore == null ? "--" : entry.bestScore}</td>` +
-        `<td>${BreakoutGame.formatSeconds(entry.bestTime)}</td>` +
-        `<td>${entry.cleared}</td>`;
+        `<td>${entry.bestLevel == null ? "--" : entry.bestLevel}</td>` +
+        `<td>${entry.runs}</td>`;
       frag.appendChild(tr);
     });
     careerTableBody.appendChild(frag);
@@ -155,8 +199,35 @@
       if (!brick.alive) return;
       const bx = brickGeom.gap + brick.col * (brickGeom.width + brickGeom.gap);
       const by = brickGeom.top + brick.row * (brickGeom.height + brickGeom.gap);
+      const alpha = 0.45 + 0.55 * (brick.hp / brick.maxHp);
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = ROW_COLORS[brick.row % ROW_COLORS.length];
       roundRect(bx, by, brickGeom.width, brickGeom.height, 4);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if (brick.maxHp > 1) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(brick.hp), bx + brickGeom.width / 2, by + brickGeom.height / 2 + 1);
+      }
+    });
+
+    state.powerUps.forEach((p) => {
+      const info = POWERUP_INFO[p.type];
+      ctx.fillStyle = info.good ? "#22c55e" : "#ef4444";
+      roundRect(p.x - 14, p.y - 12, 28, 24, 8);
+      ctx.fill();
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(info.icon, p.x, p.y + 1);
+    });
+
+    ctx.fillStyle = cssVar("--color-text") || "#1f2430";
+    state.bullets.forEach((b) => {
+      roundRect(b.x - 2, b.y - 7, 4, 14, 2);
       ctx.fill();
     });
 
@@ -165,10 +236,12 @@
     roundRect(paddleLeft, paddleGeom.y, state.paddleWidth, paddleGeom.height, 7);
     ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(state.ballX, state.ballY, paddleGeom.ballRadius, 0, Math.PI * 2);
     ctx.fillStyle = cssVar("--color-text") || "#1f2430";
-    ctx.fill();
+    state.balls.forEach((ball) => {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, paddleGeom.ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
 
   function renderOverlay(state) {
@@ -177,16 +250,36 @@
       overlayText.textContent = "按下方按鈕或 Esc 繼續遊戲";
       overlayActionBtn.textContent = "繼續遊戲";
       overlayActionBtn.dataset.mode = "pause";
+      overlayActionBtn.classList.remove("hidden");
       canvasOverlay.classList.remove("hidden");
-    } else if (state.status === "playing" && state.ballAttached) {
+    } else if (state.status === "levelClear") {
+      overlayTitle.textContent = "🎉 第 " + state.level + " 關過關！";
+      overlayText.textContent = "準備進入第 " + (state.level + 1) + " 關…";
+      overlayActionBtn.classList.add("hidden");
+      canvasOverlay.classList.remove("hidden");
+    } else if (state.status === "playing" && state.balls.some((b) => b.attached)) {
       overlayTitle.textContent = "🏓 準備開始";
       overlayText.textContent = "點擊畫面或按空白鍵發射球";
       overlayActionBtn.textContent = "發射！";
       overlayActionBtn.dataset.mode = "launch";
+      overlayActionBtn.classList.remove("hidden");
       canvasOverlay.classList.remove("hidden");
     } else {
       canvasOverlay.classList.add("hidden");
     }
+  }
+
+  function renderActiveEffects(state) {
+    const pills = Object.keys(EFFECT_LABELS)
+      .filter((key) => state.effects[key] > 0)
+      .map((key) => {
+        const info = EFFECT_LABELS[key];
+        const seconds = Math.ceil(state.effects[key] / 1000);
+        const bad = key === "paddleShrink" || key === "fastBall";
+        return `<span class="active-effect-pill${bad ? " bad" : ""}">${info.icon} ${info.label} ${seconds}s</span>`;
+      });
+    activeEffectsBarEl.innerHTML = pills.join("");
+    activeEffectsBarEl.classList.toggle("hidden", pills.length === 0);
   }
 
   function renderToolbar(state) {
@@ -195,31 +288,35 @@
     timerDisplay.textContent = BreakoutGame.formatTime(state.elapsedMs);
     pauseBtn.disabled = state.status !== "playing" && state.status !== "paused";
     pauseBtn.textContent = state.status === "paused" ? "繼續 (Esc)" : "暫停 (Esc)";
-    difficultyLabel.textContent = DIFFICULTY_LABELS[state.difficulty] || state.difficulty;
+    levelLabel.textContent =
+      "第 " + state.level + " 關 · " + (DIFFICULTY_LABELS[state.startDifficulty] || state.startDifficulty);
   }
 
   function renderWinModal(state) {
-    if (state.status !== "won" && state.status !== "lost") {
+    if (state.status !== "gameover") {
       winModal.classList.add("hidden");
       return;
     }
-    const won = state.status === "won";
-    const result = state.justFinished || { isNewBestScore: false, isNewBestTime: false };
-    winTitle.textContent = won ? "🎉 過關！" : "💥 遊戲結束";
-    winSubtitle.textContent = DIFFICULTY_LABELS[state.difficulty] || state.difficulty;
+    const result = state.justFinished || { isNewBestScore: false, isNewBestLevel: false };
+    winTitle.textContent = "💥 遊戲結束";
+    winSubtitle.textContent = DIFFICULTY_LABELS[state.startDifficulty] || state.startDifficulty;
     winStats.innerHTML =
       statRow("分數", String(state.score)) +
+      statRow("抵達關卡", "第 " + state.level + " 關") +
       statRow("花費時間", BreakoutGame.formatTime(state.elapsedMs)) +
       (result.isNewBestScore ? statRow("紀錄", "🏆 最佳分數！") : "") +
-      (result.isNewBestTime ? statRow("紀錄", "🏆 最快通關！") : "");
-    winCloseBtn.textContent = "再玩一次";
+      (result.isNewBestLevel ? statRow("紀錄", "🏆 最高關卡！") : "");
     winModal.classList.remove("hidden");
   }
 
-  function render(state) {
+  function render(state, event, extra) {
+    if (SOUND_EVENTS.has(event)) {
+      BreakoutSound.play(event, extra);
+    }
     if (!state) return;
     draw(state);
     renderOverlay(state);
+    renderActiveEffects(state);
     renderToolbar(state);
     renderWinModal(state);
   }
@@ -234,6 +331,9 @@
   instructionsCloseBtn.addEventListener("click", () => {
     instructionsModal.classList.add("hidden");
   });
+
+  soundToggleBtn.addEventListener("click", toggleSound);
+  gameSoundToggleBtn.addEventListener("click", toggleSound);
 
   difficultyButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -312,7 +412,7 @@
     const state = BreakoutGame.getState();
     if (
       state &&
-      (state.status === "playing" || state.status === "paused") &&
+      (state.status === "playing" || state.status === "paused" || state.status === "levelClear") &&
       !confirm("目前有進行中的遊戲，確定要返回首頁嗎？進度將會遺失。")
     ) {
       return;
@@ -323,7 +423,7 @@
 
   winCloseBtn.addEventListener("click", () => {
     const state = BreakoutGame.getState();
-    BreakoutGame.newGame(state ? state.difficulty : "superEasy");
+    BreakoutGame.newGame(state ? state.startDifficulty : "superEasy");
   });
 
   winHomeBtn.addEventListener("click", () => {
@@ -356,6 +456,7 @@
   });
 
   // -- boot -----------------------------------------------------------------
+  BreakoutSound.setEnabled(BreakoutStorage.getSettings().soundEnabled !== false);
   BreakoutGame.onChange(render);
   applyTheme(GameHubStorage.getTheme());
   renderHome();

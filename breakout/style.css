@@ -26,3 +26,23 @@
   opacity: 0.75;
   margin-top: 8px;
 }
+
+.active-effects-bar {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.active-effect-pill {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-selected-bg);
+}
+
+.active-effect-pill.bad {
+  background: rgba(239, 68, 68, 0.25);
+}

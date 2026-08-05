@@ -721,18 +721,19 @@ if (typeof window !== "undefined") {
 }
 
 // ---------------------------------------------------------------------------
-// BreakoutStorage — same shape again, adapted for a real-time arcade game:
-// career tracks best score + fastest clear time + clear count; history logs
-// both wins and losses with a result field. No currentGame is ever written
-// by breakout/js/game.js (a real-time round isn't meaningfully resumable
-// across a page reload), but loadCurrentGame/saveCurrentGame are still
-// exposed for API symmetry with the other games.
+// BreakoutStorage — same shape again, adapted for an endless-level arcade
+// game: career tracks best score + highest level reached + run count;
+// history logs every finished run (there's no "won", only "how far did you
+// get"). No currentGame is ever written by breakout/js/game.js (a real-time
+// round isn't meaningfully resumable across a page reload), but
+// loadCurrentGame/saveCurrentGame are still exposed for API symmetry with
+// the other games.
 // ---------------------------------------------------------------------------
 var BreakoutStorage = (function () {
   const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
 
   function defaultCareerEntry() {
-    return { bestScore: null, bestTime: null, cleared: 0 };
+    return { bestScore: null, bestLevel: null, runs: 0 };
   }
 
   function defaultData() {
@@ -742,7 +743,7 @@ var BreakoutStorage = (function () {
       currentGame: null,
       history: [],
       career,
-      settings: { superEasyPercent: 30 },
+      settings: { superEasyPercent: 30, soundEnabled: true },
     };
   }
 
@@ -760,6 +761,8 @@ var BreakoutStorage = (function () {
     }
     if (data.settings && typeof data.settings === "object") {
       merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
     }
     return merged;
   }
@@ -835,28 +838,26 @@ var BreakoutStorage = (function () {
       return defaultData().career;
     }
   }
-  function updateCareer(difficulty, score, elapsedSeconds, won) {
+  function updateCareer(difficulty, score, level) {
     try {
       const data = loadAll();
       const entry = Object.assign(defaultCareerEntry(), data.career[difficulty] || {});
       let isNewBestScore = false;
-      let isNewBestTime = false;
+      let isNewBestLevel = false;
+      entry.runs += 1;
       if (entry.bestScore == null || score > entry.bestScore) {
         entry.bestScore = score;
         isNewBestScore = true;
       }
-      if (won) {
-        entry.cleared += 1;
-        if (entry.bestTime == null || elapsedSeconds < entry.bestTime) {
-          entry.bestTime = elapsedSeconds;
-          isNewBestTime = true;
-        }
+      if (entry.bestLevel == null || level > entry.bestLevel) {
+        entry.bestLevel = level;
+        isNewBestLevel = true;
       }
       data.career[difficulty] = entry;
       saveAll(data);
-      return { isNewBestScore, isNewBestTime };
+      return { isNewBestScore, isNewBestLevel };
     } catch (e) {
-      return { isNewBestScore: false, isNewBestTime: false };
+      return { isNewBestScore: false, isNewBestLevel: false };
     }
   }
 

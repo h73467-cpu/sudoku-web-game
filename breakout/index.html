@@ -26,9 +26,10 @@
 
     <div class="home-row">
       <button id="instructionsBtn" class="btn btn-primary home-card-btn">📖 玩法說明</button>
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
     </div>
 
-    <h2 class="section-title">選擇難度開新局</h2>
+    <h2 class="section-title">選擇起始難度（過關後會自動變難，無限關卡）</h2>
     <div class="difficulty-grid">
       <div class="difficulty-item difficulty-recommended">
         <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
@@ -36,10 +37,10 @@
           比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
         </label>
       </div>
-      <button class="btn difficulty-btn" data-difficulty="easy">簡單（3 排磚塊）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（4 排磚塊）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（5 排磚塊）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（6 排磚塊）</button>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家</button>
     </div>
 
     <div class="home-nav-row">
@@ -54,7 +55,7 @@
   <div id="gameView" class="view hidden">
     <div class="toolbar">
       <button id="backHomeBtn" class="btn">← 返回首頁</button>
-      <span id="difficultyLabel" class="difficulty-label"></span>
+      <span id="levelLabel" class="difficulty-label"></span>
 
       <div class="info">
         <span class="info-label">分數</span>
@@ -72,8 +73,11 @@
       </div>
 
       <button id="pauseBtn" class="btn">暫停 (Esc)</button>
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
       <button id="gameInstructionsBtn" class="btn">📖 說明</button>
     </div>
+
+    <div id="activeEffectsBar" class="active-effects-bar hidden"></div>
 
     <div class="board-area">
       <canvas id="board" width="400" height="560"></canvas>
@@ -87,7 +91,7 @@
       </div>
     </div>
 
-    <div class="board-hint-text">滑鼠移動或手指拖曳板子；也可以用左右方向鍵</div>
+    <div class="board-hint-text">滑鼠移動或手指拖曳板子；也可以用左右方向鍵。接住掉落的道具膠囊可以獲得效果，小心紅色警示的壞道具！</div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -105,7 +109,7 @@
     </div>
     <table class="career-table">
       <thead>
-        <tr><th>難度</th><th>最佳分數</th><th>最快通關</th><th>通關次數</th></tr>
+        <tr><th>難度</th><th>最佳分數</th><th>最高關卡</th><th>遊玩次數</th></tr>
       </thead>
       <tbody id="careerTableBody"></tbody>
     </table>
@@ -115,7 +119,7 @@
 
 <div id="winModal" class="modal-overlay hidden">
   <div class="modal">
-    <h2 id="winTitle">🎉 過關！</h2>
+    <h2 id="winTitle">💥 遊戲結束</h2>
     <p id="winSubtitle"></p>
     <div id="winStats" class="win-stats"></div>
     <div class="win-actions">
@@ -131,10 +135,12 @@
     <div class="instructions-body">
       <ul>
         <li>用滑鼠移動、手指拖曳、或左右方向鍵控制畫面下方的板子。</li>
-        <li>球會黏在板子上，點擊畫面或按空白鍵發射球。</li>
-        <li>球碰到板子會反彈，打中磚塊即消除並得分；把所有磚塊打完就過關。</li>
-        <li>球掉出畫面下方會扣一命，生命歸零遊戲結束；可隨時按「暫停」休息一下。</li>
-        <li>難度差異：排數越多、球速越快、板子越窄、生命越少，「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
+        <li>球會黏在板子上，點擊畫面或按空白鍵發射球。球碰到板子會反彈，打中磚塊即消除並得分。</li>
+        <li>有些磚塊比較耐打，要打好幾下才會破，磚塊上的數字就是還要打幾下；有些磚塊會躲在有圍牆的小房間裡，要讓球從缺口鑽進去才打得到。</li>
+        <li>打破磚塊有機率掉落道具膠囊，用板子接住才會生效：綠色是好道具（分裂多顆球、板子變長、機關槍可以自動掃射磚塊、多一條命），紅色是壞道具（板子變短、球變快），效果通常會在一段時間後消失。</li>
+        <li>把畫面上的磚塊全部打完就自動進入下一關，關卡沒有上限，難度會越來越高（磚塊排數變多、球速變快、耐打磚變多、房間型磚牆變多）。</li>
+        <li>所有球都掉出畫面下方會扣一命，生命歸零遊戲結束；可隨時按「暫停」休息一下；工具列可以關閉音效。</li>
+        <li>起始難度差異：排數越多、球速越快、板子越窄、生命越少，「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
       </ul>
     </div>
     <div class="win-actions">
@@ -145,6 +151,7 @@
 
 <script src="../shared/js/storage.js"></script>
 <script src="js/game.js"></script>
+<script src="js/sound.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>
