@@ -387,7 +387,14 @@
     return (e.clientX - rect.left) * scaleX;
   }
 
-  boardCanvas.addEventListener("pointermove", (e) => {
+  // Tracked on document, not just the canvas: the canvas is narrow, and a
+  // plain pointermove listener scoped to it stops firing the instant the
+  // cursor exits its bounds (no implicit capture for mouse input), which
+  // froze the paddle in place until the pointer wandered back over the
+  // board. movePaddleTo() already no-ops unless a round is actively
+  // "playing", so this is harmless while browsing other views.
+  document.addEventListener("pointermove", (e) => {
+    if (gameViewEl.classList.contains("hidden")) return;
     BreakoutGame.movePaddleTo(canvasXFromEvent(e));
   });
 
