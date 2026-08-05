@@ -5,6 +5,10 @@
    are added. */
 
 :root {
+  /* Bumped above the browser default (16px) so every rem-based size in this
+     file reads comfortably for older/low-vision players without having to
+     inflate each rule individually. */
+  font-size: 112.5%;
   --color-bg: #f4f5f7;
   --color-panel: #ffffff;
   --color-text: #1f2430;
@@ -72,7 +76,7 @@ body {
 }
 
 h1 {
-  font-size: 1.4rem;
+  font-size: 1.9rem;
   margin: 4px 0;
 }
 
@@ -100,7 +104,7 @@ h1 {
 }
 
 .theme-label {
-  font-size: 0.8rem;
+  font-size: 1rem;
   opacity: 0.8;
 }
 
@@ -113,8 +117,8 @@ h1 {
 
 .home-card-btn {
   flex: 1 1 200px;
-  min-height: 64px;
-  font-size: 1.05rem;
+  min-height: 68px;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
@@ -126,12 +130,12 @@ h1 {
 
 .home-nav-row .btn {
   flex: 1;
-  min-height: 46px;
+  min-height: 48px;
 }
 
 .section-title {
   width: 100%;
-  font-size: 1rem;
+  font-size: 1.2rem;
   margin: 4px 0 0;
 }
 
@@ -144,8 +148,8 @@ h1 {
 
 .difficulty-btn {
   flex: 1 1 100px;
-  min-height: 56px;
-  font-size: 1rem;
+  min-height: 58px;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
@@ -161,7 +165,7 @@ h1 {
 }
 
 .super-easy-input {
-  font-size: 0.8rem;
+  font-size: 1rem;
   opacity: 0.85;
   display: flex;
   align-items: center;
@@ -169,13 +173,13 @@ h1 {
 }
 
 .super-easy-input input {
-  width: 56px;
-  padding: 4px 6px;
+  width: 64px;
+  padding: 6px 6px;
   border-radius: 6px;
   border: 1px solid var(--color-border);
   background: var(--color-panel);
   color: var(--color-text);
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 .toolbar {
@@ -192,32 +196,32 @@ h1 {
 }
 
 .page-title {
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   margin: 0;
 }
 
 .badge {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   padding: 4px 8px;
   border-radius: 999px;
   background: var(--color-selected-bg);
 }
 
 .difficulty-label {
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   font-weight: 600;
   padding: 4px 8px;
 }
 
 .btn {
-  font-size: 0.95rem;
-  padding: 8px 12px;
+  font-size: 1.1rem;
+  padding: 9px 14px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
   background: var(--color-panel);
   color: var(--color-text);
   cursor: pointer;
-  min-height: 40px;
+  min-height: 46px;
 }
 
 select.btn {
@@ -257,12 +261,12 @@ select.btn {
 }
 
 .info-label {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   opacity: 0.7;
 }
 
 .info-value {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
@@ -286,7 +290,7 @@ select.btn {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
 }
 
 .record-row .record-tag {
@@ -313,7 +317,7 @@ select.btn {
   padding: 10px 12px;
   text-align: center;
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
 }
 
 .career-table tr:last-child td {
@@ -341,14 +345,14 @@ select.btn {
   background: var(--color-panel);
   color: var(--color-text);
   border-radius: 12px;
-  padding: 24px;
-  max-width: 320px;
+  padding: 26px;
+  max-width: 340px;
   width: 90%;
   text-align: center;
 }
 
 .modal.modal-wide {
-  max-width: 420px;
+  max-width: 460px;
   text-align: left;
 }
 
@@ -361,7 +365,7 @@ select.btn {
   flex-direction: column;
   gap: 4px;
   margin: 12px 0;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   text-align: left;
 }
 
@@ -381,8 +385,8 @@ select.btn {
 }
 
 .instructions-body {
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: 1.15rem;
+  line-height: 1.7;
 }
 
 .instructions-body ul {
@@ -400,14 +404,14 @@ select.btn {
 }
 
 .game-card {
-  flex: 1 1 140px;
+  flex: 1 1 150px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 96px;
-  padding: 14px;
+  gap: 8px;
+  min-height: 140px;
+  padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: 14px;
   background: var(--color-panel);
@@ -422,12 +426,13 @@ select.btn {
 }
 
 .game-card-icon {
-  font-size: 1.8rem;
+  font-size: 3.2rem;
+  line-height: 1;
 }
 
 .game-card-title {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .game-card.planned {
@@ -437,7 +442,7 @@ select.btn {
 }
 
 .game-card-badge {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   opacity: 0.8;
 }
 

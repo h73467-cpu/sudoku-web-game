@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>1A2B 猜數字</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🔢 1A2B 猜數字</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（3 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（4 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（5 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（6 位數字）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">最少猜測</span>
+        <span id="bestAttemptsDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">猜測次數</span>
+        <span id="attemptsDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="hintBtn" class="btn">提示 (<span id="hintCount">3</span>/3)</button>
+      <button id="notesToggleBtn" class="btn" aria-pressed="true">筆記</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="guess-board">
+      <div id="guessSlots" class="guess-slots"></div>
+
+      <div id="digitPad" class="digit-pad"></div>
+
+      <div class="guess-actions">
+        <button id="clearGuessBtn" class="btn">清除</button>
+        <button id="backspaceBtn" class="btn">⌫ 倒退</button>
+        <button id="submitGuessBtn" class="btn btn-primary" disabled>送出猜測</button>
+      </div>
+
+      <div id="hintLog" class="hint-log hidden"></div>
+
+      <div id="notesPanel" class="notes-panel">
+        <div class="notes-panel-label">筆記（點擊數字記錄你的判斷，不影響遊戲判定；灰底刪除線＝我猜沒有、綠底＝我猜有）</div>
+        <div id="notesGrid" class="notes-grid-pad"></div>
+      </div>
+
+      <div class="section-title">猜測紀錄</div>
+      <div id="guessHistory" class="record-list"></div>
+    </div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳時間</th><th>最少猜測次數</th><th>完成次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">🎉 完成！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>電腦會隨機選一組「不重複的數字」當作答案，長度依難度而定（例如中等難度是 4 位數字）。</li>
+        <li>每次猜測依序點選數字組成一組猜測，再按「送出猜測」。</li>
+        <li><strong>A</strong>：猜對數字、也猜對位置。<strong>B</strong>：猜對數字，但位置不對。</li>
+        <li>當結果是「幾 A」等於位數（例如 4A0B）就代表完全猜中，遊戲結束。</li>
+        <li>「超簡單」難度可自行輸入百分比，數字越大代表可用的數字範圍越小，越容易猜中。</li>
+        <li>「筆記」區可以點數字記錄你自己判斷「應該沒有」或「應該有」的數字，方便推理，不影響遊戲判定。</li>
+        <li>每局有 3 次「提示」機會，會直接告訴你某一位的正確數字。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
