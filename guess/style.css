@@ -9,6 +9,12 @@
   gap: 14px;
 }
 
+.guess-hint-text {
+  font-size: 0.95rem;
+  opacity: 0.75;
+  text-align: center;
+}
+
 .guess-slots {
   display: flex;
   gap: 10px;
@@ -28,6 +34,8 @@
   font-weight: 700;
   background: var(--color-panel);
   color: var(--color-text);
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .guess-slot.filled {
@@ -36,6 +44,12 @@
 
 .guess-slot.empty {
   opacity: 0.45;
+}
+
+.guess-slot.selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-selected-bg);
+  opacity: 1;
 }
 
 .digit-pad {
@@ -97,7 +111,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -109,15 +123,42 @@
   opacity: 0.8;
 }
 
-.notes-grid-pad {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+/* One column per guess position, laid out left-to-right in the same order
+   as the guess slots above, so "column 1" == "slot 1". Horizontally
+   scrollable so 5-6 columns still fit on a narrow phone without shrinking
+   the buttons down to unreadable sizes. */
+.notes-table {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.notes-column {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.notes-column-header {
+  font-weight: 700;
+  font-size: 1.05rem;
+  opacity: 0.85;
+}
+
+.notes-column-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .note-btn {
-  min-height: 50px;
-  font-size: 1.25rem;
+  width: 48px;
+  min-height: 42px;
+  font-size: 1.1rem;
   font-weight: 700;
   border-radius: 8px;
   border: 1px solid var(--color-border);
@@ -127,12 +168,7 @@
   touch-action: manipulation;
 }
 
-.note-btn.excluded {
-  opacity: 0.45;
-  text-decoration: line-through;
-}
-
-.note-btn.confirmed {
+.note-btn.active {
   background: var(--color-accent);
   color: #fff;
   border-color: var(--color-accent);

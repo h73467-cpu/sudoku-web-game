@@ -12,7 +12,6 @@ var GuessGame = (function () {
   // which collapses the A/B distinction into a trivial ordering puzzle.
   const MIN_SUPER_EASY_POOL = TIERS.easy.codeLength + 2;
   const DEFAULT_MAX_HINTS = 3;
-  const NOTE_STATES = ["neutral", "excluded", "confirmed"];
 
   let state = null;
   let timerInterval = null;
@@ -56,9 +55,11 @@ var GuessGame = (function () {
     return digits.slice(0, codeLength);
   }
 
-  function defaultNotes(poolSize) {
+  // One candidate set per guess POSITION (column), not per digit — lines up
+  // 1:1 with the guess slots, same spirit as sudoku's per-cell pencil marks.
+  function defaultNotes(codeLength) {
     const notes = {};
-    for (let d = 0; d < poolSize; d++) notes[d] = "neutral";
+    for (let i = 0; i < codeLength; i++) notes[i] = new Set();
     return notes;
   }
 
@@ -85,14 +86,19 @@ var GuessGame = (function () {
   }
 
   function serialize() {
+    const notes = {};
+    Object.keys(state.notes).forEach((pos) => {
+      notes[pos] = Array.from(state.notes[pos]);
+    });
     return {
       secret: state.secret,
       codeLength: state.codeLength,
       poolSize: state.poolSize,
       difficulty: state.difficulty,
       currentGuess: state.currentGuess,
+      selectedSlot: state.selectedSlot,
       history: state.history,
-      notes: state.notes,
+      notes,
       hintsUsed: state.hintsUsed,
       maxHints: state.maxHints,
       revealedHints: state.revealedHints,
@@ -102,14 +108,25 @@ var GuessGame = (function () {
   }
 
   function deserialize(saved) {
+    const codeLength = saved.codeLength;
+    const currentGuess = Array.isArray(saved.currentGuess) && saved.currentGuess.length === codeLength
+      ? saved.currentGuess.slice()
+      : new Array(codeLength).fill(null);
+    const notes = defaultNotes(codeLength);
+    if (saved.notes && typeof saved.notes === "object") {
+      Object.keys(saved.notes).forEach((pos) => {
+        if (notes[pos]) notes[pos] = new Set(saved.notes[pos]);
+      });
+    }
     return {
       secret: saved.secret,
-      codeLength: saved.codeLength,
+      codeLength,
       poolSize: saved.poolSize,
       difficulty: saved.difficulty,
-      currentGuess: Array.isArray(saved.currentGuess) ? saved.currentGuess : [],
+      currentGuess,
+      selectedSlot: Number.isInteger(saved.selectedSlot) ? saved.selectedSlot : 0,
       history: Array.isArray(saved.history) ? saved.history : [],
-      notes: saved.notes && typeof saved.notes === "object" ? saved.notes : defaultNotes(saved.poolSize),
+      notes,
       hintsUsed: saved.hintsUsed || 0,
       maxHints: saved.maxHints || DEFAULT_MAX_HINTS,
       revealedHints: Array.isArray(saved.revealedHints) ? saved.revealedHints : [],
@@ -133,9 +150,10 @@ var GuessGame = (function () {
       codeLength: tier.codeLength,
       poolSize: tier.poolSize,
       difficulty,
-      currentGuess: [],
+      currentGuess: new Array(tier.codeLength).fill(null),
+      selectedSlot: 0,
       history: [],
-      notes: defaultNotes(tier.poolSize),
+      notes: defaultNotes(tier.codeLength),
       hintsUsed: 0,
       maxHints: DEFAULT_MAX_HINTS,
       revealedHints: [],
@@ -167,30 +185,55 @@ var GuessGame = (function () {
   function hasProgress() {
     if (!state) return false;
     if (state.status !== "playing") return false;
-    return state.history.length > 0 || state.currentGuess.length > 0;
+    return state.history.length > 0 || state.currentGuess.some((v) => v != null);
   }
 
-  function appendDigit(digit) {
+  function selectSlot(index) {
     if (!state || state.status !== "playing") return;
-    if (state.currentGuess.length >= state.codeLength) return;
-    if (state.currentGuess.includes(digit)) return;
-    state.currentGuess.push(digit);
+    if (index < 0 || index >= state.codeLength) return;
+    state.selectedSlot = index;
+    notify("select");
+  }
+
+  function findNextEmptySlot(fromIndex) {
+    for (let i = fromIndex; i < state.currentGuess.length; i++) {
+      if (state.currentGuess[i] == null) return i;
+    }
+    return null;
+  }
+
+  // The answer pad: assigns `digit` to guess position `index`, enforcing
+  // guess-wide uniqueness (evaluateGuess assumes no duplicates). Auto-
+  // advances the selection to the next empty slot, like typing a PIN.
+  function setSlotDigit(index, digit) {
+    if (!state || state.status !== "playing") return;
+    if (index < 0 || index >= state.codeLength) return;
+    if (digit < 0 || digit >= state.poolSize) return;
+    const usedElsewhere = state.currentGuess.some((v, i) => i !== index && v === digit);
+    if (usedElsewhere) return;
+
+    state.currentGuess[index] = digit;
+    state.selectedSlot = findNextEmptySlot(index + 1);
+    if (state.selectedSlot == null) state.selectedSlot = index;
     persist();
     notify("guess-edit");
   }
 
-  function removeLastDigit() {
+  function clearSlot(index) {
     if (!state || state.status !== "playing") return;
-    if (state.currentGuess.length === 0) return;
-    state.currentGuess.pop();
+    if (index < 0 || index >= state.codeLength) return;
+    if (state.currentGuess[index] == null) return;
+    state.currentGuess[index] = null;
+    state.selectedSlot = index;
     persist();
     notify("guess-edit");
   }
 
-  function clearGuess() {
+  function clearAllSlots() {
     if (!state || state.status !== "playing") return;
-    if (state.currentGuess.length === 0) return;
-    state.currentGuess = [];
+    if (state.currentGuess.every((v) => v == null)) return;
+    state.currentGuess = new Array(state.codeLength).fill(null);
+    state.selectedSlot = 0;
     persist();
     notify("guess-edit");
   }
@@ -226,10 +269,12 @@ var GuessGame = (function () {
 
   function submitGuess() {
     if (!state || state.status !== "playing") return;
-    if (state.currentGuess.length !== state.codeLength) return;
-    const { a, b } = evaluateGuess(state.currentGuess, state.secret);
-    state.history.unshift({ guess: state.currentGuess.slice(), a, b });
-    state.currentGuess = [];
+    if (state.currentGuess.some((v) => v == null)) return;
+    const guess = state.currentGuess.slice();
+    const { a, b } = evaluateGuess(guess, state.secret);
+    state.history.unshift({ guess, a, b });
+    state.currentGuess = new Array(state.codeLength).fill(null);
+    state.selectedSlot = 0;
     if (a === state.codeLength) {
       finishWin();
     } else {
@@ -238,12 +283,18 @@ var GuessGame = (function () {
     notify("submit");
   }
 
-  // Freeform scratchpad, not validated by the game — same spirit as
-  // sudoku's notes mode. Cycles neutral -> excluded -> confirmed -> neutral.
-  function toggleNote(digit) {
-    if (!state) return;
-    const cur = state.notes[digit] || "neutral";
-    state.notes[digit] = NOTE_STATES[(NOTE_STATES.indexOf(cur) + 1) % NOTE_STATES.length];
+  // Freeform per-position scratchpad, not validated by the game — same
+  // spirit as sudoku's notes mode, but keyed by guess column instead of a
+  // single cell so it lines up visually with the guess slots above it.
+  // Independent of the actual guess digits: never auto-cleared by
+  // setSlotDigit/clearSlot, only reset by starting a new game.
+  function toggleNote(position, digit) {
+    if (!state || state.status !== "playing") return;
+    if (position < 0 || position >= state.codeLength) return;
+    if (digit < 0 || digit >= state.poolSize) return;
+    const set = state.notes[position];
+    if (set.has(digit)) set.delete(digit);
+    else set.add(digit);
     persist();
     notify("note");
   }
@@ -293,9 +344,10 @@ var GuessGame = (function () {
     resumeGame,
     hasSavedResumableGame,
     hasProgress,
-    appendDigit,
-    removeLastDigit,
-    clearGuess,
+    selectSlot,
+    setSlotDigit,
+    clearSlot,
+    clearAllSlots,
     submitGuess,
     toggleNote,
     useHint,

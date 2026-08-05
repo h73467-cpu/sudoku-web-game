@@ -35,12 +35,12 @@
   const gameInstructionsBtn = document.getElementById("gameInstructionsBtn");
   const guessSlotsEl = document.getElementById("guessSlots");
   const digitPadEl = document.getElementById("digitPad");
-  const clearGuessBtn = document.getElementById("clearGuessBtn");
-  const backspaceBtn = document.getElementById("backspaceBtn");
+  const clearSlotBtn = document.getElementById("clearSlotBtn");
+  const clearAllBtn = document.getElementById("clearAllBtn");
   const submitGuessBtn = document.getElementById("submitGuessBtn");
   const hintLogEl = document.getElementById("hintLog");
   const notesPanelEl = document.getElementById("notesPanel");
-  const notesGridEl = document.getElementById("notesGrid");
+  const notesTableEl = document.getElementById("notesTable");
   const guessHistoryEl = document.getElementById("guessHistory");
 
   // -- history / career view elements -----------------------------------------
@@ -143,8 +143,14 @@
     const frag = document.createDocumentFragment();
     for (let i = 0; i < state.codeLength; i++) {
       const digit = state.currentGuess[i];
-      const slot = document.createElement("div");
-      slot.className = "guess-slot " + (digit == null ? "empty" : "filled");
+      const slot = document.createElement("button");
+      slot.type = "button";
+      slot.dataset.index = String(i);
+      slot.className =
+        "guess-slot " +
+        (digit == null ? "empty" : "filled") +
+        (state.selectedSlot === i ? " selected" : "");
+      slot.disabled = state.status !== "playing";
       slot.textContent = digit == null ? "" : String(digit);
       frag.appendChild(slot);
     }
@@ -154,37 +160,51 @@
   function renderDigitPad(state) {
     digitPadEl.innerHTML = "";
     const frag = document.createDocumentFragment();
-    const guessFull = state.currentGuess.length >= state.codeLength;
+    const sel = state.selectedSlot;
     for (let d = 0; d < state.poolSize; d++) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "digit-btn";
       btn.dataset.digit = String(d);
       btn.textContent = String(d);
-      btn.disabled = state.status !== "playing" || state.currentGuess.includes(d) || guessFull;
+      const usedElsewhere = state.currentGuess.some((v, i) => i !== sel && v === d);
+      btn.disabled = state.status !== "playing" || sel == null || usedElsewhere;
       frag.appendChild(btn);
     }
     digitPadEl.appendChild(frag);
-    clearGuessBtn.disabled = state.status !== "playing" || state.currentGuess.length === 0;
-    backspaceBtn.disabled = state.status !== "playing" || state.currentGuess.length === 0;
-    submitGuessBtn.disabled = state.status !== "playing" || state.currentGuess.length !== state.codeLength;
+    const selFilled = sel != null && state.currentGuess[sel] != null;
+    clearSlotBtn.disabled = state.status !== "playing" || sel == null || !selFilled;
+    clearAllBtn.disabled = state.status !== "playing" || state.currentGuess.every((v) => v == null);
+    submitGuessBtn.disabled = state.status !== "playing" || state.currentGuess.some((v) => v == null);
   }
 
   function renderNotesPanel(state) {
     notesPanelEl.classList.toggle("hidden", !notesVisible);
     notesToggleBtn.setAttribute("aria-pressed", notesVisible ? "true" : "false");
-    notesGridEl.innerHTML = "";
+    notesTableEl.innerHTML = "";
     const frag = document.createDocumentFragment();
-    for (let d = 0; d < state.poolSize; d++) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      const noteState = state.notes[d] || "neutral";
-      btn.className = "note-btn" + (noteState !== "neutral" ? " " + noteState : "");
-      btn.dataset.digit = String(d);
-      btn.textContent = String(d);
-      frag.appendChild(btn);
+    for (let pos = 0; pos < state.codeLength; pos++) {
+      const col = document.createElement("div");
+      col.className = "notes-column";
+      const header = document.createElement("div");
+      header.className = "notes-column-header";
+      header.textContent = "第 " + (pos + 1) + " 格";
+      const grid = document.createElement("div");
+      grid.className = "notes-column-grid";
+      for (let d = 0; d < state.poolSize; d++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "note-btn" + (state.notes[pos].has(d) ? " active" : "");
+        btn.dataset.position = String(pos);
+        btn.dataset.digit = String(d);
+        btn.textContent = String(d);
+        grid.appendChild(btn);
+      }
+      col.appendChild(header);
+      col.appendChild(grid);
+      frag.appendChild(col);
     }
-    notesGridEl.appendChild(frag);
+    notesTableEl.appendChild(frag);
   }
 
   function renderHintLog(state) {
@@ -324,18 +344,28 @@
   });
 
   // -- game view interactions ------------------------------------------------
+  guessSlotsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".guess-slot");
+    if (!btn || btn.disabled) return;
+    GuessGame.selectSlot(Number(btn.dataset.index));
+  });
+
   digitPadEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".digit-btn");
     if (!btn || btn.disabled) return;
-    GuessGame.appendDigit(Number(btn.dataset.digit));
+    const state = GuessGame.getState();
+    if (!state || state.selectedSlot == null) return;
+    GuessGame.setSlotDigit(state.selectedSlot, Number(btn.dataset.digit));
   });
 
-  clearGuessBtn.addEventListener("click", () => {
-    GuessGame.clearGuess();
+  clearSlotBtn.addEventListener("click", () => {
+    const state = GuessGame.getState();
+    if (!state || state.selectedSlot == null) return;
+    GuessGame.clearSlot(state.selectedSlot);
   });
 
-  backspaceBtn.addEventListener("click", () => {
-    GuessGame.removeLastDigit();
+  clearAllBtn.addEventListener("click", () => {
+    GuessGame.clearAllSlots();
   });
 
   submitGuessBtn.addEventListener("click", () => {
@@ -348,10 +378,10 @@
     if (state) renderNotesPanel(state);
   });
 
-  notesGridEl.addEventListener("click", (e) => {
+  notesTableEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".note-btn");
     if (!btn) return;
-    GuessGame.toggleNote(Number(btn.dataset.digit));
+    GuessGame.toggleNote(Number(btn.dataset.position), Number(btn.dataset.digit));
   });
 
   hintBtn.addEventListener("click", () => {
@@ -381,9 +411,19 @@
 
     if (e.key >= "0" && e.key <= "9") {
       const digit = Number(e.key);
-      if (digit < state.poolSize) GuessGame.appendDigit(digit);
+      if (state.selectedSlot != null && digit < state.poolSize) {
+        GuessGame.setSlotDigit(state.selectedSlot, digit);
+      }
     } else if (e.key === "Backspace" || e.key === "Delete") {
-      GuessGame.removeLastDigit();
+      if (state.selectedSlot != null) GuessGame.clearSlot(state.selectedSlot);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (state.selectedSlot != null) GuessGame.selectSlot(Math.max(0, state.selectedSlot - 1));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      if (state.selectedSlot != null) {
+        GuessGame.selectSlot(Math.min(state.codeLength - 1, state.selectedSlot + 1));
+      }
     } else if (e.key === "Enter") {
       GuessGame.submitGuess();
     }
