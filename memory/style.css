@@ -17,6 +17,7 @@
   cursor: pointer;
   perspective: 600px;
   touch-action: manipulation;
+  container-type: size;
 }
 
 .mem-card:disabled {
@@ -44,7 +45,16 @@
   justify-content: center;
   border-radius: 12px;
   backface-visibility: hidden;
-  font-size: clamp(1.2rem, 5vmin, 2.1rem);
+  /* Scale with the card itself so the symbol reads clearly at a glance
+     (elderly-friendly) regardless of grid size; vmin clamp is the fallback
+     for browsers without container query support. */
+  font-size: clamp(1.8rem, 8vmin, 4rem);
+}
+
+@supports (container-type: size) {
+  .mem-card-face {
+    font-size: 68cqmin;
+  }
 }
 
 .mem-card-back {

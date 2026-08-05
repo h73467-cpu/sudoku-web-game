@@ -5,7 +5,7 @@ var MemoryGame = (function () {
   const PAIR_COUNTS = { easy: 6, medium: 8, hard: 12, expert: 18 };
   const MIN_SUPER_EASY_PAIRS = 3;
   const DEFAULT_MAX_HINTS = 3;
-  const MISMATCH_DELAY_MS = 800;
+  const MISMATCH_DELAY_MS = 1800;
   const HINT_PEEK_MS = 1200;
   const SYMBOL_POOL = [
     "🍎", "🍌", "🍇", "🍉", "🍓", "🍒", "🍑", "🥝",
