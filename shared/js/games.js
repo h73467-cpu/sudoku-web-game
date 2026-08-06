@@ -10,7 +10,7 @@ var GAMES = [
   { id: "connectFour", title: "四子棋", icon: "🔴", status: "planned" },
   { id: "othello", title: "黑白棋", icon: "⚫", status: "planned" },
   { id: "breakout", title: "打磚塊", icon: "🧱", path: "breakout/index.html", status: "ready" },
-  { id: "fifteenPuzzle", title: "15 數字推盤", icon: "🔢", status: "planned" },
+  { id: "fifteenPuzzle", title: "15 數字推盤", icon: "🔀", path: "fifteen/index.html", status: "ready" },
   { id: "jigsaw", title: "拼圖", icon: "🖼️", status: "planned" },
   { id: "klotski", title: "華容道", icon: "🚗", path: "klotski/index.html", status: "ready" },
 ];
