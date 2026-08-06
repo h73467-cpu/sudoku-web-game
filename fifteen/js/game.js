@@ -2,26 +2,34 @@
 // stack, timer, win detection, persistence. No DOM access here (that's
 // ui.js's job). Mirrors the shape of klotski/js/game.js.
 //
-// Fixed classic 4x4 board (15 numbered tiles + 1 blank). Difficulty only
-// changes how many random legal moves are used to scramble from the solved
-// state (same reverse-play technique as klotski/sokoban — scrambling
-// backward from solved guarantees the result is solvable by construction).
+// Difficulty scales BOTH board size and scramble depth together — grid size
+// alone (keeping a fixed 4x4 board and only varying scramble steps) left
+// easy/superEasy still visually overwhelming for casual/elderly players,
+// since even a lightly-scrambled 16-cell board is a lot to scan. Smaller
+// boards at the easy end give a quicker, more visibly achievable puzzle;
+// larger boards at the hard end give real challenge. Board is scrambled by
+// reverse play from the solved state (same technique as klotski/sokoban —
+// scrambling backward from solved guarantees the result is solvable by
+// construction).
 var FifteenGame = (function () {
-  const ROWS = 4;
-  const COLS = 4;
-  const CELL_COUNT = ROWS * COLS;
   const BLANK = 0;
 
-  const SOLVED_TILES = (() => {
-    const t = [];
-    for (let i = 1; i < CELL_COUNT; i++) t.push(i);
-    t.push(BLANK);
-    return t;
-  })();
-
-  // Total random legal moves applied to scramble from the solved state.
-  const SCRAMBLE_STEPS = { easy: 25, medium: 60, hard: 120, expert: 220 };
-  const SUPER_EASY_FLOOR_STEPS = 8;
+  // Board dimensions + scramble depth per tier. superEasy deliberately does
+  // NOT interpolate board size from these via the percent slider (see
+  // SUPER_EASY_BOARD below) — a percent-lerp'd board size would often round
+  // right back to `easy`'s own dimensions at typical percent values,
+  // reproducing the exact "超簡單 barely differs from 簡單" complaint sokoban
+  // had (see project memory). Instead superEasy always uses a fixed, smaller
+  // board; the percent slider only tunes scramble depth within it.
+  const TIERS = {
+    easy: { rows: 3, cols: 3, steps: 20 },
+    medium: { rows: 4, cols: 4, steps: 60 },
+    hard: { rows: 5, cols: 5, steps: 120 },
+    expert: { rows: 6, cols: 6, steps: 220 },
+  };
+  const SUPER_EASY_BOARD = { rows: 2, cols: 3 };
+  const SUPER_EASY_STEPS_HIGH = 10;
+  const SUPER_EASY_STEPS_LOW = 3;
 
   let state = null;
   let timerInterval = null;
@@ -36,32 +44,39 @@ var FifteenGame = (function () {
 
   function superEasySteps(percent) {
     const x = (Math.max(10, Math.min(90, Math.round(Number(percent) || 30))) - 10) / 80;
-    return Math.round(SCRAMBLE_STEPS.easy + (SUPER_EASY_FLOOR_STEPS - SCRAMBLE_STEPS.easy) * x);
+    return Math.round(SUPER_EASY_STEPS_HIGH + (SUPER_EASY_STEPS_LOW - SUPER_EASY_STEPS_HIGH) * x);
   }
 
-  function neighborsOf(index) {
-    const row = Math.floor(index / COLS);
-    const col = index % COLS;
+  function solvedTiles(rows, cols) {
+    const t = [];
+    for (let i = 1; i < rows * cols; i++) t.push(i);
+    t.push(BLANK);
+    return t;
+  }
+
+  function neighborsOf(index, rows, cols) {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
     const out = [];
-    if (row > 0) out.push(index - COLS);
-    if (row < ROWS - 1) out.push(index + COLS);
+    if (row > 0) out.push(index - cols);
+    if (row < rows - 1) out.push(index + cols);
     if (col > 0) out.push(index - 1);
-    if (col < COLS - 1) out.push(index + 1);
+    if (col < cols - 1) out.push(index + 1);
     return out;
   }
 
   function isSolved(tiles) {
-    for (let i = 0; i < CELL_COUNT - 1; i++) {
+    for (let i = 0; i < tiles.length - 1; i++) {
       if (tiles[i] !== i + 1) return false;
     }
-    return tiles[CELL_COUNT - 1] === BLANK;
+    return tiles[tiles.length - 1] === BLANK;
   }
 
   // True if swapping the blank with some neighbor would immediately win —
   // the "always exactly one move from solved" triviality caught before in
   // both klotski and sokoban's generators.
-  function hasWinningMove(tiles, blankIndex) {
-    return neighborsOf(blankIndex).some((n) => {
+  function hasWinningMove(tiles, blankIndex, rows, cols) {
+    return neighborsOf(blankIndex, rows, cols).some((n) => {
       const trial = tiles.slice();
       trial[blankIndex] = trial[n];
       trial[n] = BLANK;
@@ -69,13 +84,13 @@ var FifteenGame = (function () {
     });
   }
 
-  function scrambleFromSolved(steps) {
-    const tiles = SOLVED_TILES.slice();
-    let blankIndex = CELL_COUNT - 1;
+  function scrambleFromSolved(rows, cols, steps) {
+    const tiles = solvedTiles(rows, cols);
+    let blankIndex = tiles.length - 1;
     let lastBlankIndex = -1;
     for (let i = 0; i < steps; i++) {
-      const candidates = neighborsOf(blankIndex).filter((n) => n !== lastBlankIndex);
-      const pool = candidates.length > 0 ? candidates : neighborsOf(blankIndex);
+      const candidates = neighborsOf(blankIndex, rows, cols).filter((n) => n !== lastBlankIndex);
+      const pool = candidates.length > 0 ? candidates : neighborsOf(blankIndex, rows, cols);
       const target = pool[Math.floor(Math.random() * pool.length)];
       tiles[blankIndex] = tiles[target];
       tiles[target] = BLANK;
@@ -85,9 +100,9 @@ var FifteenGame = (function () {
 
     // Guarantee the puzzle isn't solvable in 0 or 1 moves.
     let guard = 0;
-    while ((isSolved(tiles) || hasWinningMove(tiles, blankIndex)) && guard < 3000) {
-      const candidates = neighborsOf(blankIndex).filter((n) => n !== lastBlankIndex);
-      const pool = candidates.length > 0 ? candidates : neighborsOf(blankIndex);
+    while ((isSolved(tiles) || hasWinningMove(tiles, blankIndex, rows, cols)) && guard < 3000) {
+      const candidates = neighborsOf(blankIndex, rows, cols).filter((n) => n !== lastBlankIndex);
+      const pool = candidates.length > 0 ? candidates : neighborsOf(blankIndex, rows, cols);
       const target = pool[Math.floor(Math.random() * pool.length)];
       tiles[blankIndex] = tiles[target];
       tiles[target] = BLANK;
@@ -99,11 +114,14 @@ var FifteenGame = (function () {
   }
 
   function buildBoard(difficulty) {
-    const steps =
-      difficulty === "superEasy"
-        ? superEasySteps(FifteenStorage.getSettings().superEasyPercent)
-        : SCRAMBLE_STEPS[difficulty] || SCRAMBLE_STEPS.easy;
-    return scrambleFromSolved(steps);
+    if (difficulty === "superEasy") {
+      const steps = superEasySteps(FifteenStorage.getSettings().superEasyPercent);
+      const board = scrambleFromSolved(SUPER_EASY_BOARD.rows, SUPER_EASY_BOARD.cols, steps);
+      return { rows: SUPER_EASY_BOARD.rows, cols: SUPER_EASY_BOARD.cols, tiles: board.tiles, blankIndex: board.blankIndex };
+    }
+    const tier = TIERS[difficulty] || TIERS.easy;
+    const board = scrambleFromSolved(tier.rows, tier.cols, tier.steps);
+    return { rows: tier.rows, cols: tier.cols, tiles: board.tiles, blankIndex: board.blankIndex };
   }
 
   function stopTimerInterval() {
@@ -129,6 +147,8 @@ var FifteenGame = (function () {
   function serialize() {
     return {
       difficulty: state.difficulty,
+      rows: state.rows,
+      cols: state.cols,
       tiles: state.tiles.slice(),
       blankIndex: state.blankIndex,
       history: state.history,
@@ -141,6 +161,8 @@ var FifteenGame = (function () {
   function deserialize(saved) {
     return {
       difficulty: saved.difficulty,
+      rows: saved.rows,
+      cols: saved.cols,
       tiles: saved.tiles.slice(),
       blankIndex: saved.blankIndex,
       history: Array.isArray(saved.history) ? saved.history : [],
@@ -162,6 +184,8 @@ var FifteenGame = (function () {
     const board = buildBoard(difficulty);
     state = {
       difficulty,
+      rows: board.rows,
+      cols: board.cols,
       tiles: board.tiles,
       blankIndex: board.blankIndex,
       history: [],
@@ -177,7 +201,15 @@ var FifteenGame = (function () {
 
   function resumeGame() {
     const saved = FifteenStorage.loadCurrentGame();
-    if (!saved || !Array.isArray(saved.tiles) || saved.tiles.length !== CELL_COUNT) return false;
+    if (
+      !saved ||
+      !Array.isArray(saved.tiles) ||
+      !saved.rows ||
+      !saved.cols ||
+      saved.tiles.length !== saved.rows * saved.cols
+    ) {
+      return false;
+    }
     if (saved.status !== "playing") return false;
     stopTimerInterval();
     state = deserialize(saved);
@@ -217,7 +249,7 @@ var FifteenGame = (function () {
   // orthogonally adjacent to the current blank position.
   function moveTile(index) {
     if (!state || state.status !== "playing") return false;
-    if (!neighborsOf(state.blankIndex).includes(index)) {
+    if (!neighborsOf(state.blankIndex, state.rows, state.cols).includes(index)) {
       notify("invalid");
       return false;
     }
@@ -238,13 +270,13 @@ var FifteenGame = (function () {
   // Keyboard convenience: dr/dc describes the direction the *blank* moves.
   function moveBlank(dr, dc) {
     if (!state || state.status !== "playing") return false;
-    const row = Math.floor(state.blankIndex / COLS) + dr;
-    const col = (state.blankIndex % COLS) + dc;
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
+    const row = Math.floor(state.blankIndex / state.cols) + dr;
+    const col = (state.blankIndex % state.cols) + dc;
+    if (row < 0 || row >= state.rows || col < 0 || col >= state.cols) {
       notify("invalid");
       return false;
     }
-    return moveTile(row * COLS + col);
+    return moveTile(row * state.cols + col);
   }
 
   function undo() {
@@ -261,7 +293,8 @@ var FifteenGame = (function () {
     return state;
   }
   function getBoardSize() {
-    return { rows: ROWS, cols: COLS };
+    if (!state) return { rows: TIERS.medium.rows, cols: TIERS.medium.cols };
+    return { rows: state.rows, cols: state.cols };
   }
 
   function formatTime(ms) {

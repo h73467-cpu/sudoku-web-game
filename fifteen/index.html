@@ -40,10 +40,10 @@
           比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
         </label>
       </div>
-      <button class="btn difficulty-btn" data-difficulty="easy">簡單（輕度打亂）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（中度打亂）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（高度打亂）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（極度打亂）</button>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（3×3）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（4×4，經典 15 盤）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（5×5）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（6×6）</button>
     </div>
 
     <div class="home-nav-row">
@@ -85,7 +85,7 @@
       <div id="board" class="fifteen-board" role="grid" aria-label="15 數字推盤棋盤"></div>
     </div>
 
-    <div class="board-hint-text">點空格旁邊的數字方塊，就會把它推入空格；也可以用方向鍵移動空格。把數字 1~15 依序排好、空格留在右下角即過關。</div>
+    <div class="board-hint-text">點空格旁邊的數字方塊，就會把它推入空格；也可以用方向鍵移動空格。把數字依序排好、空格留在最後一格（右下角）即過關。</div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -128,11 +128,11 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
-        <li>棋盤是 4×4，共 15 個數字方塊加 1 個空格；目標是把數字依序排成 1~15，空格留在最後（右下角）。</li>
+        <li>棋盤上有數字方塊加 1 個空格；目標是把數字依序從左上排到右下，空格留在最後一格。</li>
         <li>點一下空格旁邊（上下左右）的數字方塊，就會把它推入空格；不相鄰的方塊點了不會動。</li>
         <li>也可以用鍵盤方向鍵操作：方向鍵代表空格移動的方向（例如按 ↑ 會把空格上方的數字往下推）。</li>
         <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新打亂一局新的關卡。</li>
-        <li>難度差異：打亂時套用的隨機步數越多就越難；「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
+        <li>難度差異：棋盤格數跟打亂程度會一起變化——簡單是 3×3 小盤面、中等是經典 4×4、困難 5×5、專家 6×6，格數越多、打亂越多就越難；「超簡單」固定用更小的盤面，並可自行輸入百分比再微調打亂程度。</li>
       </ul>
     </div>
     <div class="win-actions">

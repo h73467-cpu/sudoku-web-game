@@ -13,7 +13,7 @@
   grid-template-rows: repeat(var(--rows, 4), 1fr);
   gap: 6px;
   width: min(92vw, 360px);
-  aspect-ratio: 1 / 1;
+  aspect-ratio: var(--cols, 4) / var(--rows, 4);
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
   border-radius: 12px;
