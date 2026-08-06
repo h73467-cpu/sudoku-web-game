@@ -339,6 +339,9 @@ select.btn {
   align-items: center;
   justify-content: center;
   z-index: 10;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .modal {
@@ -348,6 +351,8 @@ select.btn {
   padding: 26px;
   max-width: 340px;
   width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
   text-align: center;
 }
 

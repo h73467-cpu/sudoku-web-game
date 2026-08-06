@@ -544,6 +544,9 @@ select.btn {
   align-items: center;
   justify-content: center;
   z-index: 10;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .modal {
@@ -553,11 +556,28 @@ select.btn {
   padding: 24px;
   max-width: 320px;
   width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
   text-align: center;
+}
+
+.modal.modal-wide {
+  max-width: 440px;
+  text-align: left;
 }
 
 .modal h2 {
   margin-top: 0;
+}
+
+.instructions-body {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.instructions-body ul {
+  padding-left: 1.2em;
+  margin: 8px 0;
 }
 
 .win-stats {

@@ -20,11 +20,14 @@ var NonogramGame = (function () {
 
   // Board size scales with difficulty (same lesson as fifteen/js/game.js:
   // grid size, not just puzzle complexity, needs to shrink for casual/
-  // elderly players to get a quick, achievable win). superEasy uses a
-  // fixed smaller board regardless of the percent slider — NOT a
-  // percent-lerp'd size — so it stays visibly distinct from `easy` at
-  // every slider value (percent-lerping board size was sokoban's original
-  // "超簡單 barely differs from 簡單" bug; see project memory).
+  // elderly players to get a quick, achievable win). superEasy's board size
+  // itself is percent-lerp'd between `easy`'s size and a small floor (user
+  // request: 超簡單 should visibly shrink as the percent slider increases).
+  // This is safe from sokoban's original "超簡單 barely differs from 簡單"
+  // bug because grid size is the *only* axis interpolated here across the
+  // whole percent range (sokoban's bug was two parameters — board size AND
+  // box count — both independently collapsing to the same value as `easy`
+  // for the entire range, not just the low end of the slider).
   // Density targets are deliberately modest — empirically (see project
   // memory), a pure line-logic solver rejects almost everything above
   // ~25-30% fill density for boards this size (long contiguous blobs are
@@ -38,7 +41,7 @@ var NonogramGame = (function () {
     hard: { rows: 11, cols: 11, density: 0.2 },
     expert: { rows: 13, cols: 13, density: 0.2 },
   };
-  const SUPER_EASY_BOARD = { rows: 5, cols: 5 };
+  const SUPER_EASY_SIZE_FLOOR = 3;
   const SUPER_EASY_DENSITY_HIGH = 0.22;
   const SUPER_EASY_DENSITY_LOW = 0.16;
   const MAX_GENERATE_ATTEMPTS = 400;
@@ -54,9 +57,19 @@ var NonogramGame = (function () {
     if (changeListener) changeListener(state, event || null);
   }
 
+  function superEasyPercentFraction(percent) {
+    return (Math.max(10, Math.min(90, Math.round(Number(percent) || 30))) - 10) / 80;
+  }
+
   function superEasyDensity(percent) {
-    const x = (Math.max(10, Math.min(90, Math.round(Number(percent) || 30))) - 10) / 80;
+    const x = superEasyPercentFraction(percent);
     return SUPER_EASY_DENSITY_HIGH + (SUPER_EASY_DENSITY_LOW - SUPER_EASY_DENSITY_HIGH) * x;
+  }
+
+  function superEasySize(percent) {
+    const x = superEasyPercentFraction(percent);
+    const size = Math.round(TIERS.easy.rows + (SUPER_EASY_SIZE_FLOOR - TIERS.easy.rows) * x);
+    return Math.max(SUPER_EASY_SIZE_FLOOR, size);
   }
 
   // -- puzzle generation ------------------------------------------------
@@ -263,9 +276,11 @@ var NonogramGame = (function () {
 
   function buildBoard(difficulty) {
     if (difficulty === "superEasy") {
-      const density = superEasyDensity(NonogramStorage.getSettings().superEasyPercent);
-      const built = generatePuzzle(SUPER_EASY_BOARD.rows, SUPER_EASY_BOARD.cols, density);
-      return Object.assign({ rows: SUPER_EASY_BOARD.rows, cols: SUPER_EASY_BOARD.cols }, built);
+      const percent = NonogramStorage.getSettings().superEasyPercent;
+      const size = superEasySize(percent);
+      const density = superEasyDensity(percent);
+      const built = generatePuzzle(size, size, density);
+      return Object.assign({ rows: size, cols: size }, built);
     }
     const tier = TIERS[difficulty] || TIERS.easy;
     const built = generatePuzzle(tier.rows, tier.cols, tier.density);
