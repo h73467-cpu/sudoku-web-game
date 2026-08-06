@@ -1,0 +1,81 @@
+/* 連連看 specific styles. Shared tokens/components (buttons, toolbar, modal
+   shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.llk-board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 6), 1fr);
+  grid-template-rows: repeat(var(--rows, 4), 1fr);
+  gap: 3px;
+  width: min(94vw, 560px);
+  aspect-ratio: var(--cols, 6) / var(--rows, 4);
+  background: var(--color-border-strong);
+  border: 3px solid var(--color-border-strong);
+  border-radius: 10px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.llk-tile {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.9rem, 3.2vw, 1.7rem);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.llk-tile:disabled {
+  cursor: default;
+}
+
+.llk-tile.selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px var(--color-accent);
+}
+
+.llk-tile.hint {
+  animation: llk-hint-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes llk-hint-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px #f1c40f;
+  }
+  50% {
+    box-shadow: 0 0 0 5px #f1c40f;
+  }
+}
+
+.llk-blank {
+  background: transparent;
+}
+
+.deadlock-notice {
+  background: #fff3cd;
+  color: #7a5b00;
+  border: 1px solid #f1c40f;
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}

@@ -13,6 +13,7 @@ var GAMES = [
   { id: "fifteenPuzzle", title: "15 數字推盤", icon: "🔀", path: "fifteen/index.html", status: "ready" },
   { id: "jigsaw", title: "拼圖", icon: "🖼️", path: "jigsaw/index.html", status: "ready" },
   { id: "klotski", title: "華容道", icon: "🚗", path: "klotski/index.html", status: "ready" },
+  { id: "lianliankan", title: "連連看", icon: "🔗", path: "lianliankan/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {
