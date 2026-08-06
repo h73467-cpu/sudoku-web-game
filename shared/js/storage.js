@@ -29,7 +29,7 @@ var GameHubStorage = (function () {
   }
 
   function defaultRoot() {
-    return { theme: "blue_light", games: {} };
+    return { theme: "blue_light", games: {}, favorites: [] };
   }
 
   function loadRoot() {
@@ -45,6 +45,7 @@ var GameHubStorage = (function () {
 
     if (parsed.games && typeof parsed.games === "object") {
       if (typeof parsed.theme !== "string") parsed.theme = "blue_light";
+      if (!Array.isArray(parsed.favorites)) parsed.favorites = [];
       return parsed;
     }
 
@@ -95,6 +96,36 @@ var GameHubStorage = (function () {
     }
   }
 
+  // Home-page "我的最愛" favorites — a flat array of game ids, stored at the
+  // root (not per-game) since it's about the hub's own home page, not any
+  // individual game's own data.
+  function getFavorites() {
+    try {
+      const favorites = loadRoot().favorites;
+      return Array.isArray(favorites) ? favorites : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function isFavorite(gameId) {
+    return getFavorites().indexOf(gameId) !== -1;
+  }
+
+  function toggleFavorite(gameId) {
+    try {
+      const root = loadRoot();
+      if (!Array.isArray(root.favorites)) root.favorites = [];
+      const idx = root.favorites.indexOf(gameId);
+      if (idx === -1) root.favorites.push(gameId);
+      else root.favorites.splice(idx, 1);
+      saveRoot(root);
+      return idx === -1;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Per-game namespaced load/save. `options.defaultData()` supplies the
   // shape for a brand-new game; `options.migrateLegacy()` (optional) is
   // consulted only the first time a game has no data at all, for importing
@@ -125,7 +156,7 @@ var GameHubStorage = (function () {
     return { loadGameData, saveGameData };
   }
 
-  return { forGame, getTheme, setTheme, safeGet, safeSet };
+  return { forGame, getTheme, setTheme, getFavorites, isFavorite, toggleFavorite, safeGet, safeSet };
 })();
 
 if (typeof window !== "undefined") {

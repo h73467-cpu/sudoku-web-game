@@ -446,6 +446,7 @@ select.btn {
 }
 
 .game-card {
+  position: relative;
   flex: 1 1 150px;
   display: flex;
   flex-direction: column;
@@ -461,6 +462,30 @@ select.btn {
   text-decoration: none;
   text-align: center;
   cursor: pointer;
+}
+
+.favorite-star {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-border-strong);
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.favorite-star.active {
+  color: #f0a500;
+  border-color: #f0a500;
 }
 
 .game-card:hover {
