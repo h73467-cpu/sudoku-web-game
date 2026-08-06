@@ -34,6 +34,7 @@
   const submitBtn = document.getElementById("submitBtn");
   const clearBtn = document.getElementById("clearBtn");
   const hintText = document.getElementById("hintText");
+  const lastFoundText = document.getElementById("lastFoundText");
   const foundWordsList = document.getElementById("foundWordsList");
 
   // -- history / career view elements -----------------------------------------
@@ -158,6 +159,11 @@
     clearBtn.disabled = state.status !== "playing" || state.staging.length === 0;
   }
 
+  function wordWithTranslation(w) {
+    const zh = WordGameDictionary.getTranslation(w);
+    return zh ? `${w.toUpperCase()}（${zh}）` : w.toUpperCase();
+  }
+
   function renderFoundWords(state) {
     foundWordsList.innerHTML = "";
     if (state.foundWords.length === 0) {
@@ -168,10 +174,18 @@
     state.foundWords.forEach((w) => {
       const chip = document.createElement("span");
       chip.className = "word-chip";
-      chip.textContent = w.toUpperCase();
+      chip.textContent = wordWithTranslation(w);
       frag.appendChild(chip);
     });
     foundWordsList.appendChild(frag);
+  }
+
+  function renderLastFound(state) {
+    if (!state.lastFound) {
+      lastFoundText.textContent = "";
+      return;
+    }
+    lastFoundText.textContent = `✅ 太棒了！${wordWithTranslation(state.lastFound.word)}`;
   }
 
   function renderToolbar(state) {
@@ -197,7 +211,7 @@
       statRow("花費時間", WordGame.formatTime(state.elapsedMs)) +
       statRow("分數", String(state.score)) +
       statRow("找到單字", String(state.foundWords.length)) +
-      statRow("最長單字", longestWord.toUpperCase()) +
+      statRow("最長單字", longestWord ? wordWithTranslation(longestWord) : "--") +
       statRow("使用提示", String(state.hintsUsed)) +
       (isNewBest ? statRow("紀錄", "🏆 新紀錄！") : "");
     winModal.classList.remove("hidden");
@@ -209,6 +223,7 @@
     if (event === "submit-valid" && state.status === "won") WordGameSound.play("win");
     renderTiles(state);
     renderFoundWords(state);
+    renderLastFound(state);
     renderToolbar(state);
     renderWinModal(state);
   }

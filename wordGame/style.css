@@ -10,6 +10,15 @@
   margin: 4px 0 8px;
 }
 
+.last-found-text {
+  width: 100%;
+  text-align: center;
+  min-height: 1.4em;
+  font-weight: 700;
+  color: #16a34a;
+  margin: 4px 0 0;
+}
+
 .stage-panel,
 .hand-panel,
 .found-panel {

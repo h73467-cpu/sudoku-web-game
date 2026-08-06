@@ -151,6 +151,7 @@ var WordGame = (function () {
       score: state.score,
       hintsUsed: state.hintsUsed,
       hintWord: state.hintWord,
+      lastFound: state.lastFound,
       nextTileId: tileIdCounter,
       elapsedMs: getElapsedMs(),
       status: state.status === "won" ? "won" : "playing",
@@ -171,6 +172,7 @@ var WordGame = (function () {
       score: saved.score || 0,
       hintsUsed: saved.hintsUsed || 0,
       hintWord: saved.hintWord || null,
+      lastFound: saved.lastFound || null,
       elapsedMs: saved.elapsedMs || 0,
       startTimestamp: Date.now(),
       status: saved.status === "won" ? "won" : "playing",
@@ -200,6 +202,7 @@ var WordGame = (function () {
       score: 0,
       hintsUsed: 0,
       hintWord: null,
+      lastFound: null,
       elapsedMs: 0,
       startTimestamp: Date.now(),
       status: "playing",
@@ -294,6 +297,7 @@ var WordGame = (function () {
     state.score += word.length;
     state.staging = [];
     state.hintWord = null;
+    state.lastFound = { word, translation: WordGameDictionary.getTranslation(word) };
     for (let i = 0; i < consumedCount; i++) {
       state.hand.push({ id: nextTileId(), letter: drawLetter(state.cumulative) });
     }
