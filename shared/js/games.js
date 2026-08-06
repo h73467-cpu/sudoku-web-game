@@ -15,6 +15,7 @@ var GAMES = [
   { id: "klotski", title: "華容道", icon: "🚗", path: "klotski/index.html", status: "ready" },
   { id: "lianliankan", title: "連連看", icon: "🔗", path: "lianliankan/index.html", status: "ready" },
   { id: "minesweeper", title: "踩地雷", icon: "💣", path: "minesweeper/index.html", status: "ready" },
+  { id: "game2048", title: "2048", icon: "🧮", path: "game2048/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {

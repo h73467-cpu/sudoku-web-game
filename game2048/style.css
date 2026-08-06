@@ -1,0 +1,129 @@
+/* 2048 specific styles. Shared tokens/components (buttons, toolbar, modal
+   shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.g2048-board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), 1fr);
+  grid-template-rows: repeat(var(--rows, 4), 1fr);
+  gap: 6px;
+  width: min(92vw, 400px);
+  aspect-ratio: 1 / 1;
+  background: #bbada0;
+  border: 6px solid #bbada0;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.g2048-cell {
+  background: rgba(238, 228, 218, 0.35);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(0.9rem, 5vw, 1.8rem);
+  color: #776e65;
+}
+
+.g2048-cell.v2 {
+  background: #eee4da;
+}
+.g2048-cell.v4 {
+  background: #ede0c8;
+}
+.g2048-cell.v8 {
+  background: #f2b179;
+  color: #fff;
+}
+.g2048-cell.v16 {
+  background: #f59563;
+  color: #fff;
+}
+.g2048-cell.v32 {
+  background: #f67c5f;
+  color: #fff;
+}
+.g2048-cell.v64 {
+  background: #f65e3b;
+  color: #fff;
+}
+.g2048-cell.v128 {
+  background: #edcf72;
+  color: #fff;
+  font-size: clamp(0.8rem, 4.4vw, 1.5rem);
+}
+.g2048-cell.v256 {
+  background: #edcc61;
+  color: #fff;
+  font-size: clamp(0.8rem, 4.4vw, 1.5rem);
+}
+.g2048-cell.v512 {
+  background: #edc850;
+  color: #fff;
+  font-size: clamp(0.8rem, 4.4vw, 1.5rem);
+}
+.g2048-cell.v1024 {
+  background: #edc53f;
+  color: #fff;
+  font-size: clamp(0.7rem, 3.8vw, 1.3rem);
+}
+.g2048-cell.v2048 {
+  background: #edc22e;
+  color: #fff;
+  font-size: clamp(0.7rem, 3.8vw, 1.3rem);
+}
+.g2048-cell.v4096,
+.g2048-cell.v8192 {
+  background: #3c3a32;
+  color: #fff;
+  font-size: clamp(0.7rem, 3.8vw, 1.3rem);
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 54px);
+  gap: 6px;
+  justify-content: center;
+  margin: 14px auto 0;
+}
+
+.dpad-btn {
+  font-size: 1.4rem;
+  padding: 0;
+  min-height: 0;
+}
+
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}
