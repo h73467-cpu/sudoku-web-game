@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>拼字遊戲</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🔤 拼字遊戲</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+    <div class="home-row">
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦，母音較多，找 4 個單字過關）</button>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（找 6 個單字過關）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（找 9 個單字過關）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（找 12 個單字過關）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（母音較少，找 15 個單字過關）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">分數</span>
+        <span id="scoreDisplay" class="info-value">0</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">單字</span>
+        <span id="wordsFoundDisplay" class="info-value">0 / 0</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <button id="hintBtn" class="btn">💡 提示 (5)</button>
+      <button id="reshuffleBtn" class="btn">🔄 換一批字母</button>
+      <button id="resetBtn" class="btn">重新開始</button>
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div id="hintText" class="hint-text"></div>
+
+    <div class="stage-panel">
+      <div class="stage-label">拼字區（點一下移回手牌）</div>
+      <div id="stagingArea" class="tile-row staging-row"></div>
+      <div class="stage-actions">
+        <button id="submitBtn" class="btn btn-primary" disabled>送出</button>
+        <button id="clearBtn" class="btn" disabled>清除</button>
+      </div>
+    </div>
+
+    <div class="hand-panel">
+      <div class="stage-label">手牌（點一下加入拼字區）</div>
+      <div id="handArea" class="tile-row hand-row"></div>
+    </div>
+
+    <div class="found-panel">
+      <div class="stage-label">已找到的單字</div>
+      <div id="foundWordsList" class="word-list"></div>
+    </div>
+
+    <div class="board-hint-text">點選字母組成 3 個字母以上的單字，按「送出」確認；也可以直接用鍵盤打字，Enter 送出、Backspace 移除最後一個字母。</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最快時間</th><th>最高分數</th><th>過關次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>🎉 過關了！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>畫面下方「手牌」是隨機出現的字母方塊，點一下字母就會移到上面的「拼字區」排隊組字；點拼字區裡的字母可以把它放回手牌。</li>
+        <li>拼字區組成 3 個字母以上的英文單字後，按「送出」確認；也可以直接用鍵盤打字對應的字母，按 Enter 送出、按 Backspace 移除最後一個字母。</li>
+        <li>送出正確且沒找過的單字就算成功：那些字母會被消耗掉，手牌會自動補上新的字母；分數會累加該單字的字母數。</li>
+        <li>找到指定數量的單字就過關；找到的單字數與所需數量會顯示在畫面上方。</li>
+        <li>卡住想不到單字時，可以按「提示」看目前手牌能拼出的其中一個單字（每局最多 5 次），或按「換一批字母」直接重新抽一整手新字母。</li>
+        <li>難度差異：字母裡母音（A、E、I、O、U）的比例會依難度調整，超簡單母音較多、比較容易拼出單字，專家母音較少、比較吃字彙量；過關所需的單字數也會跟著提高。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/dictionary.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+/* Word game specific styles. Shared tokens/components (buttons, toolbar,
+   modal shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.hint-text {
+  width: 100%;
+  text-align: center;
+  min-height: 1.4em;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin: 4px 0 8px;
+}
+
+.stage-panel,
+.hand-panel,
+.found-panel {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto 16px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.stage-label {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.tile-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 56px;
+}
+
+.staging-row {
+  border-bottom: 2px dashed var(--color-border);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.letter-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-panel);
+  color: var(--color-text);
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter-tile:hover {
+  background: var(--color-selected-bg, #dbeafe);
+}
+
+.staging-row .letter-tile {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.stage-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.word-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-selected-bg, #dbeafe);
+  color: var(--color-text);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}

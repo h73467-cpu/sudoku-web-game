@@ -17,6 +17,7 @@ var GAMES = [
   { id: "minesweeper", title: "踩地雷", icon: "💣", path: "minesweeper/index.html", status: "ready" },
   { id: "game2048", title: "2048", icon: "🧮", path: "game2048/index.html", status: "ready" },
   { id: "maze", title: "迷宮遊戲", icon: "🌀", path: "maze/index.html", status: "ready" },
+  { id: "wordGame", title: "拼字遊戲", icon: "🔤", path: "wordGame/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {
