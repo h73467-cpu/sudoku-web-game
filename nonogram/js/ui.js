@@ -163,6 +163,12 @@
   }
 
   // -- game view rendering ------------------------------------------------
+  function clueStatusClass(satisfied, conflicted) {
+    if (satisfied) return " satisfied";
+    if (conflicted) return " conflict";
+    return "";
+  }
+
   function renderBoard(state) {
     const rows = state.rows;
     const cols = state.cols;
@@ -176,14 +182,14 @@
 
     for (let c = 0; c < cols; c++) {
       const cell = document.createElement("div");
-      cell.className = "nono-col-clue" + (NonogramGame.isColSatisfied(c) ? " satisfied" : "");
+      cell.className = "nono-col-clue" + clueStatusClass(NonogramGame.isColSatisfied(c), NonogramGame.isColConflicted(c));
       cell.innerHTML = state.colClues[c].map((n) => `<span>${n}</span>`).join("");
       frag.appendChild(cell);
     }
 
     for (let r = 0; r < rows; r++) {
       const rowClueCell = document.createElement("div");
-      rowClueCell.className = "nono-row-clue" + (NonogramGame.isRowSatisfied(r) ? " satisfied" : "");
+      rowClueCell.className = "nono-row-clue" + clueStatusClass(NonogramGame.isRowSatisfied(r), NonogramGame.isRowConflicted(r));
       rowClueCell.textContent = state.rowClues[r].join(" ");
       frag.appendChild(rowClueCell);
 

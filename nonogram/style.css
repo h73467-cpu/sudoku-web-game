@@ -61,6 +61,12 @@
   opacity: 0.32;
 }
 
+.nono-col-clue.conflict,
+.nono-row-clue.conflict {
+  background: #fecaca;
+  color: #991b1b;
+}
+
 .nono-cell {
   background: var(--color-bg);
   border: 1px solid var(--color-border);

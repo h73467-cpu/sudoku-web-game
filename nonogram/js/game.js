@@ -186,6 +186,12 @@ var NonogramGame = (function () {
       for (let s = pos; s + b <= N; s++) {
         if (filledPrefix[s] - filledPrefix[pos] > 0) break; // known-filled cell stuck in the gap before this block
         if (emptyPrefix[s + b] - emptyPrefix[s] > 0) continue; // block would cover a known-empty cell
+        // The single mandatory separator cell right after this block (if
+        // any) is skipped by nextPos below and never re-examined by any
+        // later check, so it must be validated here explicitly — otherwise
+        // a known-filled cell sitting exactly there is silently missed by
+        // every other check in this function.
+        if (s + b < N && known[s + b] === FILLED) continue;
         const nextPos = Math.min(s + b + 1, N);
         if (solve(i + 1, nextPos)) {
           result = true;
@@ -482,6 +488,36 @@ var NonogramGame = (function () {
     return actual.length === expect.length && actual.every((v, i) => v === expect[i]);
   }
 
+  // Is row `r` (or column `c`) already IMPOSSIBLE to satisfy given the
+  // player's current fills/crosses — i.e. is there a definite mistake in
+  // it somewhere, not just "not finished yet"? Reuses the same line-
+  // feasibility solver the generator itself uses to verify a puzzle is
+  // logic-solvable (see solvableByLogic above): a filled cell is "known
+  // filled", a crossed cell is "known empty", a plain blank cell is still
+  // unknown — if no arrangement of the remaining unknowns could possibly
+  // match the clue, the line is definitely wrong already. This never
+  // fires on a merely-incomplete line (plenty of unknowns still give the
+  // solver room to find a valid completion), only on a genuine
+  // contradiction — e.g. two filled cells in a row whose clue only allows
+  // one.
+  function isRowConflicted(r) {
+    const base = r * state.cols;
+    const known = [];
+    for (let c = 0; c < state.cols; c++) {
+      const v = state.cells[base + c];
+      known.push(v === FILLED ? FILLED : v === CROSSED ? BLANK : -1);
+    }
+    return !lineFeasible(state.rowClues[r], known, state.cols);
+  }
+  function isColConflicted(c) {
+    const known = [];
+    for (let r = 0; r < state.rows; r++) {
+      const v = state.cells[r * state.cols + c];
+      known.push(v === FILLED ? FILLED : v === CROSSED ? BLANK : -1);
+    }
+    return !lineFeasible(state.colClues[c], known, state.rows);
+  }
+
   function getState() {
     return state;
   }
@@ -517,6 +553,8 @@ var NonogramGame = (function () {
     undo,
     isRowSatisfied,
     isColSatisfied,
+    isRowConflicted,
+    isColConflicted,
     getState,
     getBoardSize,
     formatTime,
