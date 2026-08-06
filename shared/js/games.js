@@ -8,7 +8,7 @@ var GAMES = [
   { id: "nonogram", title: "數織", icon: "🧩", path: "nonogram/index.html", status: "ready" },
   { id: "sokoban", title: "推箱子", icon: "📦", path: "sokoban/index.html", status: "ready" },
   { id: "connectFour", title: "四子棋", icon: "🔴", path: "connectFour/index.html", status: "ready" },
-  { id: "othello", title: "黑白棋", icon: "⚫", status: "planned" },
+  { id: "othello", title: "黑白棋", icon: "⚫", path: "othello/index.html", status: "ready" },
   { id: "breakout", title: "打磚塊", icon: "🧱", path: "breakout/index.html", status: "ready" },
   { id: "fifteenPuzzle", title: "15 數字推盤", icon: "🔀", path: "fifteen/index.html", status: "ready" },
   { id: "jigsaw", title: "拼圖", icon: "🖼️", path: "jigsaw/index.html", status: "ready" },
