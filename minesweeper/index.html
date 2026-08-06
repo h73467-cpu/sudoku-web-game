@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>踩地雷</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>💣 踩地雷</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+    <div class="home-row">
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（8×8，10 顆雷）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（10×10，18 顆雷）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（12×12，28 顆雷）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（14×14，40 顆雷）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">剩餘雷數</span>
+        <span id="flagsDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="paintModeBtn" class="btn" aria-pressed="false">⛏️ 模式：翻開</button>
+      <button id="resetBtn" class="btn">重新開始</button>
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="board-area">
+      <div id="board" class="ms-board" role="grid" aria-label="踩地雷棋盤"></div>
+    </div>
+
+    <div class="board-hint-text">「翻開」模式點格子會打開它；數字代表周圍 8 格有幾顆地雷。翻到地雷就結束了，這款遊戲沒有復原。用上方按鈕切到「插旗」模式可以標記你覺得是地雷的格子，避免手滑點開。</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳時間</th><th>完成次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">🎉 過關！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>棋盤格子下面藏著地雷，目標是把所有「不是地雷」的格子都翻開。</li>
+        <li>翻開的格子如果顯示數字，代表它周圍（含斜角）8 格裡有幾顆地雷；顯示空白代表附近完全沒有地雷，會自動幫你翻開一整片安全區域。</li>
+        <li>第一次點的格子保證安全，不會是地雷。翻到地雷遊戲就結束了，這款遊戲沒有「復原」——這就是踩地雷的樂趣所在！</li>
+        <li>不確定的格子可以用「插旗」模式標記 🚩，提醒自己這裡可能是地雷、先不要翻開；再點一次可以取消標記。上方「剩餘雷數」是地雷總數減去已插旗數，僅供參考，插旗插錯也不會扣分。</li>
+        <li>難度差異：棋盤越大、地雷越多就越難；「超簡單」固定用最小的 6×6 盤面，可自行輸入百分比調整地雷數量。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

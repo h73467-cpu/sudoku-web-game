@@ -2301,6 +2301,179 @@ if (typeof window !== "undefined") {
   window.LianliankanStorage = LianliankanStorage;
 }
 
+// ---------------------------------------------------------------------------
+// MinesweeperStorage — solo puzzle again, but career only tracks
+// bestTime/won (no bestMoves — "how many cells did you reveal" isn't a
+// meaningful skill metric the way move-count is for the other games; time
+// is what actually matters for Minesweeper). Has a 超簡單 tier (fixed small
+// board + percent-tunable mine count, same pattern as nonogram) since mine
+// density is a genuine second difficulty axis here, unlike jigsaw/
+// lianliankan/sokoban where no such axis exists. Namespaced under
+// games.minesweeper.
+// ---------------------------------------------------------------------------
+var MinesweeperStorage = (function () {
+  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+
+  function defaultCareerEntry() {
+    return { bestTime: null, won: 0 };
+  }
+
+  function defaultData() {
+    const career = {};
+    for (const d of DIFFICULTIES) career[d] = defaultCareerEntry();
+    return {
+      currentGame: null,
+      history: [],
+      career,
+      settings: { superEasyPercent: 30, soundEnabled: true },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (data.currentGame && typeof data.currentGame === "object") {
+      merged.currentGame = data.currentGame;
+    }
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      for (const d of DIFFICULTIES) {
+        merged.career[d] = Object.assign(defaultCareerEntry(), data.career[d] || {});
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("minesweeper", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- current game -----------------------------------------------------
+  function loadCurrentGame() {
+    try {
+      return loadAll().currentGame;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveCurrentGame(stateDict) {
+    try {
+      const data = loadAll();
+      data.currentGame = stateDict;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function clearCurrentGame() {
+    try {
+      const data = loadAll();
+      data.currentGame = null;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- history ------------------------------------------------------------
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // -- career ---------------------------------------------------------------
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+  function updateCareer(difficulty, elapsedSeconds) {
+    try {
+      const data = loadAll();
+      const entry = Object.assign(defaultCareerEntry(), data.career[difficulty] || {});
+      entry.won += 1;
+      let isNewBest = false;
+      if (entry.bestTime == null || elapsedSeconds < entry.bestTime) {
+        entry.bestTime = elapsedSeconds;
+        isNewBest = true;
+      }
+      data.career[difficulty] = entry;
+      saveAll(data);
+      return isNewBest;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // -- settings -------------------------------------------------------------
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    DIFFICULTIES,
+    loadCurrentGame,
+    saveCurrentGame,
+    clearCurrentGame,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    updateCareer,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.MinesweeperStorage = MinesweeperStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -2316,5 +2489,6 @@ if (typeof module !== "undefined" && module.exports) {
     ConnectFourStorage,
     OthelloStorage,
     LianliankanStorage,
+    MinesweeperStorage,
   };
 }
