@@ -1,0 +1,79 @@
+/* 四子棋 specific styles. Shared tokens/components (buttons, toolbar, modal
+   shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.c4-board {
+  display: flex;
+  gap: 4px;
+  background: #2563eb;
+  border-radius: 14px;
+  padding: 8px;
+  width: min(94vw, 420px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.c4-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.c4-column:disabled {
+  cursor: default;
+}
+
+.c4-column:not(:disabled):hover,
+.c4-column:not(:disabled):focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.c4-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: var(--color-panel);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+.c4-cell.red {
+  background: #e74c3c;
+  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.c4-cell.yellow {
+  background: #f1c40f;
+  box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.c4-cell.winning {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 14px 4px rgba(255, 255, 255, 0.85);
+}
+
+#localCareerBody.win-stats {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 0 0 16px 0;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}

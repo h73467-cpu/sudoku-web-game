@@ -1750,6 +1750,198 @@ if (typeof window !== "undefined") {
   window.JigsawStorage = JigsawStorage;
 }
 
+// ---------------------------------------------------------------------------
+// ConnectFourStorage — shaped differently from every other game's storage
+// module on purpose: 四子棋 is a two-player adversarial game, not a solo
+// puzzle, so "bestTime/bestMoves" doesn't mean anything here. Career is
+// split into `ai` (win/loss/draw per AI difficulty) and `local` (a simple
+// red/yellow/draw tally for two people sharing one device — there's no
+// "your" record to keep since either player could be either color).
+// Namespaced under games.connectFour.
+// ---------------------------------------------------------------------------
+var ConnectFourStorage = (function () {
+  const AI_DIFFICULTIES = ["easy", "medium", "hard", "expert"];
+
+  function defaultAiCareerEntry() {
+    return { wins: 0, losses: 0, draws: 0 };
+  }
+
+  function defaultData() {
+    const ai = {};
+    for (const d of AI_DIFFICULTIES) ai[d] = defaultAiCareerEntry();
+    return {
+      currentGame: null,
+      history: [],
+      career: {
+        ai,
+        local: { redWins: 0, yellowWins: 0, draws: 0, gamesPlayed: 0 },
+      },
+      settings: { soundEnabled: true },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (data.currentGame && typeof data.currentGame === "object") {
+      merged.currentGame = data.currentGame;
+    }
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      if (data.career.ai && typeof data.career.ai === "object") {
+        for (const d of AI_DIFFICULTIES) {
+          merged.career.ai[d] = Object.assign(defaultAiCareerEntry(), data.career.ai[d] || {});
+        }
+      }
+      if (data.career.local && typeof data.career.local === "object") {
+        merged.career.local = Object.assign(merged.career.local, data.career.local);
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("connectFour", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- current game -----------------------------------------------------
+  function loadCurrentGame() {
+    try {
+      return loadAll().currentGame;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveCurrentGame(stateDict) {
+    try {
+      const data = loadAll();
+      data.currentGame = stateDict;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function clearCurrentGame() {
+    try {
+      const data = loadAll();
+      data.currentGame = null;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- history ------------------------------------------------------------
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // -- career ---------------------------------------------------------------
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+  // result: "win" | "loss" | "draw" (from the human player's perspective).
+  function updateAiCareer(difficulty, result) {
+    try {
+      const data = loadAll();
+      const entry = Object.assign(defaultAiCareerEntry(), data.career.ai[difficulty] || {});
+      if (result === "win") entry.wins += 1;
+      else if (result === "loss") entry.losses += 1;
+      else entry.draws += 1;
+      data.career.ai[difficulty] = entry;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  // winner: 1 (red) | 2 (yellow) | null (draw).
+  function updateLocalCareer(winner) {
+    try {
+      const data = loadAll();
+      const local = Object.assign({ redWins: 0, yellowWins: 0, draws: 0, gamesPlayed: 0 }, data.career.local);
+      local.gamesPlayed += 1;
+      if (winner === 1) local.redWins += 1;
+      else if (winner === 2) local.yellowWins += 1;
+      else local.draws += 1;
+      data.career.local = local;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- settings -------------------------------------------------------------
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    AI_DIFFICULTIES,
+    loadCurrentGame,
+    saveCurrentGame,
+    clearCurrentGame,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    updateAiCareer,
+    updateLocalCareer,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.ConnectFourStorage = ConnectFourStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -1762,5 +1954,6 @@ if (typeof module !== "undefined" && module.exports) {
     FifteenStorage,
     NonogramStorage,
     JigsawStorage,
+    ConnectFourStorage,
   };
 }
