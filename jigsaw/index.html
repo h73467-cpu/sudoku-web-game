@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>拼圖</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🖼️ 拼圖</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+    <div class="home-row">
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <button class="btn btn-primary difficulty-btn" data-difficulty="easy">簡單（2×2，推薦）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（3×3）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（4×4）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（5×5）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">最佳步數</span>
+        <span id="bestMovesDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">步數</span>
+        <span id="movesDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="undoBtn" class="btn">復原</button>
+      <button id="resetBtn" class="btn">重新開始</button>
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="board-area">
+      <div class="jigsaw-preview-wrap">
+        <div id="preview" class="jigsaw-preview"></div>
+        <div class="jigsaw-preview-label">完成圖</div>
+      </div>
+      <div id="board" class="jigsaw-board" role="grid" aria-label="拼圖棋盤"></div>
+    </div>
+
+    <div class="board-hint-text">點一片拼圖選取（會出現白框），再點另一片就會互相交換位置；再點一次選取中的拼圖可以取消選取。把每一片都換到正確位置、拼出左邊的完成圖即過關。</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳時間</th><th>最少步數</th><th>完成次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">🎉 完成！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>畫面左上角的小圖是「完成圖」，右邊的大棋盤是被打亂的拼圖片，目標是把每一片換回正確位置、拼出跟完成圖一樣的畫面。</li>
+        <li>點一片拼圖選取（會出現白色外框），再點另一片，兩片就會互相交換位置；點同一片兩次可以取消選取。</li>
+        <li>拼圖沒有「只能跟旁邊交換」的限制，任兩片都可以直接交換，不用像推盤遊戲一樣繞路。</li>
+        <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新換一張新圖案、重新打亂。</li>
+        <li>難度差異：棋盤分割的片數越多就越難（簡單只有 4 片，專家有 25 片）。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/images.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
