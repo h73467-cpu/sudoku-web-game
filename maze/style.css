@@ -1,0 +1,97 @@
+/* Maze specific styles. Shared tokens/components (buttons, toolbar, modal
+   shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.maze-board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), 1fr);
+  grid-template-rows: repeat(var(--rows, 8), 1fr);
+  width: min(94vw, 480px);
+  aspect-ratio: 1 / 1;
+  background: var(--color-panel);
+  border: 3px solid var(--color-border-strong);
+  box-sizing: border-box;
+}
+
+.maze-cell {
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.5rem, 2.4vw, 1.1rem);
+  line-height: 1;
+}
+
+.maze-cell.wall-top {
+  border-top-color: var(--color-border-strong);
+}
+.maze-cell.wall-right {
+  border-right-color: var(--color-border-strong);
+}
+.maze-cell.wall-bottom {
+  border-bottom-color: var(--color-border-strong);
+}
+.maze-cell.wall-left {
+  border-left-color: var(--color-border-strong);
+}
+
+.maze-cell.maze-hint {
+  background: rgba(255, 196, 0, 0.35);
+}
+
+.maze-cell.maze-exit {
+  background: rgba(46, 204, 113, 0.25);
+}
+
+.maze-cell.maze-player {
+  background: rgba(52, 152, 219, 0.35);
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 54px);
+  gap: 6px;
+  justify-content: center;
+  margin: 14px auto 0;
+}
+
+.dpad-btn {
+  font-size: 1.4rem;
+  padding: 0;
+  min-height: 0;
+}
+
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}
