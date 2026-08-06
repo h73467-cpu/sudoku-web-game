@@ -2,13 +2,12 @@
 // events. Mirrors the structure of klotski/js/ui.js.
 (function () {
   const DIFFICULTY_LABELS = {
-    superEasy: "超簡單",
     easy: "簡單",
     medium: "中等",
     hard: "困難",
     expert: "專家",
   };
-  const DIFFICULTY_ORDER = ["superEasy", "easy", "medium", "hard", "expert"];
+  const DIFFICULTY_ORDER = ["easy", "medium", "hard", "expert"];
   const SOUND_EVENTS = new Set(["move", "push", "invalid", "undo"]);
 
   // -- home view elements ---------------------------------------------------
@@ -17,7 +16,6 @@
   const continueBtn = document.getElementById("continueBtn");
   const instructionsBtn = document.getElementById("instructionsBtn");
   const soundToggleBtn = document.getElementById("soundToggleBtn");
-  const superEasyPercentInput = document.getElementById("superEasyPercent");
   const difficultyButtons = Array.from(document.querySelectorAll(".difficulty-btn"));
   const historyBtn = document.getElementById("historyBtn");
   const careerBtn = document.getElementById("careerBtn");
@@ -74,11 +72,6 @@
     document.documentElement.dataset.theme = themeKey;
   }
 
-  function clampPercent(x) {
-    if (!Number.isFinite(x)) return 30;
-    return Math.max(10, Math.min(90, Math.round(x)));
-  }
-
   function hasAnyProgressToLose() {
     return SokobanGame.hasProgress() || SokobanGame.hasSavedResumableGame();
   }
@@ -100,8 +93,6 @@
   // -- home view rendering ----------------------------------------------------
   function renderHome() {
     continueBtn.disabled = !SokobanGame.hasSavedResumableGame();
-    const settings = SokobanStorage.getSettings();
-    superEasyPercentInput.value = settings.superEasyPercent;
     themeSelect.value = GameHubStorage.getTheme();
     applySoundButtonState(soundToggleBtn, false);
     applySoundButtonState(gameSoundToggleBtn, true);
@@ -240,11 +231,6 @@
       ) {
         return;
       }
-      if (difficulty === "superEasy") {
-        const x = clampPercent(Number(superEasyPercentInput.value));
-        superEasyPercentInput.value = x;
-        SokobanStorage.saveSettings({ superEasyPercent: x });
-      }
       SokobanGame.newGame(difficulty);
       showView("game");
     });
@@ -289,7 +275,7 @@
     ) {
       return;
     }
-    SokobanGame.newGame(state ? state.difficulty : "superEasy");
+    SokobanGame.newGame(state ? state.difficulty : "easy");
   });
 
   backHomeBtn.addEventListener("click", () => {
@@ -306,7 +292,7 @@
 
   winCloseBtn.addEventListener("click", () => {
     const state = SokobanGame.getState();
-    SokobanGame.newGame(state ? state.difficulty : "superEasy");
+    SokobanGame.newGame(state ? state.difficulty : "easy");
   });
 
   winHomeBtn.addEventListener("click", () => {

@@ -32,7 +32,6 @@ var SokobanGame = (function () {
     hard: { rows: 8, cols: 8, boxCount: 3, interiorWalls: 5, pullSteps: 18 },
     expert: { rows: 9, cols: 9, boxCount: 4, interiorWalls: 7, pullSteps: 26 },
   };
-  const SUPER_EASY_FLOOR = { rows: 6, cols: 6, boxCount: 1, interiorWalls: 0, pullSteps: 2 };
 
   let state = null;
   let timerInterval = null;
@@ -45,25 +44,7 @@ var SokobanGame = (function () {
     if (changeListener) changeListener(state, event || null);
   }
 
-  function lerp(a, b, t) {
-    return a + (b - a) * t;
-  }
-
-  function superEasyParams(percent) {
-    const t = (Math.max(10, Math.min(90, Math.round(Number(percent) || 30))) - 10) / 80;
-    return {
-      rows: Math.round(lerp(TIERS.easy.rows, SUPER_EASY_FLOOR.rows, t)),
-      cols: Math.round(lerp(TIERS.easy.cols, SUPER_EASY_FLOOR.cols, t)),
-      boxCount: Math.max(1, Math.round(lerp(TIERS.easy.boxCount, SUPER_EASY_FLOOR.boxCount, t))),
-      interiorWalls: Math.max(0, Math.round(lerp(TIERS.easy.interiorWalls, SUPER_EASY_FLOOR.interiorWalls, t))),
-      pullSteps: Math.max(1, Math.round(lerp(TIERS.easy.pullSteps, SUPER_EASY_FLOOR.pullSteps, t))),
-    };
-  }
-
   function tierFor(difficulty) {
-    if (difficulty === "superEasy") {
-      return superEasyParams(SokobanStorage.getSettings().superEasyPercent);
-    }
     return TIERS[difficulty] || TIERS.easy;
   }
 

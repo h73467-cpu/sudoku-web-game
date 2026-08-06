@@ -25,6 +25,7 @@
 
     <div class="home-row">
       <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
 
       <div class="daily-card">
         <h3>📅 每日挑戰</h3>
@@ -78,6 +79,7 @@
       <button id="hintBtn" class="btn">提示 (<span id="hintCount">5</span>/5)</button>
       <button id="undoBtn" class="btn">復原 (Ctrl+Z)</button>
       <button id="pauseBtn" class="btn">暫停 (Esc)</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
     </div>
 
     <div class="board-area">
@@ -137,6 +139,26 @@
     <div class="win-actions">
       <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
       <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>目標：讓每一列、每一欄、每個 3×3 小九宮格內的數字 1~9 都不重複出現。</li>
+        <li>先點選一個格子，再用畫面下方的數字鍵或鍵盤 1~9 輸入數字；按「清除」或鍵盤 Backspace/Delete 可清空該格。</li>
+        <li>開啟「筆記模式」後輸入的數字會變成候選數字（可同時記錄多個），方便先寫下可能的答案；再按一次同一個數字可取消該筆記，按 N 鍵可快速切換筆記模式。</li>
+        <li>提示次數依難度而定，用完就不能再提示；「復原」可回到上一步，不限次數（快捷鍵 Ctrl+Z）。</li>
+        <li>按「暫停」（或 Esc）會把題目內容隱藏起來，方便暫時離開；再按一次即可繼續。</li>
+        <li>難度差異：預先填好的格數不同，數字越少越難；「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
+        <li>每日挑戰每天只有一次機會，連續每天完成可以累積連續天數紀錄。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
     </div>
   </div>
 </div>

@@ -1073,7 +1073,7 @@ if (typeof window !== "undefined") {
 // fewest moves to solve + fastest time. Namespaced under games.sokoban.
 // ---------------------------------------------------------------------------
 var SokobanStorage = (function () {
-  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+  const DIFFICULTIES = ["easy", "medium", "hard", "expert"];
 
   function defaultCareerEntry() {
     return { bestMoves: null, bestTime: null, won: 0 };
@@ -1086,7 +1086,7 @@ var SokobanStorage = (function () {
       currentGame: null,
       history: [],
       career,
-      settings: { superEasyPercent: 30, soundEnabled: true },
+      settings: { soundEnabled: true },
     };
   }
 
@@ -1103,7 +1103,6 @@ var SokobanStorage = (function () {
       }
     }
     if (data.settings && typeof data.settings === "object") {
-      merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
       merged.settings.soundEnabled =
         data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
     }

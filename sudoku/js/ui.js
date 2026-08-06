@@ -13,6 +13,7 @@
   const homeViewEl = document.getElementById("homeView");
   const themeSelect = document.getElementById("themeSelect");
   const continueBtn = document.getElementById("continueBtn");
+  const instructionsBtn = document.getElementById("instructionsBtn");
   const dailyStatus = document.getElementById("dailyStatus");
   const dailyBtn = document.getElementById("dailyBtn");
   const superEasyPercentInput = document.getElementById("superEasyPercent");
@@ -37,6 +38,7 @@
   const mistakesDisplay = document.getElementById("mistakesDisplay");
   const pauseOverlayEl = document.getElementById("pauseOverlay");
   const resumeBtn = document.getElementById("resumeBtn");
+  const gameInstructionsBtn = document.getElementById("gameInstructionsBtn");
 
   // -- history / career view elements -----------------------------------------
   const historyViewEl = document.getElementById("historyView");
@@ -53,6 +55,10 @@
   const winStats = document.getElementById("winStats");
   const winCloseBtn = document.getElementById("winCloseBtn");
   const winHomeBtn = document.getElementById("winHomeBtn");
+
+  // -- instructions modal --------------------------------------------------
+  const instructionsModal = document.getElementById("instructionsModal");
+  const instructionsCloseBtn = document.getElementById("instructionsCloseBtn");
 
   const views = {
     home: homeViewEl,
@@ -294,6 +300,16 @@
   // -- home view interactions -----------------------------------------------
   continueBtn.addEventListener("click", () => {
     if (SudokuGame.resumeGame()) showView("game");
+  });
+
+  instructionsBtn.addEventListener("click", () => {
+    instructionsModal.classList.remove("hidden");
+  });
+  gameInstructionsBtn.addEventListener("click", () => {
+    instructionsModal.classList.remove("hidden");
+  });
+  instructionsCloseBtn.addEventListener("click", () => {
+    instructionsModal.classList.add("hidden");
   });
 
   difficultyButtons.forEach((btn) => {
