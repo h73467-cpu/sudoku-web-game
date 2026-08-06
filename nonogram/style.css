@@ -1,0 +1,106 @@
+/* 數織 specific styles. Shared tokens/components (buttons, toolbar, modal
+   shell, difficulty grid, record list) come from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.nono-board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), 1fr);
+  grid-template-rows: repeat(var(--rows, 8), 1fr);
+  gap: 2px;
+  width: min(94vw, 480px);
+  aspect-ratio: var(--cols, 8) / var(--rows, 8);
+  background: var(--color-border-strong);
+  border: 3px solid var(--color-border-strong);
+  border-radius: 10px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.nono-corner {
+  background: transparent;
+}
+
+.nono-col-clue,
+.nono-row-clue {
+  display: flex;
+  background: var(--color-panel);
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: clamp(0.5rem, 1.6vw, 0.8rem);
+  color: var(--color-text);
+}
+
+.nono-col-clue {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  line-height: 1.05;
+  padding-bottom: 2px;
+}
+
+.nono-col-clue span {
+  display: block;
+}
+
+.nono-row-clue {
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  padding-right: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nono-col-clue.satisfied,
+.nono-row-clue.satisfied {
+  opacity: 0.32;
+}
+
+.nono-cell {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #dc2626;
+  font-size: clamp(0.55rem, 2vw, 1rem);
+  touch-action: manipulation;
+  padding: 0;
+}
+
+.nono-cell.filled {
+  background: var(--color-accent);
+}
+
+.nono-cell.crossed {
+  background: var(--color-panel);
+}
+
+.nono-cell:disabled {
+  cursor: default;
+}
+
+.nono-loading {
+  width: min(94vw, 480px);
+  padding: 48px 0;
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}

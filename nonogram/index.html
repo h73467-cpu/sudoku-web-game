@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>數織</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🧩 數織</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+    <div class="home-row">
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <h2 class="section-title">選擇難度開新局</h2>
+    <div class="difficulty-grid">
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（7×7）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（9×9）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（11×11）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（13×13）</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">時間</span>
+        <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">最佳步數</span>
+        <span id="bestMovesDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">步數</span>
+        <span id="movesDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="paintModeBtn" class="btn" aria-pressed="false">✏️ 模式：塗黑</button>
+      <button id="undoBtn" class="btn">復原</button>
+      <button id="resetBtn" class="btn">重新開始</button>
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="board-area">
+      <div id="board" class="nono-board" role="grid" aria-label="數織棋盤"></div>
+    </div>
+
+    <div class="board-hint-text">列/欄的數字代表該行連續塗黑的長度（塊與塊之間至少留一格空白）。點格子塗黑或打叉（用上方按鈕切換模式），把所有格子正確標示完成即過關。</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳時間</th><th>最少步數</th><th>完成次數</th></tr>
+      </thead>
+      <tbody id="careerTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">🎉 完成！</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>棋盤每一列、每一欄上方/左側的數字，代表那一行「連續塗黑格」的長度，依序排列；數字之間至少要留一格空白分隔。例如某列標「3 1」，表示先連續塗黑 3 格、留至少一格空白、再塗黑 1 格。</li>
+        <li>點格子會依照目前模式塗黑或打叉；用工具列的「模式」按鈕切換塗黑／打叉（打叉是拿來標記「確定不塗黑」的格子，方便推理，不影響過關判定）。同一個模式下再點一次會清空格子。</li>
+        <li>當某一列或欄目前塗黑的格子已經符合上面的數字提示，該列/欄的提示數字會變淡，方便確認進度。</li>
+        <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新出一題新的圖案。</li>
+        <li>把所有格子正確塗黑（跟打叉沒有關係，只看塗黑的部分）跟提示完全吻合即過關。</li>
+        <li>難度差異：棋盤越大、圖案越複雜就越難；「超簡單」固定用最小的盤面，並可自行輸入百分比再微調圖案複雜度。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@ var GAMES = [
   { id: "sudoku", title: "數獨", icon: "🔢", path: "sudoku/index.html", status: "ready" },
   { id: "memoryMatch", title: "記憶翻牌", icon: "🃏", path: "memory/index.html", status: "ready" },
   { id: "guessNumber", title: "1A2B 猜數字", icon: "🕵️", path: "guess/index.html", status: "ready" },
-  { id: "nonogram", title: "數織", icon: "🧩", status: "planned" },
+  { id: "nonogram", title: "數織", icon: "🧩", path: "nonogram/index.html", status: "ready" },
   { id: "sokoban", title: "推箱子", icon: "📦", path: "sokoban/index.html", status: "ready" },
   { id: "connectFour", title: "四子棋", icon: "🔴", status: "planned" },
   { id: "othello", title: "黑白棋", icon: "⚫", status: "planned" },
