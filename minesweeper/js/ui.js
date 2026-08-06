@@ -50,6 +50,15 @@
   const instructionsModal = document.getElementById("instructionsModal");
   const instructionsCloseBtn = document.getElementById("instructionsCloseBtn");
 
+  // Loss uses a non-covering inline banner instead of the win modal —
+  // unlike winning, seeing the fully-revealed mine layout after losing is
+  // the whole point (learning where they were), so nothing should obscure
+  // the board the way a full-screen modal-overlay would.
+  const loseBanner = document.getElementById("loseBanner");
+  const loseBannerText = document.getElementById("loseBannerText");
+  const loseRetryBtn = document.getElementById("loseRetryBtn");
+  const loseHomeBtn = document.getElementById("loseHomeBtn");
+
   const views = { home: homeViewEl, game: gameViewEl, history: historyViewEl, career: careerViewEl };
 
   function showView(name) {
@@ -185,25 +194,29 @@
   }
 
   function renderWinModal(state) {
-    if (state.status !== "won" && state.status !== "lost") {
+    if (state.status !== "won") {
       winModal.classList.add("hidden");
       return;
     }
-    if (state.status === "lost") {
-      winTitle.textContent = "💥 踩到地雷了";
-      winSubtitle.textContent = DIFFICULTY_LABELS[state.difficulty] || state.difficulty;
-      winStats.innerHTML = statRow("花費時間", MinesweeperGame.formatTime(state.elapsedMs));
-      winCloseBtn.textContent = "再試一次";
-    } else {
-      const isNewBest = state.justWon && state.justWon.isNewBest;
-      winTitle.textContent = "🎉 過關！";
-      winSubtitle.textContent = DIFFICULTY_LABELS[state.difficulty] || state.difficulty;
-      winStats.innerHTML =
-        statRow("花費時間", MinesweeperGame.formatTime(state.elapsedMs)) +
-        (isNewBest ? statRow("紀錄", "🏆 新紀錄！") : "");
-      winCloseBtn.textContent = "新遊戲";
-    }
+    const isNewBest = state.justWon && state.justWon.isNewBest;
+    winTitle.textContent = "🎉 過關！";
+    winSubtitle.textContent = DIFFICULTY_LABELS[state.difficulty] || state.difficulty;
+    winStats.innerHTML =
+      statRow("花費時間", MinesweeperGame.formatTime(state.elapsedMs)) +
+      (isNewBest ? statRow("紀錄", "🏆 新紀錄！") : "");
+    winCloseBtn.textContent = "新遊戲";
     winModal.classList.remove("hidden");
+  }
+
+  function renderLoseBanner(state) {
+    if (state.status !== "lost") {
+      loseBanner.classList.add("hidden");
+      return;
+    }
+    loseBannerText.textContent =
+      `💥 踩到地雷了！（${DIFFICULTY_LABELS[state.difficulty] || state.difficulty}，花費時間 ${MinesweeperGame.formatTime(state.elapsedMs)}）` +
+      " 下面棋盤已經標出所有地雷位置。";
+    loseBanner.classList.remove("hidden");
   }
 
   function render(state, event) {
@@ -213,6 +226,7 @@
     renderBoard(state);
     renderToolbar(state);
     renderWinModal(state);
+    renderLoseBanner(state);
   }
 
   // -- home view interactions -----------------------------------------------
@@ -299,6 +313,16 @@
   });
   winHomeBtn.addEventListener("click", () => {
     winModal.classList.add("hidden");
+    renderHome();
+    showView("home");
+  });
+
+  loseRetryBtn.addEventListener("click", () => {
+    const state = MinesweeperGame.getState();
+    MinesweeperGame.newGame(state ? state.difficulty : "easy");
+  });
+  loseHomeBtn.addEventListener("click", () => {
+    loseBanner.classList.add("hidden");
     renderHome();
     showView("home");
   });

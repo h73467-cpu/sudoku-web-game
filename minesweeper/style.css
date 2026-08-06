@@ -85,3 +85,31 @@
   opacity: 0.75;
   margin-top: 8px;
 }
+
+/* Non-covering loss banner (deliberately NOT a .modal-overlay) — sits
+   inline above the board so the fully-revealed mine layout underneath
+   stays visible instead of being blocked by a full-screen modal. */
+.lose-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fdecea;
+  border: 1px solid #e74c3c;
+  color: #7a1f16;
+  font-weight: 700;
+  text-align: center;
+}
+
+[data-theme="blue_dark"] .lose-banner,
+[data-theme="green_dark"] .lose-banner {
+  background: #3a1f1c;
+  border-color: #e74c3c;
+  color: #ffb4ab;
+}
