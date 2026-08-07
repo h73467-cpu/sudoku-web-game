@@ -39,12 +39,12 @@ var SmokeCarGame = (function () {
   ];
 
   const TIERS = {
-    easy: { enemyCount: 1, enemySpeed: 70, playerSpeed: 112, smokeCharges: 4, flagCount: 6, randomness: 0.4, lives: 5 },
-    medium: { enemyCount: 2, enemySpeed: 85, playerSpeed: 112, smokeCharges: 3, flagCount: 7, randomness: 0.25, lives: 4 },
-    hard: { enemyCount: 3, enemySpeed: 100, playerSpeed: 112, smokeCharges: 3, flagCount: 8, randomness: 0.12, lives: 3 },
-    expert: { enemyCount: 4, enemySpeed: 115, playerSpeed: 112, smokeCharges: 2, flagCount: 9, randomness: 0.05, lives: 3 },
+    easy: { enemyCount: 1, enemySpeed: 70, playerSpeed: 112, smokeCharges: 4, flagCount: 6, randomness: 0.22, lives: 5 },
+    medium: { enemyCount: 2, enemySpeed: 85, playerSpeed: 112, smokeCharges: 3, flagCount: 7, randomness: 0.14, lives: 4 },
+    hard: { enemyCount: 3, enemySpeed: 100, playerSpeed: 112, smokeCharges: 3, flagCount: 8, randomness: 0.08, lives: 3 },
+    expert: { enemyCount: 4, enemySpeed: 115, playerSpeed: 112, smokeCharges: 2, flagCount: 9, randomness: 0.03, lives: 3 },
   };
-  const SUPER_EASY_FLOOR = { enemyCount: 1, enemySpeed: 55, playerSpeed: 112, smokeCharges: 5, flagCount: 5, randomness: 0.5, lives: 6 };
+  const SUPER_EASY_FLOOR = { enemyCount: 1, enemySpeed: 55, playerSpeed: 112, smokeCharges: 5, flagCount: 5, randomness: 0.3, lives: 6 };
 
   let state = null;
   let changeListener = null;
@@ -88,11 +88,14 @@ var SmokeCarGame = (function () {
   function buildLevel(levelNumber, base) {
     const speedMult = Math.min(MAX_ENEMY_SPEED_MULT, 1 + (levelNumber - 1) * 0.07);
     return {
-      enemyCount: Math.min(MAX_ENEMIES, base.enemyCount + Math.floor((levelNumber - 1) / 2)),
+      // One more enemy every single level (not every two) — clearing a
+      // level should visibly and immediately raise the stakes: 1 car, then
+      // 2 after the next clear, then 3, etc., capped at MAX_ENEMIES.
+      enemyCount: Math.min(MAX_ENEMIES, base.enemyCount + (levelNumber - 1)),
       enemySpeed: base.enemySpeed * speedMult,
       playerSpeed: base.playerSpeed,
       flagCount: Math.min(MAX_FLAGS, base.flagCount + Math.floor((levelNumber - 1) / 3)),
-      randomness: Math.max(0.05, base.randomness - (levelNumber - 1) * 0.02),
+      randomness: Math.max(0.03, base.randomness - (levelNumber - 1) * 0.015),
     };
   }
 
@@ -258,8 +261,22 @@ var SmokeCarGame = (function () {
   // new direction exactly at its current cell's center), which stalls
   // movement completely instead of ever actually crossing to the next
   // cell.
-  function stepEntity(e, dt, speed, cells, blockedFn) {
+  // `onArrive`, if given, is called exactly at the instant an entity
+  // reaches a cell center (or is already idle there) — BEFORE queuedDir is
+  // consulted. This matters a lot for chase AI specifically: computing the
+  // chase direction on some *other* frame (e.g. the frame after arrival,
+  // via a separately-scheduled "am I at a center" poll) means that by the
+  // time stepEntity gets around to checking queuedDir, the entity has
+  // usually already committed to "continue straight" for that whole cell
+  // (since queuedDir only gets consulted right at arrival, and continuing
+  // straight is legal at most intersections) — the freshly-computed chase
+  // direction ends up applying one full cell-traversal late, over and
+  // over, which reads as "barely chasing, mostly just going straight"
+  // instead of an actual pursuit. Deciding synchronously inside the same
+  // arrival instant closes that gap entirely.
+  function stepEntity(e, dt, speed, cells, blockedFn, onArrive) {
     if (e.dir.dx === 0 && e.dir.dy === 0) {
+      if (onArrive) onArrive(e);
       if (canMove(cells, e.col, e.row, e.queuedDir, blockedFn)) {
         e.dir = e.queuedDir;
         e.facing = e.dir;
@@ -279,6 +296,7 @@ var SmokeCarGame = (function () {
       e.y = target.y;
       e.col = nextCol;
       e.row = nextRow;
+      if (onArrive) onArrive(e);
       if (canMove(cells, e.col, e.row, e.queuedDir, blockedFn)) {
         e.dir = e.queuedDir;
       } else if (!canMove(cells, e.col, e.row, e.dir, blockedFn)) {
@@ -295,21 +313,11 @@ var SmokeCarGame = (function () {
     return (col, row) => isSmoked(state, col, row);
   }
 
-  function updateEnemyAI(enemy, cells, state) {
+  // Called by stepEntity exactly at the moment an enemy reaches a cell
+  // center (see stepEntity's `onArrive` note for why the timing matters).
+  // Sets queuedDir fresh, right before stepEntity consults it.
+  function decideEnemyDir(enemy, cells, state) {
     const blocked = enemyBlocked(state);
-    // Frozen if currently sitting in an active smoke cell — can't move at
-    // all until it dissipates, regardless of queuedDir.
-    if (isSmoked(state, enemy.col, enemy.row)) {
-      enemy.dir = { dx: 0, dy: 0 };
-      enemy.queuedDir = { dx: 0, dy: 0 };
-      return;
-    }
-    // Only re-decide when idle or exactly at a cell center (stepEntity
-    // handles the actual center-detection; this just needs to keep
-    // queuedDir fresh so stepEntity has something current to apply).
-    const atCenter = Math.abs(enemy.x - (enemy.col * CELL + CELL / 2)) < 0.5 && Math.abs(enemy.y - (enemy.row * CELL + CELL / 2)) < 0.5;
-    if (!atCenter && (enemy.dir.dx || enemy.dir.dy)) return;
-
     const legal = legalDirs(cells, enemy.col, enemy.row, blocked);
     if (legal.length === 0) {
       enemy.queuedDir = { dx: 0, dy: 0 };
@@ -324,21 +332,28 @@ var SmokeCarGame = (function () {
   }
 
   // -- level setup --------------------------------------------------------
-  function farCornerStarts(cells, playerCol, playerRow, count) {
-    // 8 candidates so up to MAX_ENEMIES(6) can always be placed even after
-    // excluding whichever one coincides with the player's own start.
-    const candidates = [
-      [0, 0],
-      [COLS - 1, 0],
-      [0, ROWS - 1],
-      [COLS - 1, ROWS - 1],
-      [Math.floor(COLS / 2), 0],
-      [Math.floor(COLS / 2), ROWS - 1],
-      [0, Math.floor(ROWS / 2)],
-      [COLS - 1, Math.floor(ROWS / 2)],
-    ].filter(([c, r]) => !(c === playerCol && r === playerRow));
-    candidates.sort((a, b) => bfsDistance(cells, playerCol, playerRow, b[0], b[1]) - bfsDistance(cells, playerCol, playerRow, a[0], a[1]));
-    return candidates.slice(0, count);
+  // Picks `count` distinct enemy start cells, randomized each level (not a
+  // fixed handful of corners every time — a small fixed candidate set kept
+  // landing on the same one or two farthest corners regardless of how the
+  // maze reshuffled) while still keeping them meaningfully far from the
+  // player: sample from the farthest third of the maze by BFS distance,
+  // then shuffle and take `count` of those.
+  function farRandomStarts(cells, playerCol, playerRow, count) {
+    const distances = [];
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLS; col++) {
+        if (col === playerCol && row === playerRow) continue;
+        distances.push({ col, row, dist: bfsDistance(cells, playerCol, playerRow, col, row) });
+      }
+    }
+    distances.sort((a, b) => b.dist - a.dist);
+    const poolSize = Math.max(count, Math.floor(distances.length / 3));
+    const pool = distances.slice(0, poolSize);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, count).map((p) => [p.col, p.row]);
   }
 
   function placeFlags(cells, avoidCells, count) {
@@ -364,7 +379,7 @@ var SmokeCarGame = (function () {
     addLoops(cells, ROWS, COLS, LOOP_CHANCE);
 
     const playerStart = [0, ROWS - 1];
-    const enemyStarts = farCornerStarts(cells, playerStart[0], playerStart[1], built.enemyCount);
+    const enemyStarts = farRandomStarts(cells, playerStart[0], playerStart[1], built.enemyCount);
     const flags = placeFlags(cells, [playerStart, ...enemyStarts], built.flagCount);
 
     state.level = levelNumber;
@@ -537,8 +552,13 @@ var SmokeCarGame = (function () {
 
     stepEntity(state.player, dt, state.playerSpeed, state.cells, null);
     state.enemies.forEach((e) => {
-      updateEnemyAI(e, state.cells, state);
-      stepEntity(e, dt, state.enemySpeed, state.cells, enemyBlocked(state));
+      // Frozen outright while sitting in an active smoke cell — skips
+      // movement and re-deciding entirely, regardless of queuedDir.
+      if (isSmoked(state, e.col, e.row)) {
+        e.dir = { dx: 0, dy: 0 };
+        return;
+      }
+      stepEntity(e, dt, state.enemySpeed, state.cells, enemyBlocked(state), (ent) => decideEnemyDir(ent, state.cells, state));
     });
 
     checkFlagPickup();

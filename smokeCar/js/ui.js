@@ -226,27 +226,52 @@
     });
   }
 
+  function roundRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // A top-down car reads as "a car" (not just a colored blob/arrow) via a
+  // rectangular body + windshield band + headlight dots + wheel bumps on
+  // the sides — same recognizable silhouette the 🏎️ home-screen icon
+  // already conveys, just drawn instead of an emoji so it can rotate to
+  // face whichever way it's actually driving.
   function drawCar(x, y, facing, color) {
-    const w = grid.cell * 0.62;
-    const h = grid.cell * 0.62;
-    const angle = Math.atan2(facing.dy, facing.dx) - Math.PI / 2;
+    const w = grid.cell * 0.5;
+    const len = grid.cell * 0.74;
+    const angle = Math.atan2(facing.dy, facing.dx) + Math.PI / 2;
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(-w * 0.62, -len * 0.3, w * 0.16, len * 0.24);
+    ctx.fillRect(w * 0.46, -len * 0.3, w * 0.16, len * 0.24);
+    ctx.fillRect(-w * 0.62, len * 0.06, w * 0.16, len * 0.24);
+    ctx.fillRect(w * 0.46, len * 0.06, w * 0.16, len * 0.24);
+
+    roundRectPath(-w / 2, -len / 2, w, len, w * 0.35);
     ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(-w * 0.28, h * 0.5);
-    ctx.lineTo(w * 0.28, h * 0.5);
-    ctx.lineTo(w * 0.4, -h * 0.1);
-    ctx.lineTo(0, -h * 0.5);
-    ctx.lineTo(-w * 0.4, -h * 0.1);
-    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.beginPath();
-    ctx.arc(-w * 0.16, -h * 0.05, w * 0.1, 0, Math.PI * 2);
-    ctx.arc(w * 0.16, -h * 0.05, w * 0.1, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    roundRectPath(-w * 0.32, -len * 0.34, w * 0.64, len * 0.3, w * 0.15);
+    ctx.fillStyle = "rgba(210, 235, 255, 0.85)";
     ctx.fill();
+
+    ctx.fillStyle = "#fff6c9";
+    ctx.beginPath();
+    ctx.arc(-w * 0.3, -len * 0.46, w * 0.13, 0, Math.PI * 2);
+    ctx.arc(w * 0.3, -len * 0.46, w * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
   }
 
