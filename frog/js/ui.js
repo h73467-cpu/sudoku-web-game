@@ -388,16 +388,21 @@
     winModal.classList.remove("hidden");
   }
 
-  // Bgm only plays while there's an active run the player can hear it
-  // over — muted at home/history/career and stopped outright on game over,
-  // started (or re-started) whenever a run becomes "playing".
+  // Bgm plays if and only if a run is actively "playing" — anything else
+  // (paused, levelClear, dying, gameover, or no run at all) stops it. Kept
+  // deliberately unconditional rather than special-casing which non-
+  // playing statuses count as "stop": the game's own RAF loop keeps
+  // ticking (and re-rendering) even after the player navigates back to
+  // this game's home screen unless the run itself is paused/ended, so any
+  // narrower condition here risks the bgm surviving a status this function
+  // wasn't told to treat as "stopped".
   let bgmActive = false;
   function syncBgm(state) {
     const shouldPlay = !!state && state.status === "playing";
     if (shouldPlay && !bgmActive) {
       FrogSound.startBgm();
       bgmActive = true;
-    } else if (!shouldPlay && bgmActive && (!state || state.status === "gameover" || state.status === "paused")) {
+    } else if (!shouldPlay && bgmActive) {
       FrogSound.stopBgm();
       bgmActive = false;
     }
@@ -473,6 +478,15 @@
     if (FrogGame.hasProgress() && !confirm("目前有進行中的遊戲，確定要返回首頁嗎？進度將會遺失。")) {
       return;
     }
+    // Leaving to the home screen discards the run (per the confirm above),
+    // but the RAF loop itself keeps ticking in the background regardless
+    // of which view is showing — if the run were left in "playing", the
+    // very next tick's syncBgm would see status==="playing" and start the
+    // bgm right back up a frame later, which is exactly the bug this
+    // guards against. Pausing (not just muting) is what actually stops it
+    // for good.
+    const state = FrogGame.getState();
+    if (state && state.status === "playing") FrogGame.togglePause();
     FrogSound.stopBgm();
     bgmActive = false;
     renderHome();
