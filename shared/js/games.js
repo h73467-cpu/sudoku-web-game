@@ -20,6 +20,7 @@ var GAMES = [
   { id: "wordGame", title: "拼字遊戲", icon: "🔤", path: "wordGame/index.html", status: "ready" },
   { id: "shellGame", title: "三個杯子", icon: "🎩", path: "shellGame/index.html", status: "ready" },
   { id: "frogger", title: "青蛙過河", icon: "🐸", path: "frog/index.html", status: "ready" },
+  { id: "smokeCar", title: "迷魂車", icon: "🏎️", path: "smokeCar/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {

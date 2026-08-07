@@ -3324,6 +3324,175 @@ if (typeof window !== "undefined") {
   window.FrogStorage = FrogStorage;
 }
 
+// ---------------------------------------------------------------------------
+// SmokeCarStorage — same endless-run shape as BreakoutStorage/FrogStorage
+// (career tracks best score + highest level reached + run count per
+// starting difficulty), for 迷魂車. Namespaced under games.smokeCar.
+// ---------------------------------------------------------------------------
+var SmokeCarStorage = (function () {
+  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+
+  function defaultCareerEntry() {
+    return { bestScore: null, bestLevel: null, runs: 0 };
+  }
+
+  function defaultData() {
+    const career = {};
+    for (const d of DIFFICULTIES) career[d] = defaultCareerEntry();
+    return {
+      currentGame: null,
+      history: [],
+      career,
+      settings: { superEasyPercent: 30, soundEnabled: true },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (data.currentGame && typeof data.currentGame === "object") {
+      merged.currentGame = data.currentGame;
+    }
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      for (const d of DIFFICULTIES) {
+        merged.career[d] = Object.assign(defaultCareerEntry(), data.career[d] || {});
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("smokeCar", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  function loadCurrentGame() {
+    try {
+      return loadAll().currentGame;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveCurrentGame(stateDict) {
+    try {
+      const data = loadAll();
+      data.currentGame = stateDict;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function clearCurrentGame() {
+    try {
+      const data = loadAll();
+      data.currentGame = null;
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+  function updateCareer(difficulty, score, level) {
+    try {
+      const data = loadAll();
+      const entry = Object.assign(defaultCareerEntry(), data.career[difficulty] || {});
+      let isNewBestScore = false;
+      let isNewBestLevel = false;
+      entry.runs += 1;
+      if (entry.bestScore == null || score > entry.bestScore) {
+        entry.bestScore = score;
+        isNewBestScore = true;
+      }
+      if (entry.bestLevel == null || level > entry.bestLevel) {
+        entry.bestLevel = level;
+        isNewBestLevel = true;
+      }
+      data.career[difficulty] = entry;
+      saveAll(data);
+      return { isNewBestScore, isNewBestLevel };
+    } catch (e) {
+      return { isNewBestScore: false, isNewBestLevel: false };
+    }
+  }
+
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    DIFFICULTIES,
+    loadCurrentGame,
+    saveCurrentGame,
+    clearCurrentGame,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    updateCareer,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.SmokeCarStorage = SmokeCarStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -3345,5 +3514,6 @@ if (typeof module !== "undefined" && module.exports) {
     WordGameStorage,
     ShellGameStorage,
     FrogStorage,
+    SmokeCarStorage,
   };
 }
