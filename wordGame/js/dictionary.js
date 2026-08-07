@@ -577,6 +577,37 @@ var WordGameDictionary = (function () {
   "physician": "醫生", "potential": "潛力", "principal": "校長", "principle": "原則", "professor": "教授", "punishment": "懲罰",
   "satellite": "衛星", "satisfied": "滿意的", "secondary": "次要的", "something": "某事", "spectator": "觀眾", "structure": "結構",
   "sufficient": "足夠的", "territory": "領土", "traditional": "傳統的", "translate": "翻譯", "yesterday": "昨天",
+
+  // Added 2026-08-08: fifth batch (user hit "oil" missing) plus continued
+  // GEPT-intermediate expansion. Liquids/substances, more kitchen/food-
+  // prep terms, more verbs, materials, and deeper emotion vocabulary,
+  // followed by science, geography, medical, psychology, arts, sports,
+  // and business terms now that the 11-letter ceiling makes longer common
+  // words like "temperature"/"experiment"/"competition" includable.
+  "oil": "油", "oxygen": "氧氣", "nitrogen": "氮氣", "carbon": "碳", "sodium": "鈉", "chlorine": "氯",
+  "ammonia": "氨", "alcohol": "酒精", "petroleum": "石油", "kerosene": "煤油", "diesel": "柴油", "lubricant": "潤滑劑",
+  "solvent": "溶劑", "paint": "油漆", "varnish": "清漆", "wax": "蠟", "lotion": "乳液", "bubble": "泡泡",
+  "vapor": "蒸氣", "smoke": "煙", "soot": "煤灰", "mud": "泥巴", "soil": "土壤", "asphalt": "柏油",
+  "gravel": "碎石", "pebble": "鵝卵石", "boulder": "巨石", "yeast": "酵母", "batter": "麵糊", "filling": "餡料",
+  "topping": "配料", "stuffing": "填料", "marinade": "醃料", "dressing": "調味醬", "condiment": "調味品", "seasoning": "調味料",
+  "spice": "香料", "spill": "灑出", "wring": "擰乾", "knead": "揉（麵團）", "flatten": "壓平", "shrink": "縮小",
+  "expand": "擴大", "inflate": "充氣", "deflate": "洩氣", "compress": "壓縮", "squash": "壓扁", "mince": "切碎",
+  "strain": "過濾", "sift": "篩", "sieve": "過濾網", "yarn": "紗線", "suede": "麂皮", "boredom": "無聊",
+  "excitement": "興奮", "frustration": "挫折感", "curiosity": "好奇心", "sympathy": "同情", "empathy": "同理心", "compassion": "同情心",
+  "gratitude": "感激", "admiration": "欽佩", "affection": "喜愛", "attachment": "依附", "devotion": "奉獻", "loyalty": "忠誠",
+  "betrayal": "背叛", "jealousy": "嫉妒", "rejection": "拒絕", "acceptance": "接受", "approval": "贊同", "confidence": "自信",
+  "telescope": "望遠鏡", "microscope": "顯微鏡", "binoculars": "雙筒望遠鏡", "kite": "風箏", "origami": "摺紙", "checkers": "西洋跳棋",
+  "dominoes": "骨牌", "marbles": "彈珠", "laboratory": "實驗室", "experiment": "實驗", "hypothesis": "假設", "observation": "觀察",
+  "measurement": "測量", "temperature": "溫度", "pressure": "壓力", "density": "密度", "velocity": "速度", "friction": "摩擦力",
+  "particle": "粒子", "molecule": "分子", "electron": "電子", "neutron": "中子", "hemisphere": "半球", "latitude": "緯度",
+  "longitude": "經度", "altitude": "海拔", "elevation": "高度", "landscape": "風景", "atmosphere": "大氣層", "peninsula": "半島",
+  "treatment": "治療", "operation": "手術", "recovery": "康復", "infection": "感染", "ambulance": "救護車", "emergency": "緊急情況",
+  "wheelchair": "輪椅", "vaccination": "接種疫苗", "antibiotic": "抗生素", "perception": "感知", "awareness": "意識", "intuition": "直覺",
+  "reasoning": "推理", "motivation": "動機", "personality": "個性", "behavior": "行為", "sculpture": "雕塑", "performance": "表演",
+  "exhibition": "展覽", "collection": "收藏", "masterpiece": "傑作", "inspiration": "靈感", "creativity": "創造力", "tournament": "錦標賽",
+  "competition": "比賽", "opponent": "對手", "teammate": "隊友", "strategy": "策略", "technique": "技巧", "endurance": "耐力",
+  "stamina": "體力", "management": "管理", "marketing": "行銷", "negotiation": "談判", "investment": "投資", "transaction": "交易",
+  "corporation": "公司", "partnership": "合夥關係",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
