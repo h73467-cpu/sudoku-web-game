@@ -3023,6 +3023,134 @@ if (typeof window !== "undefined") {
   window.WordGameStorage = WordGameStorage;
 }
 
+// ---------------------------------------------------------------------------
+// ShellGameStorage — for 三個杯子 (Shell Game). No difficulty tiers at all
+// (the user explicitly didn't want a picker — the game is one endless run
+// that self-paces via level-based speed ramp), so this is the simplest
+// storage module in the hub: a single flat career blob instead of one
+// entry per difficulty, and no currentGame (a shuffle round isn't
+// meaningfully resumable across a reload, same reasoning as breakout).
+// Namespaced under games.shellGame.
+// ---------------------------------------------------------------------------
+var ShellGameStorage = (function () {
+  function defaultData() {
+    return {
+      history: [],
+      career: { bestLevel: 0, bestStreak: 0, runs: 0 },
+      settings: { soundEnabled: true },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      merged.career = Object.assign(merged.career, data.career);
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("shellGame", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+  function recordRun(levelReached, longestStreak) {
+    try {
+      const data = loadAll();
+      const career = Object.assign(defaultData().career, data.career);
+      career.runs += 1;
+      let isNewBestLevel = false;
+      let isNewBestStreak = false;
+      if (levelReached > career.bestLevel) {
+        career.bestLevel = levelReached;
+        isNewBestLevel = true;
+      }
+      if (longestStreak > career.bestStreak) {
+        career.bestStreak = longestStreak;
+        isNewBestStreak = true;
+      }
+      data.career = career;
+      saveAll(data);
+      return { isNewBestLevel, isNewBestStreak };
+    } catch (e) {
+      return { isNewBestLevel: false, isNewBestStreak: false };
+    }
+  }
+
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    recordRun,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.ShellGameStorage = ShellGameStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -3042,5 +3170,6 @@ if (typeof module !== "undefined" && module.exports) {
     Game2048Storage,
     MazeStorage,
     WordGameStorage,
+    ShellGameStorage,
   };
 }

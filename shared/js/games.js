@@ -18,6 +18,7 @@ var GAMES = [
   { id: "game2048", title: "2048", icon: "🧮", path: "game2048/index.html", status: "ready" },
   { id: "maze", title: "迷宮遊戲", icon: "🌀", path: "maze/index.html", status: "ready" },
   { id: "wordGame", title: "拼字遊戲", icon: "🔤", path: "wordGame/index.html", status: "ready" },
+  { id: "shellGame", title: "三個杯子", icon: "🎩", path: "shellGame/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {

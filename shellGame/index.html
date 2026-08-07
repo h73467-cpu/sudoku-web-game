@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>三個杯子</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🎩 三個杯子</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="startBtn" class="btn btn-primary home-card-btn">🎩 開始遊戲</button>
+      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
+    </div>
+    <div class="home-row">
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <p class="board-hint-text">不分難度，一局玩到底：從慢速開始，每過一關就會變快一點，看你能撐到第幾關！</p>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 返回首頁</button>
+
+      <div class="info">
+        <span class="info-label">關卡</span>
+        <span id="levelDisplay" class="info-value">1</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">生命</span>
+        <span id="livesDisplay" class="info-value">❤️❤️❤️</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">連續</span>
+        <span id="streakDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <div class="board-area">
+      <div id="messageBanner" class="message-banner"></div>
+
+      <div class="cup-stage">
+        <div id="particleLayer" class="particle-layer"></div>
+        <div class="cup-track" id="cupTrack">
+          <div class="cup-slot">
+            <div class="cup" data-cup="0">
+              <div class="treasure" data-cup="0"></div>
+              <div class="cup-body" data-cup="0"></div>
+            </div>
+          </div>
+          <div class="cup-slot">
+            <div class="cup" data-cup="1">
+              <div class="treasure" data-cup="1"></div>
+              <div class="cup-body" data-cup="1"></div>
+            </div>
+          </div>
+          <div class="cup-slot">
+            <div class="cup" data-cup="2">
+              <div class="treasure" data-cup="2"></div>
+              <div class="cup-body" data-cup="2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-hint-text">記住寶物在哪個杯子下面，杯子交換位置後點一個杯子猜猜看！</div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <div class="win-stats" id="careerStats"></div>
+  </div>
+
+</div>
+
+<div id="screenFlash" class="screen-flash"></div>
+
+<div id="winModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="winTitle">💥 遊戲結束</h2>
+    <p id="winSubtitle"></p>
+    <div id="winStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="winCloseBtn" class="btn btn-primary">再玩一次</button>
+      <button id="winHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>三個杯子中有一個底下藏著寶物，遊戲開始時會掀開讓你看清楚位置。</li>
+        <li>杯子蓋上後會開始交換位置，交換結束後選一個杯子，猜猜寶物在哪裡。</li>
+        <li>猜對就過關，寶物款式隨機、還有煙火特效和音效慶祝，而且下一關杯子交換的速度會變得更快、次數更多。</li>
+        <li>猜錯會扣一條命，畫面會掀開所有杯子讓你看看寶物原本在哪；三條命都用完遊戲結束。</li>
+        <li>這個遊戲不分難度：一開始一定很慢很好猜，全靠你自己撐到第幾關越來越快的關卡。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
