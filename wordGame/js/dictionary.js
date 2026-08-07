@@ -225,6 +225,55 @@ var WordGameDictionary = (function () {
   "never": "從不", "number": "數字", "off": "離開", "order": "順序", "own": "自己的", "people": "人們",
   "point": "點", "set": "一組", "should": "應該", "since": "自從", "sentence": "句子", "through": "穿過",
   "under": "在下面", "water": "水", "where": "哪裡", "which": "哪一個", "why": "為什麼",
+
+  // Added 2026-08-08: a much broader sweep after "tea" and "size" (both
+  // extremely common) turned up missing too — the 2026-08-06 dictionary's
+  // gaps went well past just function words into everyday nouns/verbs/
+  // adjectives (food, animals, body parts, family, house objects, common
+  // actions, basic descriptive words). Checked ~280 everyday words this
+  // time and found 246 more missing (basketball excluded — 10 letters,
+  // over this dictionary's 8-letter max).
+  "tea": "茶", "milk": "牛奶", "rice": "米飯", "meat": "肉", "soup": "湯", "salt": "鹽",
+  "sugar": "糖", "cheese": "起司", "nut": "堅果", "pie": "派", "juice": "果汁", "wine": "酒",
+  "coffee": "咖啡", "snack": "點心", "lunch": "午餐", "pig": "豬", "owl": "貓頭鷹", "rat": "老鼠",
+  "sheep": "綿羊", "wolf": "狼", "lion": "獅子", "tiger": "老虎", "snake": "蛇", "frog": "青蛙",
+  "shark": "鯊魚", "whale": "鯨魚", "mouse": "老鼠", "spider": "蜘蛛", "rabbit": "兔子", "monkey": "猴子",
+  "turtle": "烏龜", "worm": "蟲", "goose": "鵝", "pony": "小馬", "leg": "腿", "nose": "鼻子",
+  "mouth": "嘴巴", "tooth": "牙齒", "teeth": "牙齒（複數）", "neck": "脖子", "knee": "膝蓋", "skin": "皮膚",
+  "lip": "嘴唇", "shoulder": "肩膀", "thumb": "大拇指", "mom": "媽媽", "son": "兒子", "wife": "妻子",
+  "kid": "小孩", "baby": "嬰兒", "uncle": "叔叔", "sister": "姊妹", "mother": "媽媽", "father": "爸爸",
+  "parent": "父母", "grandma": "奶奶", "grandpa": "爺爺", "red": "紅色", "white": "白色", "pink": "粉紅色",
+  "purple": "紫色", "orange": "橘色", "yellow": "黃色", "silver": "銀色", "sun": "太陽", "moon": "月亮",
+  "star": "星星", "sky": "天空", "sea": "海", "lake": "湖", "river": "河流", "rock": "石頭",
+  "sand": "沙", "snow": "雪", "rain": "雨", "wind": "風", "tree": "樹", "leaf": "葉子",
+  "storm": "暴風雨", "ocean": "海洋", "mountain": "山", "desert": "沙漠", "island": "島", "valley": "山谷",
+  "stone": "石頭", "wood": "木頭", "park": "公園", "week": "星期", "month": "月份", "minute": "分鐘",
+  "second": "秒", "morning": "早上", "night": "晚上", "today": "今天", "tomorrow": "明天", "spring": "春天",
+  "summer": "夏天", "winter": "冬天", "autumn": "秋天", "noon": "中午", "midnight": "午夜", "window": "窗戶",
+  "wall": "牆", "roof": "屋頂", "table": "桌子", "lamp": "燈", "pen": "筆", "pencil": "鉛筆",
+  "key": "鑰匙", "knife": "刀", "spoon": "湯匙", "plate": "盤子", "mirror": "鏡子", "phone": "電話",
+  "radio": "收音機", "paper": "紙", "letter": "信", "toy": "玩具", "shoe": "鞋子", "sock": "襪子",
+  "shirt": "襯衫", "pants": "褲子", "ring": "戒指", "room": "房間", "kitchen": "廚房", "school": "學校",
+  "store": "商店", "shop": "商店", "town": "城鎮", "road": "道路", "street": "街道", "train": "火車",
+  "plane": "飛機", "ship": "船", "run": "跑", "walk": "走", "jump": "跳", "swim": "游泳",
+  "sleep": "睡覺", "wake": "醒來", "sit": "坐", "stand": "站", "talk": "說話", "speak": "說",
+  "listen": "聽", "watch": "看", "read": "閱讀", "sing": "唱歌", "laugh": "笑", "smile": "微笑",
+  "wash": "洗", "sell": "賣", "pay": "付錢", "learn": "學習", "teach": "教", "ride": "騎",
+  "push": "推", "pull": "拉", "throw": "丟", "wear": "穿", "plant": "種植", "wave": "揮手",
+  "kiss": "親吻", "love": "愛", "wish": "希望", "plan": "計畫", "start": "開始", "stop": "停止",
+  "finish": "完成", "win": "贏", "lose": "輸", "try": "嘗試", "pass": "通過", "arrive": "到達",
+  "leave": "離開", "return": "返回", "visit": "拜訪", "travel": "旅行", "wait": "等待", "rest": "休息",
+  "relax": "放鬆", "tall": "高的", "short": "矮的", "wide": "寬的", "low": "低的", "slow": "慢的",
+  "warm": "溫暖的", "wet": "濕的", "light": "輕的", "soft": "柔軟的", "sharp": "銳利的", "loud": "大聲的",
+  "quiet": "安靜的", "bright": "明亮的", "sad": "難過的", "scared": "害怕的", "tired": "累的", "hungry": "飢餓的",
+  "thirsty": "口渴的", "sick": "生病的", "strong": "強壯的", "weak": "虛弱的", "rich": "富有的", "poor": "貧窮的",
+  "young": "年輕的", "mean": "刻薄的", "nice": "好的", "shy": "害羞的", "serious": "嚴肅的", "safe": "安全的",
+  "ugly": "醜的", "pretty": "漂亮的", "smart": "聰明的", "wise": "有智慧的", "size": "尺寸", "shape": "形狀",
+  "weight": "重量", "height": "高度", "width": "寬度", "length": "長度", "speed": "速度", "price": "價格",
+  "value": "價值", "taste": "味道", "smell": "氣味", "touch": "觸摸", "sense": "感覺", "sport": "運動",
+  "music": "音樂", "movie": "電影", "photo": "照片", "video": "影片", "money": "錢", "job": "工作",
+  "office": "辦公室", "stairs": "樓梯", "market": "市場", "nurse": "護士", "police": "警察", "teacher": "老師",
+  "student": "學生", "test": "測驗", "score": "分數", "team": "隊伍", "soccer": "足球", "tennis": "網球",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
