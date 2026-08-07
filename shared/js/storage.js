@@ -3037,7 +3037,7 @@ var ShellGameStorage = (function () {
     return {
       history: [],
       career: { bestLevel: 0, bestStreak: 0, runs: 0 },
-      settings: { soundEnabled: true },
+      settings: { soundEnabled: true, startDurationMs: 650 },
     };
   }
 
@@ -3051,6 +3051,7 @@ var ShellGameStorage = (function () {
     if (data.settings && typeof data.settings === "object") {
       merged.settings.soundEnabled =
         data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+      merged.settings.startDurationMs = data.settings.startDurationMs || 650;
     }
     return merged;
   }

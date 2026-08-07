@@ -13,12 +13,18 @@ var ShellGame = (function () {
   const TREASURES = ["💎", "🌟", "👑", "🍀", "🔔", "🎁", "🪙", "🍭"];
   const LIVES_START = 3;
   const REVEAL_MS = 1100;
-  const RESULT_MS = 1400;
-  const MILESTONE_RESULT_MS = 2200;
+  const RESULT_MS = 2000;
+  const MILESTONE_RESULT_MS = 2600;
   const MILESTONE_EVERY = 5;
   const MIN_SWAP_DURATION_MS = 150;
-  const MAX_SWAP_DURATION_MS = 620;
   const MAX_SWAP_COUNT = 14;
+  // The starting speed is now a player-adjustable slider (home screen),
+  // not a fixed constant — but every level after 1 still ramps up from
+  // whatever start speed was picked, at a fixed ~10%-per-level rate.
+  const DEFAULT_START_DURATION_MS = 650;
+  const MIN_START_DURATION_MS = 350;
+  const MAX_START_DURATION_MS = 900;
+  const LEVEL_SPEEDUP_FACTOR = 0.9;
 
   let state = null;
   let changeListener = null;
@@ -30,16 +36,24 @@ var ShellGame = (function () {
     if (changeListener) changeListener(state, event || null);
   }
 
-  // Difficulty here isn't a player choice — it's purely a function of how
-  // many levels have been cleared this run, exactly as requested: slow and
-  // simple at level 1, gradually more swaps and less time per swap as the
-  // player keeps winning. Both curves flatten out (via clamping) rather
-  // than growing unbounded, so very long runs stay hard but still fair.
+  function clampStartDuration(x) {
+    const n = Number(x);
+    if (!Number.isFinite(n)) return DEFAULT_START_DURATION_MS;
+    return Math.max(MIN_START_DURATION_MS, Math.min(MAX_START_DURATION_MS, n));
+  }
+
+  // Swap count still grows with level (more cups moving around feels
+  // harder independent of speed) — unaffected by the start-speed slider.
   function swapCountForLevel(level) {
     return Math.min(MAX_SWAP_COUNT, 3 + Math.floor((level - 1) / 2));
   }
-  function swapDurationForLevel(level) {
-    return Math.max(MIN_SWAP_DURATION_MS, MAX_SWAP_DURATION_MS - (level - 1) * 22);
+  // Multiplicative ~10%-per-level ramp from whichever starting speed the
+  // player picked, rather than a fixed additive slope from a fixed
+  // constant — so "how slow level 1 is" and "how fast it gets" are both
+  // driven by the same one knob, compounding level over level.
+  function swapDurationForLevel(level, startDurationMs) {
+    const start = clampStartDuration(startDurationMs);
+    return Math.max(MIN_SWAP_DURATION_MS, start * Math.pow(LEVEL_SPEEDUP_FACTOR, level - 1));
   }
 
   // Picks b uniformly from {0,1,2} \ {a} without a rejection loop.
@@ -82,20 +96,21 @@ var ShellGame = (function () {
     state.treasureEmoji = TREASURES[Math.floor(Math.random() * TREASURES.length)];
     state.swaps = generateSwaps(state.level);
     state.swapIndex = 0;
-    state.swapDurationMs = swapDurationForLevel(state.level);
+    state.swapDurationMs = swapDurationForLevel(state.level, state.startDurationMs);
     state.status = "reveal";
     state.guessedCup = null;
     state.clearedLevel = null;
     notify("round-start");
   }
 
-  function newGame() {
+  function newGame(startDurationMs) {
     state = {
       level: 1,
       lives: LIVES_START,
       streak: 0,
       bestStreak: 0,
       justFinished: null,
+      startDurationMs: clampStartDuration(startDurationMs),
     };
     startRound();
   }
@@ -191,12 +206,16 @@ var ShellGame = (function () {
     isMilestone,
     swapCountForLevel,
     swapDurationForLevel,
+    clampStartDuration,
     TREASURES,
     LIVES_START,
     REVEAL_MS,
     RESULT_MS,
     MILESTONE_RESULT_MS,
     MILESTONE_EVERY,
+    DEFAULT_START_DURATION_MS,
+    MIN_START_DURATION_MS,
+    MAX_START_DURATION_MS,
   };
 })();
 

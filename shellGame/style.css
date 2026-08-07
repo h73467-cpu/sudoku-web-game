@@ -9,6 +9,22 @@
   gap: 18px;
 }
 
+.speed-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 1.05rem;
+}
+
+.speed-picker input[type="range"] {
+  width: 100%;
+}
+
+#continueRoundBtn {
+  min-width: 200px;
+}
+
 .message-banner {
   min-height: 1.6em;
   font-size: 1.25rem;

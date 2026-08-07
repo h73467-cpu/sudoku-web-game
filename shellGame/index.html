@@ -32,7 +32,12 @@
       <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
     </div>
 
-    <p class="board-hint-text">不分難度，一局玩到底：從慢速開始，每過一關就會變快一點，看你能撐到第幾關！</p>
+    <p class="board-hint-text">不分難度，一局玩到底：每過一關交換速度會自動加快約 10%，看你能撐到第幾關！</p>
+
+    <div class="speed-picker">
+      <label for="startSpeedSlider">🐇 第一關起始速度 🐢　<span id="startSpeedLabel"></span></label>
+      <input type="range" id="startSpeedSlider" min="350" max="900" step="50" value="650" />
+    </div>
 
     <div class="home-nav-row">
       <button id="historyBtn" class="btn">遊玩紀錄</button>
@@ -92,6 +97,8 @@
           </div>
         </div>
       </div>
+
+      <button id="continueRoundBtn" class="btn btn-primary hidden">▶️ 繼續下一輪</button>
     </div>
 
     <div class="board-hint-text">記住寶物在哪個杯子下面，杯子交換位置後點一個杯子猜猜看！</div>
@@ -134,11 +141,12 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
+        <li>開始前可以用「起始速度」拉桿設定第一關的交換速度，越靠 🐇 那端第一關就越快。</li>
         <li>三個杯子中有一個底下藏著寶物，遊戲開始時會掀開讓你看清楚位置。</li>
         <li>杯子蓋上後會開始交換位置，交換結束後選一個杯子，猜猜寶物在哪裡。</li>
-        <li>猜對就過關，寶物款式隨機、還有煙火特效和音效慶祝，而且下一關杯子交換的速度會變得更快、次數更多。</li>
-        <li>猜錯會扣一條命，畫面會掀開所有杯子讓你看看寶物原本在哪；三條命都用完遊戲結束。</li>
-        <li>這個遊戲不分難度：一開始一定很慢很好猜，全靠你自己撐到第幾關越來越快的關卡。</li>
+        <li>掀開答案時只有真正藏寶物的那個杯子會顯示寶物，畫面會停留兩秒鐘讓你看清楚。</li>
+        <li>猜對就過關，還有特效和音效慶祝；猜錯會扣一條命，三條命都用完遊戲結束。之後每一關交換速度都會比上一關快約 10%，次數也會變多。</li>
+        <li>不管猜對猜錯，看完結果後要按「▶️ 繼續下一輪」才會進入下一輪，不會自動開始。</li>
       </ul>
     </div>
     <div class="win-actions">

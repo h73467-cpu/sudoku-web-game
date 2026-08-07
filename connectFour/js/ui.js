@@ -5,7 +5,21 @@
 (function () {
   const DIFFICULTY_LABELS = { easy: "簡單", medium: "中等", hard: "困難", expert: "專家" };
   const DIFFICULTY_ORDER = ["easy", "medium", "hard", "expert"];
-  const SOUND_EVENTS = new Set(["drop", "invalid", "undo"]);
+  const SOUND_EVENTS = new Set(["invalid", "undo"]);
+
+  // Cells currently mid-fall (keyed "row,col") are rendered as empty even
+  // though the real board state already has the piece placed — the
+  // falling disc overlay shows it instead, so the piece doesn't "pop in"
+  // at its landing cell before the coin visually arrives. A Set (not a
+  // single value) because a fast AI reply can start falling before the
+  // human's own drop animation has finished.
+  const pendingDrops = new Set();
+  function dropKey(row, col) {
+    return row + "," + col;
+  }
+  // Guards against playing the win/draw sting twice when two overlapping
+  // drop animations both resolve after the game has already ended.
+  let resultSoundPlayed = false;
 
   // -- home view elements ---------------------------------------------------
   const homeViewEl = document.getElementById("homeView");
@@ -158,7 +172,7 @@
       colBtn.disabled = state.status !== "playing" || state.aiThinking || colFull;
       for (let r = 0; r < size.rows; r++) {
         const idx = r * size.cols + c;
-        const v = state.board[idx];
+        const v = pendingDrops.has(dropKey(r, c)) ? 0 : state.board[idx];
         const cell = document.createElement("div");
         let cls = "c4-cell";
         if (v === 1) cls += " red";
@@ -213,11 +227,91 @@
     winModal.classList.remove("hidden");
   }
 
+  // Animates a coin falling from the top of `col`'s column down to the
+  // cell it actually landed in (`row`), using real measured geometry
+  // (getBoundingClientRect) rather than hardcoded pixel math so it stays
+  // correct regardless of the board's responsive width. The landing cell
+  // itself renders empty the whole time (via `pendingDrops`) so there's
+  // never a moment where both the static disc and the falling disc are
+  // visible at once.
+  function animateDrop(col, row, player, onDone) {
+    const colBtn = boardEl.children[col];
+    const topCellEl = colBtn.children[0];
+    const targetCellEl = colBtn.children[row];
+
+    const boardRect = boardEl.getBoundingClientRect();
+    const topRect = topCellEl.getBoundingClientRect();
+    const targetRect = targetCellEl.getBoundingClientRect();
+
+    const disc = document.createElement("div");
+    disc.className = "c4-falling-disc " + (player === 1 ? "red" : "yellow");
+    disc.style.width = topRect.width + "px";
+    disc.style.height = topRect.height + "px";
+    disc.style.left = topRect.left - boardRect.left + "px";
+    disc.style.top = topRect.top - boardRect.top + "px";
+    boardEl.appendChild(disc);
+
+    const distance = targetRect.top - topRect.top;
+    // Falls further => takes a little longer, like real gravity over a
+    // longer drop, rather than every column height feeling identical.
+    const duration = 240 + row * 55;
+
+    ConnectFourSound.play("fall");
+
+    const anim = disc.animate(
+      [
+        { transform: "translateY(0px)" },
+        { transform: "translateY(" + distance + "px)", offset: 0.85 },
+        { transform: "translateY(" + (distance - 8) + "px)", offset: 0.93 },
+        { transform: "translateY(" + distance + "px)" },
+      ],
+      { duration, easing: "cubic-bezier(0.45, 0, 1, 0.6)", fill: "forwards" }
+    );
+
+    const finish = () => {
+      ConnectFourSound.play("land");
+      disc.remove();
+      onDone && onDone();
+    };
+    if (anim.finished && anim.finished.then) anim.finished.then(finish).catch(finish);
+    else anim.onfinish = finish;
+  }
+
   function render(state, event) {
     if (SOUND_EVENTS.has(event)) ConnectFourSound.play(event);
     if (!state) return;
-    if (event === "drop" && state.status === "won") ConnectFourSound.play("win");
-    else if (event === "drop" && state.status === "draw") ConnectFourSound.play("draw");
+
+    if (event === "new-game" || event === "restore") {
+      pendingDrops.clear();
+      resultSoundPlayed = false;
+    }
+
+    if (event === "drop") {
+      const last = state.history[state.history.length - 1];
+      if (last) {
+        pendingDrops.add(dropKey(last.row, last.col));
+        renderBoard(state);
+        renderToolbar(state);
+        animateDrop(last.col, last.row, last.player, () => {
+          pendingDrops.delete(dropKey(last.row, last.col));
+          const latest = ConnectFourGame.getState();
+          renderBoard(latest);
+          if (!resultSoundPlayed) {
+            if (latest.status === "won") {
+              ConnectFourSound.play("win");
+              resultSoundPlayed = true;
+            } else if (latest.status === "draw") {
+              ConnectFourSound.play("draw");
+              resultSoundPlayed = true;
+            }
+          }
+          renderWinModal(latest);
+          if (latest.aiThinking) setTimeout(() => ConnectFourGame.runAiTurn(), 30);
+        });
+        return;
+      }
+    }
+
     renderBoard(state);
     renderToolbar(state);
     renderWinModal(state);

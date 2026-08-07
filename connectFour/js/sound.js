@@ -39,11 +39,36 @@ var ConnectFourSound = (function () {
     });
   }
 
+  // A short descending pitch sweep — plays the instant a coin starts
+  // falling, so the sound tracks the "whoosh" of it dropping through the
+  // empty column rather than a flat click.
+  function whoosh() {
+    const audioCtx = ensureCtx();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(560, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(190, audioCtx.currentTime + 0.22);
+    gain.gain.value = 0.14;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.24);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.24);
+  }
+
   function play(event) {
     if (!enabled) return;
     switch (event) {
-      case "drop":
-        beep(300 + Math.random() * 50, 0.1, "triangle", 0.2);
+      case "fall":
+        whoosh();
+        break;
+      case "land":
+        // A low thud plus a tiny high click layered together, for a
+        // coin-hitting-plastic "clink" instead of a single flat tone.
+        beep(115, 0.13, "sine", 0.3);
+        beep(720, 0.045, "square", 0.12);
         break;
       case "invalid":
         beep(140, 0.12, "sawtooth", 0.18);

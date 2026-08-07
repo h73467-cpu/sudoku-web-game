@@ -15,6 +15,8 @@
   const soundToggleBtn = document.getElementById("soundToggleBtn");
   const historyBtn = document.getElementById("historyBtn");
   const careerBtn = document.getElementById("careerBtn");
+  const startSpeedSlider = document.getElementById("startSpeedSlider");
+  const startSpeedLabel = document.getElementById("startSpeedLabel");
 
   // -- game view elements -----------------------------------------------------
   const gameViewEl = document.getElementById("gameView");
@@ -25,6 +27,7 @@
   const gameSoundToggleBtn = document.getElementById("gameSoundToggleBtn");
   const gameInstructionsBtn = document.getElementById("gameInstructionsBtn");
   const messageBanner = document.getElementById("messageBanner");
+  const continueRoundBtn = document.getElementById("continueRoundBtn");
   const particleLayerEl = document.getElementById("particleLayer");
   const cupTrackEl = document.getElementById("cupTrack");
   const cupWrapperEls = [0, 1, 2].map((c) => cupTrackEl.querySelector('.cup[data-cup="' + c + '"]'));
@@ -79,8 +82,17 @@
   }
 
   // -- home / history / career rendering ---------------------------------------
+  function speedLabel(ms) {
+    if (ms <= 450) return ms + "ms（快）";
+    if (ms >= 800) return ms + "ms（慢）";
+    return ms + "ms（適中）";
+  }
+
   function renderHome() {
     themeSelect.value = GameHubStorage.getTheme();
+    const settings = ShellGameStorage.getSettings();
+    startSpeedSlider.value = settings.startDurationMs;
+    startSpeedLabel.textContent = speedLabel(settings.startDurationMs);
     applySoundButtonState(soundToggleBtn, false);
     applySoundButtonState(gameSoundToggleBtn, true);
   }
@@ -269,6 +281,7 @@
     resetCupPositionsInstant();
     clearCupVisualState();
     disableGuessing();
+    continueRoundBtn.classList.add("hidden");
     cupTrackEl.style.setProperty("--swap-duration", state.swapDurationMs + "ms");
     showMessage("👀 記住寶物在哪裡！", "");
 
@@ -318,7 +331,11 @@
     disableGuessing();
     const milestone = event === "correct" && ShellGame.isMilestone(state.clearedLevel);
 
-    for (let id = 0; id < 3; id++) revealTreasure(id, { truth: id === state.ballCup });
+    // Only the cup that actually holds the treasure shows it — the other
+    // two lift empty, same as the real trick, so "opening the answer"
+    // reads as one clear reveal instead of all three looking like winners.
+    for (let id = 0; id < 3; id++) cupBodyEls[id].classList.add("lifted");
+    revealTreasure(state.ballCup, { truth: true });
     cupBodyEls[state.guessedCup].classList.add(event === "correct" ? "correct-pop" : "wrong-pick");
 
     if (event === "correct") {
@@ -340,15 +357,26 @@
       ShellGameSound.play(event === "gameover" ? "gameover" : "wrong");
     }
 
+    // Force a clear look at the reveal before anything else can happen —
+    // no auto-advance after this: the player must tap "continue" to start
+    // the next round (or, on game over, the result modal itself is the
+    // next required action).
     const delay = milestone ? ShellGame.MILESTONE_RESULT_MS : ShellGame.RESULT_MS;
     schedule(() => {
       if (event === "gameover") {
         renderWinModal(state);
       } else {
-        ShellGame.proceedAfterResult();
+        continueRoundBtn.classList.remove("hidden");
       }
     }, delay);
   }
+
+  continueRoundBtn.addEventListener("click", () => {
+    const state = ShellGame.getState();
+    if (!state || (state.status !== "correct" && state.status !== "wrong")) return;
+    continueRoundBtn.classList.add("hidden");
+    ShellGame.proceedAfterResult();
+  });
 
   function render(state, event) {
     if (!state) return;
@@ -369,8 +397,14 @@
   // -- home view interactions -----------------------------------------------
   startBtn.addEventListener("click", () => {
     lastLives = null;
-    ShellGame.newGame();
+    ShellGame.newGame(Number(startSpeedSlider.value));
     showView("game");
+  });
+
+  startSpeedSlider.addEventListener("input", () => {
+    const ms = Number(startSpeedSlider.value);
+    startSpeedLabel.textContent = speedLabel(ms);
+    ShellGameStorage.saveSettings({ startDurationMs: ms });
   });
 
   instructionsBtn.addEventListener("click", () => instructionsModal.classList.remove("hidden"));
@@ -418,7 +452,7 @@
   winCloseBtn.addEventListener("click", () => {
     winModal.classList.add("hidden");
     lastLives = null;
-    ShellGame.newGame();
+    ShellGame.newGame(ShellGameStorage.getSettings().startDurationMs);
   });
 
   winHomeBtn.addEventListener("click", () => {
