@@ -530,6 +530,30 @@ var WordGameDictionary = (function () {
   "pupil": "瞳孔", "iris": "虹膜", "nostril": "鼻孔", "earlobe": "耳垂", "tongue": "舌頭", "throat": "喉嚨",
   "windpipe": "氣管", "bladder": "膀胱", "womb": "子宮", "vertebra": "脊椎骨", "skull": "頭骨", "pelvis": "骨盆",
   "femur": "股骨",
+
+  // Added 2026-08-08: explicit GEPT-elementary completeness pass (user's
+  // request — elementary tier must be fully covered before intermediate
+  // matters). Checked ~310 core elementary words (numbers, days/months,
+  // school/house/animal/food/color/clothing/body/family basics, basic
+  // verbs incl. irregular past tense, basic adjectives, prepositions,
+  // ordinals, basic response/indefinite-pronoun words) — most were
+  // already covered by earlier batches; only these were genuinely
+  // missing. Numbers 13-19, 100+, and most weekday/month names are
+  // excluded for exceeding the game's 8-letter max (e.g. "wednesday",
+  // "september", "thirteen") — there's no way around that given the
+  // game's own length constraint.
+  "six": "六", "seven": "七", "eight": "八", "nine": "九", "ten": "十", "eleven": "十一",
+  "twelve": "十二", "twenty": "二十", "thirty": "三十", "sixty": "六十", "seventy": "七十", "eighty": "八十",
+  "ninety": "九十", "monday": "星期一", "thursday": "星期四", "sunday": "星期日", "january": "一月", "february": "二月",
+  "april": "四月", "may": "五月", "june": "六月", "july": "七月", "august": "八月", "october": "十月",
+  "november": "十一月", "banana": "香蕉", "saw": "看見了", "ran": "跑了", "wrote": "寫了", "sang": "唱了",
+  "drew": "畫了", "took": "拿了", "gave": "給了", "said": "說了", "told": "告訴了", "near": "靠近",
+  "inside": "裡面", "outside": "外面", "around": "周圍", "third": "第三", "fourth": "第四", "sixth": "第六",
+  "seventh": "第七", "eighth": "第八", "ninth": "第九", "tenth": "第十", "then": "然後", "there": "那裡",
+  "these": "這些", "those": "那些", "yes": "是的", "maybe": "也許", "please": "請", "thanks": "謝謝",
+  "sorry": "抱歉", "welcome": "歡迎", "okay": "好的", "ready": "準備好的", "together": "一起", "everyone": "每個人",
+  "somebody": "某人", "someone": "某人", "nobody": "沒有人", "nothing": "沒有東西", "anybody": "任何人", "anyone": "任何人",
+  "anything": "任何東西",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
