@@ -1,11 +1,20 @@
-// Curated English word list (1135 words, length 3-8) for the 拼字遊戲
-// (word game), each paired with a Traditional Chinese gloss. This is a
-// deliberately smaller, FULLY-translated subset rather than the earlier
-// untranslated 3097-word list — every word here is guaranteed to have a
-// zh gloss, so "show the Chinese meaning when a word is found" never hits
-// a missing-translation case. More words get added here over time as they
-// get translated; nothing in game.js/ui.js needs to change when that
+// Curated English word list (growing toward GEPT-intermediate scale,
+// ~2900 words as of 2026-08-08, length 3-11) for the 拼字遊戲 (word game),
+// each paired with a Traditional Chinese gloss. Every word here is
+// guaranteed to have a zh gloss, so "show the Chinese meaning when a word
+// is found" never hits a missing-translation case. More words get added
+// here over time; nothing in game.js/ui.js needs to change when that
 // happens, since both just read whatever is in TRANSLATIONS.
+//
+// Length cap is 11, not an arbitrary round number — it's the game's own
+// ceiling: `handSize` tops out at 11 tiles (expert tier, see game.js's
+// TIERS), so no word longer than that could ever actually be spelled
+// regardless of what the dictionary contains. The dictionary was
+// initially curated to 8 letters (a self-imposed, overly conservative
+// choice, not a real game constraint) and raised to the true 11-letter
+// ceiling on 2026-08-08 after the user asked to remove that cap —
+// `wordsOfMaxLength`/`BY_LENGTH` below already handled any length
+// dynamically, so this was a content-only change, no code change needed.
 var WordGameDictionary = (function () {
   var TRANSLATIONS = {
   "able": "能夠的", "about": "關於", "above": "在...之上", "absolute": "絕對的", "accident": "意外", "ace": "王牌",
@@ -554,6 +563,20 @@ var WordGameDictionary = (function () {
   "sorry": "抱歉", "welcome": "歡迎", "okay": "好的", "ready": "準備好的", "together": "一起", "everyone": "每個人",
   "somebody": "某人", "someone": "某人", "nobody": "沒有人", "nothing": "沒有東西", "anybody": "任何人", "anyone": "任何人",
   "anything": "任何東西",
+
+  // Added 2026-08-08: the 8-letter cap is gone (see the top-of-file note)
+  // — these 53 words were logged as "excluded for length" across every
+  // earlier batch this session and are added back now that the real
+  // ceiling is 11 (the expert tier's hand size), not 8.
+  "accomplish": "完成", "adventure": "冒險", "ambitious": "有野心的", "anniversary": "週年紀念", "artificial": "人造的", "attention": "注意力",
+  "basketball": "籃球", "beautiful": "美麗的", "breakfast": "早餐", "calculate": "計算", "cartilage": "軟骨", "character": "性格",
+  "cheekbone": "顴骨", "chemistry": "化學", "chocolate": "巧克力", "collarbone": "鎖骨", "colleague": "同事", "communicate": "溝通",
+  "component": "元件", "confident": "有自信的", "construct": "建造", "continent": "大陸", "diagnosis": "診斷", "disappear": "消失",
+  "esophagus": "食道", "everybody": "每個人", "everything": "每件事", "fingernail": "手指甲", "fingertip": "指尖", "geography": "地理",
+  "imagination": "想像力", "immediate": "立即的", "introduce": "介紹", "literature": "文學", "mysterious": "神秘的", "permission": "允許",
+  "physician": "醫生", "potential": "潛力", "principal": "校長", "principle": "原則", "professor": "教授", "punishment": "懲罰",
+  "satellite": "衛星", "satisfied": "滿意的", "secondary": "次要的", "something": "某事", "spectator": "觀眾", "structure": "結構",
+  "sufficient": "足夠的", "territory": "領土", "traditional": "傳統的", "translate": "翻譯", "yesterday": "昨天",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
