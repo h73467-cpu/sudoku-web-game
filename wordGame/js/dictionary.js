@@ -198,6 +198,33 @@ var WordGameDictionary = (function () {
   "humid": "潮濕的", "humor": "幽默", "hundred": "一百", "hunt": "狩獵", "hunter": "獵人", "hurl": "投擲",
   "hurry": "趕快", "hurt": "受傷", "husband": "丈夫", "hush": "安靜", "hut": "小屋", "hydrogen": "氫",
   "hymn": "讚美詩",
+
+  // Added 2026-08-08: the most common short English function/sight words
+  // (the, are, you, was, ...) were almost entirely missing from the
+  // original curated list, which skewed toward topical/content vocabulary
+  // — a casual player's very first instinct (try "the", "you", "are")
+  // kept failing, which is what made the dictionary feel like it "didn't
+  // recognize any word at all" even though matching itself worked fine.
+  "the": "這／那（冠詞）", "are": "是", "not": "不", "you": "你", "had": "有（過去式）", "was": "是（過去式）",
+  "one": "一", "our": "我們的", "out": "出去", "has": "有", "man": "男人", "new": "新的",
+  "now": "現在", "old": "老的", "see": "看見", "two": "二", "way": "方法", "who": "誰",
+  "did": "做了", "its": "它的", "let": "讓", "put": "放", "say": "說", "she": "她",
+  "too": "也；太", "use": "使用", "that": "那個", "with": "跟", "this": "這個", "will": "將會",
+  "your": "你的", "they": "他們", "know": "知道", "want": "想要", "much": "很多", "some": "一些",
+  "time": "時間", "very": "非常", "when": "當...時", "just": "剛好", "like": "喜歡", "long": "長的",
+  "make": "製作", "many": "許多", "over": "越過", "such": "這樣的", "take": "拿", "than": "比",
+  "them": "他們", "well": "良好地", "were": "是（複數過去式）", "what": "什麼", "work": "工作", "came": "來了",
+  "keep": "保持", "kind": "種類", "last": "最後的", "left": "左邊", "life": "生命", "live": "居住",
+  "look": "看", "most": "大部分", "move": "移動", "must": "必須", "name": "名字", "need": "需要",
+  "only": "只有", "open": "打開", "part": "部分", "play": "玩", "right": "對的", "same": "相同的",
+  "seem": "似乎", "show": "顯示", "side": "邊", "tell": "告訴", "turn": "轉動", "went": "去了",
+  "year": "年", "might": "可能", "place": "地方", "small": "小的", "sound": "聲音", "still": "仍然",
+  "study": "學習", "think": "想", "world": "世界", "other": "其他的", "thing": "東西", "three": "三",
+  "would": "將會", "write": "寫", "after": "之後", "again": "再次", "before": "之前", "between": "之間",
+  "during": "期間", "into": "進入", "large": "大的", "line": "線", "little": "小的", "made": "製作了",
+  "never": "從不", "number": "數字", "off": "離開", "order": "順序", "own": "自己的", "people": "人們",
+  "point": "點", "set": "一組", "should": "應該", "since": "自從", "sentence": "句子", "through": "穿過",
+  "under": "在下面", "water": "水", "where": "哪裡", "which": "哪一個", "why": "為什麼",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);

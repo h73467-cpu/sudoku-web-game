@@ -133,6 +133,28 @@ h1 {
   min-height: 48px;
 }
 
+/* -- home-screen design credit ---------------------------------------------
+   Deliberately no external font (@font-face / CDN) — stays consistent with
+   the hub's zero-external-asset rule; a serif italic reads as "artistic"
+   using only fonts already present on the device. */
+.page-credit {
+  width: 100%;
+  text-align: center;
+  margin-top: 6px;
+  font-family: Georgia, "Times New Roman", "Noto Serif TC", serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  opacity: 0.55;
+}
+
+.page-credit .credit-name {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .section-title {
   width: 100%;
   font-size: 1.2rem;
