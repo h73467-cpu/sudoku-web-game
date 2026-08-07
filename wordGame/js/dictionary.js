@@ -471,6 +471,53 @@ var WordGameDictionary = (function () {
   "physical": "身體的", "mental": "心理的", "social": "社會的", "cultural": "文化的", "legal": "合法的", "illegal": "非法的",
   "moral": "道德的", "formal": "正式的", "casual": "隨意的", "official": "官方的", "private": "私人的", "public": "公共的",
   "personal": "個人的", "mutual": "互相的", "joint": "共同的",
+
+  // Added 2026-08-08: fourth batch toward GEPT-intermediate scale.
+  // Communication verbs, law/government/society, more geography, medical/
+  // biology terms, psychology, entertainment, everyday objects, kitchen
+  // tools, sports equipment, many more action verbs (including animal
+  // sounds), size/texture adjectives, hand tools, feelings, and more.
+  "murmur": "低聲說", "mutter": "嘟囔", "chat": "聊天", "debate": "辯論", "inform": "告知", "notify": "通知",
+  "declare": "宣布", "insist": "堅持", "suggest": "建議", "propose": "提議", "advise": "建議", "warn": "警告",
+  "remind": "提醒", "demand": "要求", "plead": "懇求", "complain": "抱怨", "protest": "抗議", "question": "問題",
+  "answer": "回答", "reply": "回覆", "respond": "回應", "react": "反應", "quote": "引用", "vote": "投票",
+  "ballot": "選票", "treaty": "條約", "colony": "殖民地", "justice": "正義", "criminal": "罪犯", "victim": "受害者",
+  "witness": "目擊者", "verdict": "判決", "prison": "監獄", "jail": "監獄", "arrest": "逮捕", "trial": "審判",
+  "lawsuit": "訴訟", "terrain": "地形", "horizon": "地平線", "pole": "極地", "tundra": "凍原", "oasis": "綠洲",
+  "delta": "三角洲", "strait": "海峽", "immune": "免疫的", "vaccine": "疫苗", "pharmacy": "藥局", "instinct": "本能",
+  "logic": "邏輯", "judgment": "判斷", "identity": "身分", "cartoon": "卡通", "memoir": "回憶錄", "thriller": "驚悚片",
+  "horror": "恐怖", "sitcom": "情境喜劇", "musical": "音樂劇", "candle": "蠟燭", "matches": "火柴", "lighter": "打火機",
+  "remote": "遙控器", "stapler": "釘書機", "tape": "膠帶", "marker": "麥克筆", "crayon": "蠟筆", "eraser": "橡皮擦",
+  "ruler": "尺", "binder": "活頁夾", "ritual": "儀式", "oven": "烤箱", "stove": "爐子", "blender": "果汁機",
+  "kettle": "水壺", "pot": "鍋子", "pan": "平底鍋", "ladle": "勺子", "tongs": "夾子", "peeler": "削皮刀",
+  "cutter": "切割器", "jar": "罐子", "wrap": "包裝", "racket": "球拍", "net": "網子", "track": "跑道",
+  "pool": "游泳池", "locker": "置物櫃", "jersey": "運動衫", "pads": "護具", "whistle": "哨子", "umpire": "裁判",
+  "knock": "敲", "buzz": "嗡嗡叫", "beep": "嗶嗶聲", "honk": "按喇叭", "roar": "吼叫", "growl": "低吼",
+  "meow": "喵喵叫", "chirp": "啾啾叫", "hiss": "發出嘶嘶聲", "squeak": "發出吱吱聲", "snap": "啪一聲折斷", "pop": "啪一聲",
+  "bounce": "彈跳", "spin": "旋轉", "twist": "扭轉", "squeeze": "擠壓", "press": "按壓", "snatch": "搶奪",
+  "seize": "抓住", "release": "釋放", "lift": "舉起", "raise": "舉起", "lower": "放低", "tilt": "傾斜",
+  "roll": "滾動", "slide": "滑動", "splash": "濺起水花", "spray": "噴灑", "leak": "漏水", "melt": "融化",
+  "pour": "傾倒", "sparse": "稀疏的", "opaque": "不透明的", "matte": "無光澤的", "glossy": "有光澤的", "shiny": "閃亮的",
+  "faded": "褪色的", "vivid": "鮮明的", "pale": "蒼白的", "pastel": "粉彩色的", "neutral": "中立的", "menu": "菜單",
+  "tip": "小費", "buffet": "自助餐", "recipe": "食譜", "vegan": "純素的", "gluten": "麩質", "beige": "米色",
+  "maroon": "栗色", "scarlet": "猩紅色", "ivory": "象牙色", "tan": "棕褐色", "khaki": "卡其色", "plaid": "格紋",
+  "stripe": "條紋", "striped": "有條紋的", "dotted": "有點點的", "percent": "百分比", "ratio": "比例", "positive": "正面的",
+  "negative": "負面的", "zero": "零", "pair": "一對", "couple": "一對", "trio": "三人組", "plural": "複數的",
+  "singular": "單數的", "profile": "個人檔案", "mute": "靜音", "tag": "標籤", "trending": "熱門的", "viral": "爆紅的",
+  "meme": "迷因", "gif": "動圖", "sticker": "貼紙", "filter": "濾鏡", "caption": "說明文字", "heater": "暖氣機",
+  "cooler": "冷卻器", "vent": "通風口", "outlet": "插座", "adapter": "轉接器", "booking": "預訂", "boarding": "登機",
+  "terminal": "航廈", "spine": "脊椎", "tendon": "肌腱", "organ": "器官", "kidney": "腎臟", "liver": "肝臟",
+  "lung": "肺", "artery": "動脈", "vein": "靜脈", "nerve": "神經", "gland": "腺體", "enzyme": "酵素",
+  "protein": "蛋白質", "calcium": "鈣", "leap": "跳躍", "dart": "飛奔", "plunge": "跳入",
+  "soar": "翱翔", "hover": "盤旋", "wade": "涉水", "trudge": "跋涉", "stagger": "蹣跚", "stumble": "絆倒",
+  "trip": "絆倒", "slip": "滑倒", "sneak": "偷偷摸摸", "prowl": "潛行", "lurk": "潛伏", "pursue": "追求",
+  "retreat": "撤退", "advance": "前進", "invade": "入侵", "attack": "攻擊", "defend": "防禦", "protect": "保護",
+  "rescue": "救援", "tiny": "微小的", "compact": "緊湊的", "bulky": "笨重的", "slim": "苗條的", "plump": "豐滿的",
+  "chubby": "圓胖的", "skinny": "瘦的", "obese": "肥胖的", "crate": "板條箱", "barrel": "桶子", "sack": "麻袋",
+  "pouch": "小袋子", "satchel": "書包", "wrench": "扳手", "pliers": "鉗子", "chisel": "鑿子", "washer": "墊圈",
+  "lever": "槓桿", "pulley": "滑輪", "valve": "閥門", "meter": "儀表", "outcome": "結果", "impact": "影響",
+  "spite": "惡意", "malice": "惡意", "respect": "尊重", "disgust": "厭惡", "terror": "恐怖", "panic": "恐慌",
+  "misery": "痛苦", "sorrow": "悲傷", "bliss": "幸福",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
