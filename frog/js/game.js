@@ -176,11 +176,24 @@ var FrogGame = (function () {
     state.frog = makeFrog(state.totalRows - 1);
   }
 
+  // Classic-Frogger rule: every home slot has to be filled before the level
+  // clears, not just any one of them — each successful crossing parks a
+  // frog in an empty slot and sends a fresh one back to the start, and
+  // that slot is then off-limits (see tryHop's occupied-slot guard) until
+  // the level resets. Landing between slots (not a slot column at all) is
+  // still an immediate death.
   function onLanded() {
     const f = state.frog;
     if (f.row === 0) {
       if (HOME_SLOT_COLS.includes(f.col)) {
-        finishLevel();
+        state.filledHomeCols.push(f.col);
+        state.score += 30;
+        notify("slotFilled");
+        if (state.filledHomeCols.length >= HOME_SLOT_COLS.length) {
+          finishLevel();
+        } else {
+          respawnFrog();
+        }
       } else {
         killFrog("gapFall");
       }
@@ -237,6 +250,12 @@ var FrogGame = (function () {
     const newCol = clamp(f.col + dCol, 0, COLS - 1);
     const newRow = clamp(f.row + dRow, 0, state.totalRows - 1);
     if (newCol === f.col && newRow === f.row) return;
+    // An occupied home slot blocks entry outright, same as a board edge —
+    // there's already a frog parked there.
+    if (newRow === 0 && state.filledHomeCols.includes(newCol)) {
+      notify("bump");
+      return;
+    }
     const ch = cellH();
     f.hopFrom = { x: f.x, y: f.y };
     f.col = newCol;
@@ -270,6 +289,7 @@ var FrogGame = (function () {
       state.lanes.push(buildLane(row, kind, direction, built.carSpeed * (0.85 + Math.random() * 0.3), built.gap));
     }
     state.frog = makeFrog(totalRows - 1);
+    state.filledHomeCols = [];
     state.status = "playing";
   }
 
@@ -288,6 +308,7 @@ var FrogGame = (function () {
       riverLanes: 0,
       lanes: [],
       frog: null,
+      filledHomeCols: [],
       levelClearMsRemaining: 0,
       dyingMsRemaining: 0,
       pendingGameOver: false,

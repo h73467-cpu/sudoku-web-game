@@ -82,6 +82,26 @@
   }
 
   // -- home / history / career rendering ---------------------------------------
+  // The slider's raw value (1=left/slow .. 10=right/fast) is deliberately
+  // NOT the millisecond duration directly — a plain range input always
+  // increases left-to-right, but higher ms means *slower*, so binding the
+  // slider straight to ms would make dragging right (a longer, more-filled
+  // bar) make the game slower, backwards from how a "speed" bar reads
+  // intuitively (longer bar = faster). This level->ms conversion keeps the
+  // stored setting in ms (unchanged shape) while presenting a slider whose
+  // direction matches what it visually suggests.
+  const SPEED_LEVEL_MIN = 1;
+  const SPEED_LEVEL_MAX = 10;
+  function speedLevelToMs(level) {
+    const t = (level - SPEED_LEVEL_MIN) / (SPEED_LEVEL_MAX - SPEED_LEVEL_MIN);
+    return Math.round(
+      ShellGame.MAX_START_DURATION_MS + (ShellGame.MIN_START_DURATION_MS - ShellGame.MAX_START_DURATION_MS) * t
+    );
+  }
+  function msToSpeedLevel(ms) {
+    const t = (ShellGame.MAX_START_DURATION_MS - ms) / (ShellGame.MAX_START_DURATION_MS - ShellGame.MIN_START_DURATION_MS);
+    return Math.round(SPEED_LEVEL_MIN + t * (SPEED_LEVEL_MAX - SPEED_LEVEL_MIN));
+  }
   function speedLabel(ms) {
     if (ms <= 450) return ms + "ms（快）";
     if (ms >= 800) return ms + "ms（慢）";
@@ -91,7 +111,7 @@
   function renderHome() {
     themeSelect.value = GameHubStorage.getTheme();
     const settings = ShellGameStorage.getSettings();
-    startSpeedSlider.value = settings.startDurationMs;
+    startSpeedSlider.value = msToSpeedLevel(settings.startDurationMs);
     startSpeedLabel.textContent = speedLabel(settings.startDurationMs);
     applySoundButtonState(soundToggleBtn, false);
     applySoundButtonState(gameSoundToggleBtn, true);
@@ -397,12 +417,12 @@
   // -- home view interactions -----------------------------------------------
   startBtn.addEventListener("click", () => {
     lastLives = null;
-    ShellGame.newGame(Number(startSpeedSlider.value));
+    ShellGame.newGame(speedLevelToMs(Number(startSpeedSlider.value)));
     showView("game");
   });
 
   startSpeedSlider.addEventListener("input", () => {
-    const ms = Number(startSpeedSlider.value);
+    const ms = speedLevelToMs(Number(startSpeedSlider.value));
     startSpeedLabel.textContent = speedLabel(ms);
     ShellGameStorage.saveSettings({ startDurationMs: ms });
   });

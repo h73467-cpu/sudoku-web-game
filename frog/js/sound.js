@@ -141,6 +141,12 @@ var FrogSound = (function () {
       case "gapFall":
         beep(200, 0.16, "triangle", 0.2);
         break;
+      case "slotFilled":
+        chime([659, 880], "sine");
+        break;
+      case "bump":
+        beep(150, 0.06, "square", 0.16);
+        break;
       case "levelClear":
         chime([523, 659, 784, 1046], "sine");
         break;

@@ -6,17 +6,36 @@
 (function () {
   const DIFFICULTY_LABELS = { superEasy: "超簡單", easy: "簡單", medium: "中等", hard: "困難", expert: "專家" };
   const DIFFICULTY_ORDER = ["superEasy", "easy", "medium", "hard", "expert"];
-  const SOUND_EVENTS = new Set(["hop", "carHit", "drown", "edgeFall", "gapFall", "levelClear", "gameover"]);
+  const SOUND_EVENTS = new Set([
+    "hop",
+    "carHit",
+    "drown",
+    "edgeFall",
+    "gapFall",
+    "slotFilled",
+    "bump",
+    "levelClear",
+    "gameover",
+  ]);
 
   const { width: BOARD_W, height: BOARD_H } = FrogGame.getBoardSize();
 
+  // Deliberately no green anywhere the frog itself can be standing (start,
+  // median, home) — the frog is green, so a green background used to make
+  // it nearly invisible (only the eyes showed). Safe zones use a sandy/
+  // dirt palette instead; the home bank uses dark brown so a parked frog
+  // (drawn in a different, warm color) stays clearly visible on it too.
   const LANE_COLORS = {
-    home: "#1b5e3a",
+    home: "#3a2a1c",
     river: "#2f7dc4",
-    median: "#4caf50",
+    median: "#a9824f",
     road: "#333333",
-    start: "#4caf50",
+    start: "#d4b579",
   };
+  const HOME_HEDGE_COLOR = "#241a10";
+  const HOME_SLOT_EMPTY_COLOR = "#7ec8e3";
+  const HOME_SLOT_EMPTY_STROKE = "#2b6a86";
+  const PARKED_FROG_COLOR = "#f2a541";
   const DEATH_FLASH_COLORS = {
     carHit: "rgba(220, 38, 38, 0.45)",
     drown: "rgba(37, 99, 235, 0.45)",
@@ -191,19 +210,46 @@
       const cx = col * grid.cellW + grid.cellW / 2;
       const cy = homeY + grid.cellH / 2;
       if (grid.homeSlotCols.includes(col)) {
-        ctx.fillStyle = "#3fae6a";
+        ctx.fillStyle = HOME_SLOT_EMPTY_COLOR;
         ctx.beginPath();
         ctx.ellipse(cx, cy, grid.cellW * 0.36, grid.cellH * 0.32, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "#276b45";
+        ctx.strokeStyle = HOME_SLOT_EMPTY_STROKE;
         ctx.lineWidth = 2;
         ctx.stroke();
+        if (state.filledHomeCols.includes(col)) {
+          drawParkedFrog(cx, cy, grid.cellW * 0.28);
+        }
       } else {
-        ctx.fillStyle = "#123c27";
+        ctx.fillStyle = HOME_HEDGE_COLOR;
         roundRect(col * grid.cellW + 3, homeY + 3, grid.cellW - 6, grid.cellH - 6, 4);
         ctx.fill();
       }
     }
+  }
+
+  // A parked frog uses a distinct warm color from the live frog (which
+  // stays green) — the point is "unmistakably occupied, unmistakably not
+  // the frog you're controlling right now", not a second green shape that
+  // would just recreate the same blends-into-the-background problem.
+  function drawParkedFrog(cx, cy, r) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = PARKED_FROG_COLOR;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, r * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff3d6";
+    ctx.beginPath();
+    ctx.arc(-r * 0.35, -r * 0.4, r * 0.22, 0, Math.PI * 2);
+    ctx.arc(r * 0.35, -r * 0.4, r * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#5a3a10";
+    ctx.beginPath();
+    ctx.arc(-r * 0.35, -r * 0.4, r * 0.1, 0, Math.PI * 2);
+    ctx.arc(r * 0.35, -r * 0.4, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   function drawObstacle(lane, obs, grid) {
