@@ -518,6 +518,18 @@ var WordGameDictionary = (function () {
   "lever": "槓桿", "pulley": "滑輪", "valve": "閥門", "meter": "儀表", "outcome": "結果", "impact": "影響",
   "spite": "惡意", "malice": "惡意", "respect": "尊重", "disgust": "厭惡", "terror": "恐怖", "panic": "恐慌",
   "misery": "痛苦", "sorrow": "悲傷", "bliss": "幸福",
+
+  // Added 2026-08-08: user hit "toe" missing — the earlier body-parts
+  // pass (2026-08-08, second batch) covered the common/obvious ones but
+  // left real gaps once someone actually tried less-central-but-still-
+  // ordinary parts. Closing out the category properly this time with a
+  // thorough sweep rather than patching just the one reported word.
+  "toe": "腳趾", "toes": "腳趾（複數）", "wrist": "手腕", "forehead": "額頭", "eyebrow": "眉毛", "eyelash": "睫毛",
+  "eyelid": "眼皮", "jaw": "下巴", "waist": "腰", "thigh": "大腿", "forearm": "前臂", "armpit": "腋下",
+  "navel": "肚臍", "rib": "肋骨", "kneecap": "膝蓋骨", "shin": "脛骨", "sole": "腳底", "knuckle": "指關節",
+  "pupil": "瞳孔", "iris": "虹膜", "nostril": "鼻孔", "earlobe": "耳垂", "tongue": "舌頭", "throat": "喉嚨",
+  "windpipe": "氣管", "bladder": "膀胱", "womb": "子宮", "vertebra": "脊椎骨", "skull": "頭骨", "pelvis": "骨盆",
+  "femur": "股骨",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
