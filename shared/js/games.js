@@ -21,6 +21,7 @@ var GAMES = [
   { id: "shellGame", title: "三個杯子", icon: "🎩", path: "shellGame/index.html", status: "ready" },
   { id: "frogger", title: "青蛙過河", icon: "🐸", path: "frog/index.html", status: "ready" },
   { id: "smokeCar", title: "迷魂車", icon: "🏎️", path: "smokeCar/index.html", status: "ready" },
+  { id: "pitchTrain", title: "絕對音感", icon: "🎧", path: "pitchTrain/index.html", status: "planned" },
 ];
 
 if (typeof window !== "undefined") {
