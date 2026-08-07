@@ -1,0 +1,64 @@
+/* 青蛙過河 specific styles. Shared tokens/components (buttons, toolbar,
+   modal shell, difficulty grid, canvas-overlay shell, record list) come
+   from ../shared/style.css. */
+
+.board-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+#board {
+  width: min(92vw, 400px);
+  height: auto;
+  aspect-ratio: 400 / 560;
+  display: block;
+  border-radius: 10px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  touch-action: none;
+}
+
+.board-hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+  margin-top: 8px;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 54px);
+  gap: 6px;
+  justify-content: center;
+  margin: 14px auto 0;
+}
+
+.dpad-btn {
+  font-size: 1.4rem;
+  padding: 0;
+  min-height: 0;
+}
+
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+}
