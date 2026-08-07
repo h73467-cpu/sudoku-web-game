@@ -608,6 +608,34 @@ var WordGameDictionary = (function () {
   "competition": "比賽", "opponent": "對手", "teammate": "隊友", "strategy": "策略", "technique": "技巧", "endurance": "耐力",
   "stamina": "體力", "management": "管理", "marketing": "行銷", "negotiation": "談判", "investment": "投資", "transaction": "交易",
   "corporation": "公司", "partnership": "合夥關係",
+
+  // Added 2026-08-08: sixth GEPT-intermediate batch. More birds/fish/sea
+  // creatures/insects, flowers/plants, weather phenomena, geography/
+  // landforms, clothing/fashion, deeper science terms, and abstract/
+  // philosophical nouns.
+  "heron": "蒼鷺", "stork": "鸛", "swan": "天鵝", "robin": "知更鳥", "blackbird": "烏鶇", "woodpecker": "啄木鳥",
+  "pelican": "鵜鶘", "toucan": "巨嘴鳥", "cockatoo": "葵花鳳頭鸚鵡", "canary": "金絲雀", "finch": "雀", "swallow": "燕子",
+  "seagull": "海鷗", "albatross": "信天翁", "condor": "禿鷹", "buzzard": "鵟", "kestrel": "紅隼", "magpie": "喜鵲",
+  "starling": "椋鳥", "thrush": "鶇", "catfish": "鯰魚", "salmon": "鮭魚", "trout": "鱒魚", "tuna": "鮪魚",
+  "cod": "鱈魚", "eel": "鰻魚", "bass": "鱸魚", "pike": "梭子魚", "guppy": "孔雀魚", "goldfish": "金魚",
+  "jellyfish": "水母", "starfish": "海星", "seahorse": "海馬", "stingray": "魟魚", "swordfish": "旗魚", "piranha": "食人魚",
+  "anemone": "海葵", "plankton": "浮游生物", "krill": "磷蝦", "dragonfly": "蜻蜓", "grasshopper": "蚱蜢", "cockroach": "蟑螂",
+  "mantis": "螳螂", "aphid": "蚜蟲", "maggot": "蛆", "larva": "幼蟲", "pupa": "蛹", "cocoon": "繭",
+  "swarm": "一群（昆蟲）", "nest": "巢", "dahlia": "大理花", "begonia": "秋海棠", "petunia": "矮牽牛花", "marigold": "萬壽菊",
+  "jasmine": "茉莉花", "hibiscus": "木槿花", "magnolia": "木蘭花", "azalea": "杜鵑花", "poppy": "罌粟花", "violet": "紫羅蘭",
+  "buttercup": "毛茛", "sunflower": "向日葵", "dandelion": "蒲公英", "succulent": "多肉植物", "lichen": "地衣", "fungus": "真菌",
+  "mold": "黴菌", "algae": "藻類", "seaweed": "海藻", "kelp": "海帶", "humidity": "濕度", "monsoon": "季風",
+  "typhoon": "颱風", "hurricane": "颶風", "tsunami": "海嘯", "avalanche": "雪崩", "blizzard": "暴風雪", "sleet": "凍雨",
+  "overcast": "陰天的", "rainbow": "彩虹", "mirage": "海市蜃樓", "cavern": "洞穴", "crater": "火山口", "ridge": "山脊",
+  "summit": "山頂", "slope": "斜坡", "gorge": "峽谷", "fjord": "峽灣", "lagoon": "潟湖", "marsh": "沼澤",
+  "wetland": "濕地", "grassland": "草原", "rainforest": "雨林", "savanna": "大草原", "iceberg": "冰山", "cardigan": "針織外套",
+  "tuxedo": "燕尾服", "overcoat": "大衣", "raincoat": "雨衣", "poncho": "斗篷", "kimono": "和服", "sari": "紗麗",
+  "turban": "頭巾", "beret": "貝雷帽", "bandana": "印花大手帕", "mittens": "連指手套", "leggings": "內搭褲", "stockings": "長襪",
+  "pajamas": "睡衣", "bathrobe": "浴袍", "nightgown": "睡袍", "swimsuit": "泳衣", "wetsuit": "潛水衣", "earrings": "耳環",
+  "bracelet": "手鍊", "necklace": "項鍊", "pendant": "墜飾", "catalyst": "催化劑", "isotope": "同位素", "suspension": "懸浮液",
+  "sediment": "沉積物", "erosion": "侵蝕", "evaporation": "蒸發", "respiration": "呼吸作用", "metabolism": "新陳代謝", "digestion": "消化",
+  "wisdom": "智慧", "knowledge": "知識", "viewpoint": "觀點", "existence": "存在", "universe": "宇宙", "infinity": "無限",
+  "karma": "因果報應",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
