@@ -244,6 +244,18 @@ h1 {
   color: var(--color-text);
   cursor: pointer;
   min-height: 46px;
+  /* Removes the double-tap-to-zoom gesture (and the ~300ms tap delay) on
+     this element specifically, without disabling page-wide pinch-zoom the
+     way a viewport user-scalable=no would — matters most for buttons that
+     get tapped rapidly/repeatedly (real-time games), where a mistimed
+     double-tap can otherwise zoom the whole page and strand the button
+     under the finger. -webkit-touch-callout/user-select stop iOS's
+     long-press text-selection/callout popup from eating a slightly-held
+     tap the same way. */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 select.btn {

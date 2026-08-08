@@ -30,9 +30,10 @@
 
 .controls-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 16px 22px;
   margin-top: 14px;
 }
 

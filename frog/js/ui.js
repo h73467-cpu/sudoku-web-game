@@ -471,6 +471,59 @@
   dpadButtons.left.addEventListener("click", () => FrogGame.tryHop(-1, 0));
   dpadButtons.right.addEventListener("click", () => FrogGame.tryHop(1, 0));
 
+  // Drag/swipe directly on the board as an alternative to the dpad buttons —
+  // touch drag on phone/tablet and mouse/trackpad drag on a laptop both fire
+  // the same Pointer Events, so one handler covers both (same technique
+  // breakout/js/ui.js uses for its paddle, adapted here for a discrete
+  // one-hop-per-swipe model instead of a continuous x-position). Unlike
+  // smokeCar's continuous glide, each threshold crossing fires exactly one
+  // tryHop() — matches one dpad tap — and the origin resets after firing so
+  // a longer continuous drag can chain multiple hops.
+  (function attachSwipeControls() {
+    const THRESHOLD = 22;
+    let active = false;
+    let originX = 0;
+    let originY = 0;
+
+    function pointFromEvent(e) {
+      const rect = boardCanvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    boardCanvas.addEventListener("pointerdown", (e) => {
+      const state = FrogGame.getState();
+      if (!state || state.status !== "playing") return;
+      e.preventDefault();
+      boardCanvas.setPointerCapture(e.pointerId);
+      const p = pointFromEvent(e);
+      originX = p.x;
+      originY = p.y;
+      active = true;
+    });
+
+    boardCanvas.addEventListener("pointermove", (e) => {
+      if (!active) return;
+      const p = pointFromEvent(e);
+      const dx = p.x - originX;
+      const dy = p.y - originY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < THRESHOLD) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        FrogGame.tryHop(dx > 0 ? 1 : -1, 0);
+      } else {
+        FrogGame.tryHop(0, dy > 0 ? 1 : -1);
+      }
+      originX = p.x;
+      originY = p.y;
+    });
+
+    boardCanvas.addEventListener("pointerup", () => {
+      active = false;
+    });
+    boardCanvas.addEventListener("pointercancel", () => {
+      active = false;
+    });
+  })();
+
   overlayActionBtn.addEventListener("click", () => FrogGame.togglePause());
   pauseBtn.addEventListener("click", () => FrogGame.togglePause());
 

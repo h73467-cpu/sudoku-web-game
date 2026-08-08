@@ -419,6 +419,61 @@
   dpadButtons.right.addEventListener("click", () => SmokeCarGame.setQueuedDir(1, 0));
   smokeBtn.addEventListener("click", () => SmokeCarGame.useSmoke());
 
+  // Drag/swipe directly on the board as an alternative to the dpad buttons —
+  // touch drag on phone/tablet and mouse/trackpad drag on a laptop both fire
+  // the same Pointer Events, so one handler covers both (same technique
+  // breakout/js/ui.js uses for its paddle, adapted here for discrete 4-way
+  // direction instead of a continuous x-position). Every THRESHOLD px of
+  // drag re-evaluates the dominant axis and re-fires setQueuedDir, so a
+  // single continuous drag can steer through several turns — the glide
+  // movement model in game.js only actually applies a queued direction at
+  // the next cell-center crossing, so firing this "too often" during a drag
+  // is harmless.
+  (function attachSwipeControls() {
+    const THRESHOLD = 18;
+    let active = false;
+    let originX = 0;
+    let originY = 0;
+
+    function pointFromEvent(e) {
+      const rect = boardCanvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+    boardCanvas.addEventListener("pointerdown", (e) => {
+      const state = SmokeCarGame.getState();
+      if (!state || state.status !== "playing") return;
+      e.preventDefault();
+      boardCanvas.setPointerCapture(e.pointerId);
+      const p = pointFromEvent(e);
+      originX = p.x;
+      originY = p.y;
+      active = true;
+    });
+
+    boardCanvas.addEventListener("pointermove", (e) => {
+      if (!active) return;
+      const p = pointFromEvent(e);
+      const dx = p.x - originX;
+      const dy = p.y - originY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < THRESHOLD) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        SmokeCarGame.setQueuedDir(dx > 0 ? 1 : -1, 0);
+      } else {
+        SmokeCarGame.setQueuedDir(0, dy > 0 ? 1 : -1);
+      }
+      originX = p.x;
+      originY = p.y;
+    });
+
+    boardCanvas.addEventListener("pointerup", () => {
+      active = false;
+    });
+    boardCanvas.addEventListener("pointercancel", () => {
+      active = false;
+    });
+  })();
+
   overlayActionBtn.addEventListener("click", () => SmokeCarGame.togglePause());
   pauseBtn.addEventListener("click", () => SmokeCarGame.togglePause());
 
