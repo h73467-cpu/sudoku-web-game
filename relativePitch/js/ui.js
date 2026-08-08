@@ -580,9 +580,20 @@
       const chip = document.createElement("span");
       const picked = state.playerAttempt[i];
       const correct = state.melodyResult.perNote[i];
+      const correctLabel = RelativePitchGame.FULL_DEGREE_LABELS[degree];
       chip.className = "attempt-chip " + (correct ? "correct" : "wrong");
-      chip.textContent = picked != null ? RelativePitchGame.FULL_DEGREE_LABELS[picked] : "—";
-      if (!correct) chip.title = "正確答案：" + RelativePitchGame.FULL_DEGREE_LABELS[degree];
+      if (correct) {
+        chip.textContent = correctLabel;
+      } else {
+        // Show the standard answer inline, not just via a hover title —
+        // a title-only reveal is invisible on touch devices, which this
+        // hub's audience skews toward.
+        const pickedLabel = picked != null ? RelativePitchGame.FULL_DEGREE_LABELS[picked] : "—";
+        chip.innerHTML =
+          '<span class="chip-picked">' + pickedLabel + "</span>" +
+          '<span class="chip-arrow">→</span>' +
+          '<span class="chip-correct">' + correctLabel + "</span>";
+      }
       frag.appendChild(chip);
     });
     melodyResultTrack.appendChild(frag);

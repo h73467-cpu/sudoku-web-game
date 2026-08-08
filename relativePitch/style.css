@@ -316,6 +316,24 @@
   background: rgba(220, 38, 38, 0.12);
   border-color: #dc2626;
   color: #dc2626;
+  min-width: 68px;
+  gap: 3px;
+  font-size: 0.95rem;
+}
+
+.chip-picked {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.chip-arrow {
+  opacity: 0.55;
+  font-size: 0.8rem;
+}
+
+.chip-correct {
+  font-weight: 800;
+  color: #16a34a;
 }
 
 .melody-actions {
