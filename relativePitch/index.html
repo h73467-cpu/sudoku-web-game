@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>相對音感</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div id="homeView" class="view">
+    <div class="home-top">
+      <h1>🎹 相對音感</h1>
+      <div class="theme-picker">
+        <label for="themeSelect" class="theme-label">背景主題</label>
+        <select id="themeSelect" class="btn">
+          <option value="blue_light">晴空藍（淺色模式）</option>
+          <option value="blue_dark">深邃夜藍（深色模式）</option>
+          <option value="green_light">森林綠（淺色模式）</option>
+          <option value="green_dark">暗夜森林（深色模式）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="home-row">
+      <button id="instructionsBtn" class="btn btn-primary home-card-btn">📖 玩法說明</button>
+      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
+    </div>
+
+    <p class="board-hint-text">每輪都會先聽一個隨機的「do」（主音永遠不固定，每題/每輪都重新報一次）——這正是「相對」音感的練習重點，沒有生命值、不會遊戲結束，練多久都可以。</p>
+
+    <div class="mode-tabs">
+      <button class="btn mode-tab" data-mode="singleDegree" aria-pressed="true">🎯 單音辨識</button>
+      <button class="btn mode-tab" data-mode="melody" aria-pressed="false">🎼 旋律回奏</button>
+    </div>
+    <p id="modeDescription" class="mode-description"></p>
+
+    <h2 class="section-title">選擇作答方式</h2>
+    <div class="input-mode-tabs">
+      <button class="btn input-mode-tab" data-input-mode="piano" aria-pressed="true">🎹 鋼琴鍵盤</button>
+      <button class="btn input-mode-tab" data-input-mode="degree" aria-pressed="false">🔢 簡譜按鈕</button>
+    </div>
+    <p class="mode-description">選好的作答方式會用在這一輪練習裡，練習中途不會切換；想換介面請先返回首頁重新選擇。</p>
+
+    <label class="key-toggle">
+      <input type="checkbox" id="includeChromaticToggle" />
+      包含半音階（進階挑戰，會多出 #1 #2 #4 #5 #6 五個黑鍵音，可以跟任何難度一起開）
+    </label>
+
+    <h2 class="section-title">選擇難度</h2>
+    <div class="difficulty-grid">
+      <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家</button>
+    </div>
+
+    <div class="home-nav-row">
+      <button id="historyBtn" class="btn">遊玩紀錄</button>
+      <button id="careerBtn" class="btn">生涯總覽</button>
+    </div>
+    <div class="home-nav-row">
+      <a href="../index.html" class="btn">← 回遊戲集</a>
+    </div>
+
+    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>.</p>
+  </div>
+
+  <div id="gameView" class="view hidden">
+    <div class="toolbar">
+      <button id="backHomeBtn" class="btn">← 結束並返回首頁</button>
+      <span id="difficultyLabel" class="difficulty-label"></span>
+
+      <div class="info">
+        <span class="info-label">連續</span>
+        <span id="streakDisplay" class="info-value">0</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">正確率</span>
+        <span id="accuracyDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">已作答</span>
+        <span id="answeredDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="gameInstructionsBtn" class="btn">📖 說明</button>
+    </div>
+
+    <!-- 單音辨識 -->
+    <div id="singleDegreeBoard" class="practice-board hidden">
+      <div class="note-visual">🎯</div>
+      <p class="practice-hint-text">先聽 do，再聽這個音，猜猜是第幾級</p>
+      <div class="single-controls">
+        <button id="playReferenceAgainBtn" class="btn">🎯 再聽一次 Do</button>
+        <button id="playSingleDegreeBtn" class="btn btn-primary play-btn">🔊 播放這個音</button>
+      </div>
+
+      <div id="singlePianoKeyboard" class="piano-keyboard-wrap"></div>
+      <div id="singleDegreeKeypad" class="degree-keypad"></div>
+
+      <div id="singleDegreeResultBanner" class="result-banner"></div>
+      <button id="nextDegreeBtn" class="btn btn-primary hidden">▶️ 下一題</button>
+    </div>
+
+    <!-- 旋律回奏 -->
+    <div id="melodyBoard" class="practice-board hidden">
+      <div class="note-visual">🎼</div>
+      <p id="melodyHintText" class="practice-hint-text"></p>
+      <div class="melody-controls">
+        <button id="playMelodyBtn" class="btn btn-primary play-btn">🔊 播放旋律</button>
+        <span id="replayCountLabel" class="replay-count-label"></span>
+      </div>
+      <div id="melodyAttemptTrack" class="melody-attempt-track"></div>
+
+      <div id="melodyPianoKeyboard" class="piano-keyboard-wrap"></div>
+      <div id="melodyDegreeKeypad" class="degree-keypad"></div>
+
+      <div class="melody-actions">
+        <button id="undoTapBtn" class="btn">⬅️ 清除上一個</button>
+      </div>
+      <div id="melodyResultBanner" class="result-banner"></div>
+      <div id="melodyResultTrack" class="melody-attempt-track hidden"></div>
+      <button id="nextMelodyBtn" class="btn btn-primary hidden">▶️ 下一題</button>
+    </div>
+  </div>
+
+  <div id="historyView" class="view hidden">
+    <div class="toolbar">
+      <button id="historyBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">遊玩紀錄</h2>
+    </div>
+    <div id="historyList" class="record-list"></div>
+  </div>
+
+  <div id="careerView" class="view hidden">
+    <div class="toolbar">
+      <button id="careerBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">生涯總覽</h2>
+    </div>
+    <h3 class="section-title">🎯 單音辨識</h3>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳連續</th><th>最佳正確率</th><th>累計作答</th></tr>
+      </thead>
+      <tbody id="careerTableSingle"></tbody>
+    </table>
+    <h3 class="section-title">🎼 旋律回奏</h3>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳連續</th><th>最佳正確率</th><th>累計作答</th></tr>
+      </thead>
+      <tbody id="careerTableMelody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="particleLayer" class="particle-layer"></div>
+<div id="screenFlash" class="screen-flash"></div>
+
+<div id="sessionEndModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="sessionEndTitle">🎹 本輪練習成果</h2>
+    <p id="sessionEndSubtitle"></p>
+    <div id="sessionEndStats" class="win-stats"></div>
+    <div class="win-actions">
+      <button id="sessionEndCloseBtn" class="btn btn-primary">再練一輪</button>
+      <button id="sessionEndHomeBtn" class="btn">返回首頁</button>
+    </div>
+  </div>
+</div>
+
+<div id="instructionsModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <h2>📖 玩法說明</h2>
+    <div class="instructions-body">
+      <ul>
+        <li>沒有生命值、不會「遊戲結束」——這是持續練習模式，答錯只會把這一輪的連續答對次數歸零，離開時會自動記錄這輪的成績。</li>
+        <li>每一題／每一輪都會**先播放一個隨機的「do」**（主音，永遠不固定），這是「相對」音感的重點：練的是音與音之間的相對關係，不是背絕對音高。</li>
+        <li><strong>🎯 單音辨識</strong>：聽完 do 之後再聽一個音，猜猜它是第幾級（1~7、i，或加開半音階後的 #1 #2 #4 #5 #6）。</li>
+        <li><strong>🎼 旋律回奏</strong>：聽完 do 之後再聽一小段旋律，用鋼琴鍵盤或簡譜鍵盤依序點出你聽到的音，點滿整段會自動送出，逐格顯示對錯。</li>
+        <li>作答方式（鋼琴鍵盤／簡譜按鈕）在首頁選好、整輪練習固定使用，練習中途不會切換。</li>
+        <li>「包含半音階」關閉時，鋼琴鍵盤上的黑鍵只是裝飾，不能按、也不會出現在題目裡；打開後黑鍵會變成可以按的真正選項（標上 #1 #2 #4 #5 #6），題目也會可能出現半音，任何難度都能加開，會讓該難度變得更難。</li>
+        <li>連續答對達 5、10、15…的倍數會有特效慶祝；工具列可以隨時看目前這輪的連續次數、正確率、已作答題數，也能關閉音效。</li>
+        <li>「生涯總覽」分別記錄兩種模式、五種難度各自的最佳連續紀錄、最佳正確率（單輪作答數需累積到 20 題以上才會納入比較）。</li>
+      </ul>
+    </div>
+    <div class="win-actions">
+      <button id="instructionsCloseBtn" class="btn btn-primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/js/storage.js"></script>
+<script src="js/game.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

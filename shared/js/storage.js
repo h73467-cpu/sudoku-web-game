@@ -3677,6 +3677,182 @@ if (typeof window !== "undefined") {
   window.PitchTrainStorage = PitchTrainStorage;
 }
 
+// ---------------------------------------------------------------------------
+// RelativePitchStorage — for 相對音感 (relative pitch training). Sister
+// module to PitchTrainStorage, same two-layer mode-keyed career shape
+// (`singleDegree` | `melody`, each keyed by the usual 5 difficulty tiers)
+// for the same reason PitchTrainStorage needed it: two independent
+// practice modes sharing one career/history/settings blob. `settings`
+// additionally carries `inputMode` ("piano" | "degree", chosen on the home
+// screen and applied for the whole session) and `includeChromatic` (a
+// player-facing toggle orthogonal to difficulty — see
+// relativePitch/js/game.js's `effectivePool`). `recordSession` is called
+// once per practice session (on leaving/ending it), not per-answer — same
+// "persist at a natural checkpoint" spirit as ShellGameStorage.recordRun
+// and PitchTrainStorage.recordSession.
+// ---------------------------------------------------------------------------
+var RelativePitchStorage = (function () {
+  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+  const MODES = ["singleDegree", "melody"];
+  const MIN_ANSWERED_FOR_ACCURACY = 20;
+
+  function defaultCareerEntry() {
+    return { bestStreak: 0, bestAccuracy: null, totalAnswered: 0, totalCorrect: 0 };
+  }
+
+  function defaultModeCareer() {
+    const career = {};
+    for (const d of DIFFICULTIES) career[d] = defaultCareerEntry();
+    return career;
+  }
+
+  function defaultData() {
+    const career = {};
+    for (const m of MODES) career[m] = defaultModeCareer();
+    return {
+      history: [],
+      career,
+      settings: { soundEnabled: true, inputMode: "piano", includeChromatic: false },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      for (const m of MODES) {
+        const modeCareer = data.career[m];
+        if (modeCareer && typeof modeCareer === "object") {
+          for (const d of DIFFICULTIES) {
+            merged.career[m][d] = Object.assign(defaultCareerEntry(), modeCareer[d] || {});
+          }
+        }
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+      merged.settings.inputMode = data.settings.inputMode === "degree" ? "degree" : "piano";
+      merged.settings.includeChromatic = !!data.settings.includeChromatic;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("relativePitch", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- history ------------------------------------------------------------
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // -- career ---------------------------------------------------------------
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+
+  function recordSession(mode, difficulty, session) {
+    try {
+      const answered = Math.max(0, session.answered || 0);
+      const correct = Math.max(0, Math.min(answered, session.correct || 0));
+      const streak = Math.max(0, session.streak || 0);
+      if (answered === 0) return { isNewBestStreak: false, isNewBestAccuracy: false };
+
+      const data = loadAll();
+      const entry = Object.assign(defaultCareerEntry(), data.career[mode][difficulty] || {});
+      entry.totalAnswered += answered;
+      entry.totalCorrect += correct;
+
+      let isNewBestStreak = false;
+      if (streak > entry.bestStreak) {
+        entry.bestStreak = streak;
+        isNewBestStreak = true;
+      }
+
+      let isNewBestAccuracy = false;
+      if (answered >= MIN_ANSWERED_FOR_ACCURACY) {
+        const accuracy = correct / answered;
+        if (entry.bestAccuracy == null || accuracy > entry.bestAccuracy) {
+          entry.bestAccuracy = accuracy;
+          isNewBestAccuracy = true;
+        }
+      }
+
+      data.career[mode][difficulty] = entry;
+      saveAll(data);
+      return { isNewBestStreak, isNewBestAccuracy };
+    } catch (e) {
+      return { isNewBestStreak: false, isNewBestAccuracy: false };
+    }
+  }
+
+  // -- settings -------------------------------------------------------------
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    DIFFICULTIES,
+    MODES,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    recordSession,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.RelativePitchStorage = RelativePitchStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -3700,5 +3876,6 @@ if (typeof module !== "undefined" && module.exports) {
     FrogStorage,
     SmokeCarStorage,
     PitchTrainStorage,
+    RelativePitchStorage,
   };
 }
