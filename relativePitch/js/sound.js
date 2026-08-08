@@ -66,11 +66,22 @@ var RelativePitchSound = (function () {
     beep(700, 0.06, "sine", 0.12);
   }
 
+  // A sharper, higher-pitched percussive click for the melody count-in
+  // ("答答" two-beat lead-in before the melody itself starts) — deliberately
+  // distinct in timbre from tap() so it reads as a metronome click, not a
+  // UI confirmation sound.
+  function countInTick() {
+    beep(900, 0.05, "square", 0.18);
+  }
+
   function play(event, extra) {
     if (!enabled) return;
     switch (event) {
       case "tap":
         tap();
+        break;
+      case "tick":
+        countInTick();
         break;
       case "correct": {
         const step = Math.min((extra && extra.streak) || 0, 10);

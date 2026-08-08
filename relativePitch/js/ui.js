@@ -49,6 +49,7 @@
 
   const melodyBoard = document.getElementById("melodyBoard");
   const melodyHintText = document.getElementById("melodyHintText");
+  const playMelodyReferenceBtn = document.getElementById("playMelodyReferenceBtn");
   const playMelodyBtn = document.getElementById("playMelodyBtn");
   const replayCountLabel = document.getElementById("replayCountLabel");
   const melodyAttemptTrack = document.getElementById("melodyAttemptTrack");
@@ -514,17 +515,38 @@
     return RelativePitchGame.midiToFreq(state.tonicMidi + degreeIndex);
   }
 
-  function scheduleMelodyPlayback(state, onDone) {
+  // Two-beat "答答" count-in (at the melody's own tempo, so the tick
+  // spacing previews the beat the melody will play at) immediately
+  // followed by the melody notes themselves — this is the reusable core
+  // shared by both the automatic round-start intro (which prepends "do")
+  // and the standalone "replay the question" button (which does not).
+  function scheduleCountInAndMelody(state, startT, onDone) {
     const tier = RelativePitchGame.melodyTierFor(state.difficulty);
     const noteDurationSec = Math.max(0.16, (tier.tempoMs * 0.82) / 1000);
-    let t = 0;
-    schedule(() => RelativePitchSound.playReference(RelativePitchGame.midiToFreq(state.tonicMidi)), t);
-    t += 750;
+    let t = startT;
+    schedule(() => RelativePitchSound.play("tick"), t);
+    t += tier.tempoMs;
+    schedule(() => RelativePitchSound.play("tick"), t);
+    t += tier.tempoMs;
     state.melody.forEach((degree) => {
       schedule(() => RelativePitchSound.playNote(melodyNoteFreq(state, degree), noteDurationSec, MELODY_NOTE_TIMBRE, 0.24, 0), t);
       t += tier.tempoMs;
     });
     schedule(onDone, t + 120);
+  }
+
+  // Full round-start intro: do -> (750ms) -> 答答 count-in -> melody.
+  function scheduleMelodyIntro(state, onDone) {
+    schedule(() => RelativePitchSound.playReference(RelativePitchGame.midiToFreq(state.tonicMidi)), 0);
+    scheduleCountInAndMelody(state, 750, onDone);
+  }
+
+  // Replay of just the question (答答 count-in -> melody, no "do" —
+  // there's now a separate always-available button for replaying "do"
+  // alone, see playMelodyReferenceBtn below). This is what consumes one of
+  // the tier's replayLimit uses.
+  function scheduleMelodyReplay(state, onDone) {
+    scheduleCountInAndMelody(state, 0, onDone);
   }
 
   function updateReplayLabel(state) {
@@ -573,7 +595,7 @@
     ensureInputBuilt("melody", state);
     clearInputMarks(melodyPianoKeyboard);
     clearInputMarks(melodyDegreeKeypad);
-    melodyHintText.textContent = "🔊 播放中，仔細聽…（先報 do，再放 " + state.melody.length + " 個音）";
+    melodyHintText.textContent = "🔊 播放中：先報 do，答答兩拍後開始旋律…（共 " + state.melody.length + " 個音）";
     renderLiveAttemptTrack(state);
     melodyResultBanner.textContent = "";
     melodyResultBanner.className = "result-banner";
@@ -584,7 +606,7 @@
     enableInputContainer(melodyDegreeKeypad, false);
     playMelodyBtn.disabled = true;
     updateReplayLabel(state);
-    scheduleMelodyPlayback(state, () => RelativePitchGame.markMelodyIntroDone());
+    scheduleMelodyIntro(state, () => RelativePitchGame.markMelodyIntroDone());
   }
 
   function onMelodyInputReady(state) {
@@ -595,12 +617,12 @@
   }
 
   function onMelodyReplay(state) {
-    melodyHintText.textContent = "🔊 播放中，仔細聽…（先報 do，再放 " + state.melody.length + " 個音）";
+    melodyHintText.textContent = "🔊 播放中：答答兩拍後開始旋律…（共 " + state.melody.length + " 個音）";
     enableInputContainer(melodyPianoKeyboard, false);
     enableInputContainer(melodyDegreeKeypad, false);
     playMelodyBtn.disabled = true;
     updateReplayLabel(state);
-    scheduleMelodyPlayback(state, () => {
+    scheduleMelodyReplay(state, () => {
       melodyHintText.textContent = "換你了！依序點出你聽到的音";
       enableInputContainer(melodyPianoKeyboard, true);
       enableInputContainer(melodyDegreeKeypad, true);
@@ -634,6 +656,13 @@
     const state = RelativePitchGame.getState();
     if (!state || state.mode !== "melody") return;
     if (RelativePitchGame.requestMelodyReplay()) onMelodyReplay(RelativePitchGame.getState());
+  });
+  // Re-listening to "do" is unlimited and independent of the question's
+  // replayLimit — same pattern as 單音辨識's playReferenceAgainBtn.
+  playMelodyReferenceBtn.addEventListener("click", () => {
+    const state = RelativePitchGame.getState();
+    if (!state || state.mode !== "melody") return;
+    RelativePitchSound.playReference(RelativePitchGame.midiToFreq(state.tonicMidi));
   });
   undoTapBtn.addEventListener("click", () => RelativePitchGame.undoMelodyTap());
   nextMelodyBtn.addEventListener("click", () => RelativePitchGame.startMelodyRound());
