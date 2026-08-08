@@ -3493,6 +3493,190 @@ if (typeof window !== "undefined") {
   window.SmokeCarStorage = SmokeCarStorage;
 }
 
+// ---------------------------------------------------------------------------
+// PitchTrainStorage — for 絕對音感 (pitch training). Shaped differently from
+// every solo-puzzle storage above: there's no "win"/finish, just continuous
+// practice, so career is keyed by **mode** first (`singleNote` | `melody`),
+// then by the usual 5-tier difficulty within each mode — two independent
+// career maps sharing the same DIFFICULTIES list. Each entry uses one
+// uniform shape across both modes ({bestStreak, bestAccuracy, totalAnswered,
+// totalCorrect}) even though what "one answered unit" means differs per
+// mode (one note guess in singleNote; one melody note-position in melody,
+// so a single melody attempt adds `length` to totalAnswered at once) — see
+// pitchTrain/js/game.js for how each mode maps its own scoring onto this
+// same pair of counters. `recordSession` is called once per practice
+// session (when the player leaves/ends it, not per-answer), same "persist
+// at a natural checkpoint, not on every micro-action" spirit as
+// ShellGameStorage.recordRun. bestAccuracy only updates once a single
+// session's `answered` crosses ~20, so a lucky short streak's 100% doesn't
+// outrank a genuinely long, mostly-accurate session.
+// ---------------------------------------------------------------------------
+var PitchTrainStorage = (function () {
+  const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
+  const MODES = ["singleNote", "melody"];
+  const MIN_ANSWERED_FOR_ACCURACY = 20;
+
+  function defaultCareerEntry() {
+    return { bestStreak: 0, bestAccuracy: null, totalAnswered: 0, totalCorrect: 0 };
+  }
+
+  function defaultModeCareer() {
+    const career = {};
+    for (const d of DIFFICULTIES) career[d] = defaultCareerEntry();
+    return career;
+  }
+
+  function defaultData() {
+    const career = {};
+    for (const m of MODES) career[m] = defaultModeCareer();
+    return {
+      history: [],
+      career,
+      settings: { soundEnabled: true, superEasyPercent: 30, melodyRandomKey: false },
+    };
+  }
+
+  function mergeDefaults(data) {
+    const merged = defaultData();
+    if (!data || typeof data !== "object") return merged;
+    if (Array.isArray(data.history)) merged.history = data.history;
+    if (data.career && typeof data.career === "object") {
+      for (const m of MODES) {
+        const modeCareer = data.career[m];
+        if (modeCareer && typeof modeCareer === "object") {
+          for (const d of DIFFICULTIES) {
+            merged.career[m][d] = Object.assign(defaultCareerEntry(), modeCareer[d] || {});
+          }
+        }
+      }
+    }
+    if (data.settings && typeof data.settings === "object") {
+      merged.settings.soundEnabled =
+        data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
+      merged.settings.superEasyPercent = data.settings.superEasyPercent || 30;
+      merged.settings.melodyRandomKey = !!data.settings.melodyRandomKey;
+    }
+    return merged;
+  }
+
+  const gameStore = GameHubStorage.forGame("pitchTrain", { defaultData });
+
+  function loadAll() {
+    try {
+      return mergeDefaults(gameStore.loadGameData());
+    } catch (e) {
+      return defaultData();
+    }
+  }
+
+  function saveAll(data) {
+    try {
+      gameStore.saveGameData(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  // -- history ------------------------------------------------------------
+  function appendHistoryEntry(entry) {
+    try {
+      const data = loadAll();
+      data.history.unshift(entry);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getHistory() {
+    try {
+      return loadAll().history;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // -- career ---------------------------------------------------------------
+  function getCareer() {
+    try {
+      return loadAll().career;
+    } catch (e) {
+      return defaultData().career;
+    }
+  }
+
+  // Called once per practice session (on leaving/ending it), not per
+  // answer. `answered`/`correct` are this session's totals (in whatever
+  // unit that mode counts in — see the file-header note above); `streak`
+  // is this session's best run within itself.
+  function recordSession(mode, difficulty, session) {
+    try {
+      const answered = Math.max(0, session.answered || 0);
+      const correct = Math.max(0, Math.min(answered, session.correct || 0));
+      const streak = Math.max(0, session.streak || 0);
+      if (answered === 0) return { isNewBestStreak: false, isNewBestAccuracy: false };
+
+      const data = loadAll();
+      const entry = Object.assign(defaultCareerEntry(), data.career[mode][difficulty] || {});
+      entry.totalAnswered += answered;
+      entry.totalCorrect += correct;
+
+      let isNewBestStreak = false;
+      if (streak > entry.bestStreak) {
+        entry.bestStreak = streak;
+        isNewBestStreak = true;
+      }
+
+      let isNewBestAccuracy = false;
+      if (answered >= MIN_ANSWERED_FOR_ACCURACY) {
+        const accuracy = correct / answered;
+        if (entry.bestAccuracy == null || accuracy > entry.bestAccuracy) {
+          entry.bestAccuracy = accuracy;
+          isNewBestAccuracy = true;
+        }
+      }
+
+      data.career[mode][difficulty] = entry;
+      saveAll(data);
+      return { isNewBestStreak, isNewBestAccuracy };
+    } catch (e) {
+      return { isNewBestStreak: false, isNewBestAccuracy: false };
+    }
+  }
+
+  // -- settings -------------------------------------------------------------
+  function getSettings() {
+    try {
+      return loadAll().settings;
+    } catch (e) {
+      return defaultData().settings;
+    }
+  }
+  function saveSettings(partial) {
+    try {
+      const data = loadAll();
+      data.settings = Object.assign(data.settings, partial);
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+
+  return {
+    DIFFICULTIES,
+    MODES,
+    appendHistoryEntry,
+    getHistory,
+    getCareer,
+    recordSession,
+    getSettings,
+    saveSettings,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.PitchTrainStorage = PitchTrainStorage;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     GameHubStorage,
@@ -3515,5 +3699,6 @@ if (typeof module !== "undefined" && module.exports) {
     ShellGameStorage,
     FrogStorage,
     SmokeCarStorage,
+    PitchTrainStorage,
   };
 }

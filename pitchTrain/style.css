@@ -1,0 +1,324 @@
+/* 絕對音感 specific styles. Shared tokens/components (buttons, toolbar,
+   modal shell, difficulty grid, record list, career table) come from
+   ../shared/style.css. Particle/confetti/screen-flash/milestone-banner
+   celebration layer is adapted from shellGame/style.css, anchored to the
+   viewport (position:fixed) instead of a specific stage element since
+   there's no single board element to anchor to across both modes. */
+
+.mode-tabs {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.mode-tab {
+  flex: 1;
+  font-weight: 700;
+}
+
+.mode-description {
+  width: 100%;
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.melody-key-option {
+  width: 100%;
+}
+
+.key-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.key-toggle input {
+  width: 20px;
+  height: 20px;
+}
+
+/* -- practice board shell ------------------------------------------------ */
+
+.practice-board {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.note-visual {
+  font-size: 3.2rem;
+  line-height: 1;
+}
+
+.practice-hint-text {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.play-btn {
+  min-width: 160px;
+  font-weight: 700;
+}
+
+.single-controls,
+.melody-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.replay-count-label {
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.result-banner {
+  min-height: 1.6em;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.result-banner.tone-correct {
+  color: #16a34a;
+}
+.result-banner.tone-wrong {
+  color: #dc2626;
+}
+
+/* -- 聽音辨識 answer grid ------------------------------------------------- */
+
+.note-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.note-answer-btn {
+  min-height: 54px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.note-answer-btn:disabled {
+  cursor: not-allowed;
+}
+
+.note-answer-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.note-answer-btn.picked-correct {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}
+
+.note-answer-btn.picked-wrong {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+.note-answer-btn.reveal-correct {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+}
+
+/* -- 旋律回奏 keypad + attempt track --------------------------------------- */
+
+.degree-keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.degree-btn {
+  min-height: 54px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.degree-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.degree-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.melody-attempt-track {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+}
+
+.attempt-chip {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 2px solid var(--color-border);
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: var(--color-panel);
+  color: var(--color-text);
+}
+
+.attempt-chip.empty {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.attempt-chip.correct {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+.attempt-chip.wrong {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.melody-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.melody-actions .btn {
+  flex: 1;
+}
+
+/* -- particles + celebration layers (adapted from shellGame) -------------- */
+
+.particle-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+}
+
+.particle {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  font-size: 1.4rem;
+  transform: translate(-50%, 0);
+  animation: particleBurst 0.9s ease-out forwards;
+}
+
+@keyframes particleBurst {
+  0% { transform: translate(-50%, 0) scale(0.6); opacity: 1; }
+  100% {
+    transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, -80px)) scale(1.1) rotate(var(--rot, 20deg));
+    opacity: 0;
+  }
+}
+
+.confetti-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 16px;
+  opacity: 0.9;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(110vh) rotate(540deg); }
+}
+
+.screen-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0;
+}
+
+.screen-flash.flash-good {
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35), transparent 70%);
+  animation: flashPulse 0.6s ease-out;
+}
+
+.screen-flash.flash-bad {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.32), transparent 70%);
+  animation: flashPulse 0.5s ease-out;
+}
+
+@keyframes flashPulse {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+.milestone-banner {
+  position: fixed;
+  top: 22%;
+  left: 50%;
+  transform: translate(-50%, -20px) scale(0.8);
+  background: var(--color-panel);
+  border: 2px solid #f59e0b;
+  border-radius: 14px;
+  padding: 14px 26px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 21;
+  opacity: 0;
+  animation: milestonePop 2s ease-in-out forwards;
+  text-align: center;
+}
+
+@keyframes milestonePop {
+  0% { opacity: 0; transform: translate(-50%, -20px) scale(0.7); }
+  15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+  25% { transform: translate(-50%, 0) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+}
