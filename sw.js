@@ -8,15 +8,19 @@
 //
 // MAINTENANCE: bump CACHE_VERSION on every content change (new game, any
 // edited file, new/removed asset) — that's what triggers the
-// update-available banner (see shared/js/pwa.js). If files are added,
-// removed, or renamed, regenerate PRECACHE_URLS too — this list was
-// generated, not hand-typed, via:
+// update-available banner (see shared/js/pwa.js). Format is
+// "YYYY-MM-DD-HHmm" (local time of the deploy) rather than an opaque vN —
+// shared/js/pwa.js parses this exact string to show "版本更新於 ..." on the
+// hub homepage, so this is the ONE place that timestamp comes from; no
+// second value to keep in sync. If files are added, removed, or renamed,
+// regenerate PRECACHE_URLS too — this list was generated, not hand-typed,
+// via:
 //   find . -type f \( -iname "*.html" -o -iname "*.js" -o -iname "*.css" -o -iname "*.json" \) \
 //     -not -path "./.git/*" -not -path "./.venv/*" -not -path "./.claude/*" -not -name "sw.js" \
 //     | sed 's|^\./||' | sort
 //   (plus icons/*.png) — re-run that and diff before hand-editing this
 // array for anything beyond a one-off addition.
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "2026-08-11-1545";
 const CACHE_NAME = "sudo-hub-" + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -187,4 +191,7 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data === "skipWaiting") self.skipWaiting();
+  else if (event.data === "getVersion" && event.source) {
+    event.source.postMessage({ type: "version", version: CACHE_VERSION });
+  }
 });

@@ -6,6 +6,19 @@
   const DIFFICULTY_LABELS = { easy: "簡單", medium: "中等", hard: "困難", expert: "專家" };
   const DIFFICULTY_ORDER = ["easy", "medium", "hard", "expert"];
   const SOUND_EVENTS = new Set(["invalid", "undo"]);
+  // Only these events actually change what's ON the board (new layout,
+  // resumed layout, or pieces removed) and so are the only ones allowed to
+  // call renderBoard() — "drop" is handled separately below (it needs the
+  // animation-aware version). Every other event ("tick" from the 1s game
+  // timer, "ai-thinking", "invalid") is purely cosmetic and must NOT call
+  // renderBoard(): that function does `boardEl.innerHTML = "" ` + a full
+  // rebuild, which would destroy any `.c4-falling-disc` overlay currently
+  // mid-animation if one of these fires while a piece is still falling —
+  // confirmed via DOM-mutation timing that a "tick" landing inside a
+  // ~240-570ms fall window was cutting the animation short exactly this
+  // way (the AI's disc looked like it fell at a different, faster "speed"
+  // than the player's only because its animation kept getting truncated).
+  const BOARD_CHANGING_EVENTS = new Set(["new-game", "restore", "undo"]);
 
   // Cells currently mid-fall (keyed "row,col") are rendered as empty even
   // though the real board state already has the piece placed — the
@@ -314,22 +327,30 @@
             }
           }
           renderWinModal(latest);
+          // The ONLY place that schedules the AI's next move — waits until
+          // the piece that was just dropped (human's or the AI's own) has
+          // fully finished falling before letting the AI start its reply,
+          // so the two players' discs never visually overlap or race.
           if (latest.aiThinking) setTimeout(() => ConnectFourGame.runAiTurn(), 30);
         });
         return;
       }
     }
 
-    renderBoard(state);
+    if (BOARD_CHANGING_EVENTS.has(event)) {
+      renderBoard(state);
+      renderToolbar(state);
+      renderWinModal(state);
+      return;
+    }
+
+    // Cosmetic-only events (tick, ai-thinking, invalid, or none) — toolbar
+    // text only, never renderBoard() (see BOARD_CHANGING_EVENTS comment
+    // above for why). In particular this is what makes the "🤖 電腦思考中"
+    // text appear immediately after the human's move without disturbing
+    // that move's own still-playing fall animation.
     renderToolbar(state);
     renderWinModal(state);
-
-    // Kick off the AI's reply one tick later so the "電腦思考中" indicator
-    // actually paints first — minimax at higher difficulties is real
-    // synchronous work (same reasoning as nonogram's generation deferral).
-    if (state.aiThinking) {
-      setTimeout(() => ConnectFourGame.runAiTurn(), 30);
-    }
   }
 
   // -- home view interactions -----------------------------------------------

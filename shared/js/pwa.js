@@ -12,6 +12,7 @@
   var installBtn = document.getElementById("pwaInstallBtn");
   var updateBanner = document.getElementById("pwaUpdateBanner");
   var updateBtn = document.getElementById("pwaUpdateBtn");
+  var buildVersionText = document.getElementById("buildVersionText");
 
   var isStandalone =
     (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
@@ -93,4 +94,33 @@
     reloading = true;
     window.location.reload();
   });
+
+  // -- visible build version (which cached version is actually running) -----
+  // sw.js's CACHE_VERSION is the single source of truth, formatted as
+  // "YYYY-MM-DD-HHmm" — parsed here rather than duplicated as a second
+  // hardcoded string anywhere, so there's nothing else to keep in sync when
+  // bumping it. Asks the ACTIVE (controlling) worker specifically, not
+  // whichever cache happens to exist in storage, so this reflects what the
+  // page is really running right now — if an update is waiting but not yet
+  // applied, this still (correctly) shows the old version until the player
+  // taps "立即更新".
+  function formatBuildVersion(raw) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})$/.exec(raw);
+    if (!m) return raw;
+    return m[1] + "年" + Number(m[2]) + "月" + Number(m[3]) + "日 " + m[4] + ":" + m[5] + " 更新";
+  }
+  navigator.serviceWorker.addEventListener("message", function (event) {
+    if (event.data && event.data.type === "version" && buildVersionText) {
+      buildVersionText.textContent = "📦 版本：" + formatBuildVersion(event.data.version);
+      buildVersionText.classList.remove("hidden");
+    }
+  });
+  function requestVersion() {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage("getVersion");
+    }
+  }
+  if (navigator.serviceWorker.controller) requestVersion();
+  navigator.serviceWorker.ready.then(requestVersion);
+  navigator.serviceWorker.addEventListener("controllerchange", requestVersion);
 })();
