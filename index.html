@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2563eb" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 <title>益智遊戲集</title>
 <link rel="stylesheet" href="shared/style.css" />
 </head>
@@ -28,10 +31,21 @@
   <h2 class="section-title">選擇遊戲</h2>
   <div id="gameGrid" class="game-grid"></div>
 
+  <div id="pwaUpdateBanner" class="pwa-update-banner hidden">
+    <span>🔄 有新版本可用</span>
+    <button id="pwaUpdateBtn" class="btn">立即更新</button>
+  </div>
+
+  <div id="pwaInstallHint" class="pwa-install-hint hidden">
+    <p id="pwaInstallText" class="pwa-install-text"></p>
+    <button id="pwaInstallBtn" class="btn hidden">📲 加入主畫面，離線也能玩</button>
+  </div>
+
 </div>
 
 <script src="shared/js/storage.js"></script>
 <script src="shared/js/games.js"></script>
 <script src="shared/js/hub.js"></script>
+<script src="shared/js/pwa.js"></script>
 </body>
 </html>
