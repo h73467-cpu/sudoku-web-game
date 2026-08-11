@@ -53,16 +53,19 @@ var RelativePitchGame = (function () {
   };
 
   // -- 旋律回奏 (melody echo) tiers ---------------------------------------------
-  // length/tempoMs same shape as pitchTrain's MELODY_TIERS; diatonicPool
-  // grows narrower->wider the same way SINGLE_TIERS does. Replay is
+  // length/tempoMs same shape as pitchTrain's MELODY_TIERS. Note CONTENT is
+  // no longer a free random pool — see buildMelodyFromProgression below,
+  // which walks a real chord progression (reusing CHORD_TIERS via
+  // chordTierFor for gating which progressions/qualities are reachable at
+  // each difficulty) and arpeggiates it into the melody. Replay is
   // unlimited at every tier (see requestMelodyReplay) — difficulty comes
-  // from length/tempo, not from rationing how many times you can re-hear it.
+  // from length/tempo/progression complexity, not from rationing replays.
   const MELODY_TIERS = {
-    superEasy: { length: 4, diatonicPool: [0, 2, 4, 7, 9], tempoMs: 700 },
-    easy: { length: 6, diatonicPool: DIATONIC_INDICES.slice(0, 7), tempoMs: 620 },
-    medium: { length: 8, diatonicPool: DIATONIC_INDICES, tempoMs: 550 },
-    hard: { length: 12, diatonicPool: DIATONIC_INDICES, tempoMs: 480 },
-    expert: { length: 16, diatonicPool: DIATONIC_INDICES, tempoMs: 420 },
+    superEasy: { length: 4, tempoMs: 700 },
+    easy: { length: 6, tempoMs: 620 },
+    medium: { length: 8, tempoMs: 550 },
+    hard: { length: 12, tempoMs: 480 },
+    expert: { length: 16, tempoMs: 420 },
   };
 
   // -- 和弦練習 (chord) theory data ---------------------------------------------
@@ -385,26 +388,89 @@ var RelativePitchGame = (function () {
     return clampMidiList(midiList);
   }
 
+  // Every chord in the template (root AND quality) must fit within
+  // tier.progressionPool/qualityPool for the template to be usable at that
+  // tier — harder progressions (blues' dominant7, jazz's V7/Imaj7)
+  // naturally only surface once the tier's qualityPool unlocks those
+  // chord qualities. Shared by chord-mode question generation and
+  // melody-mode's progression-arpeggio generation (see chordTierFor reuse
+  // in buildMelodyFromProgression below).
+  function templateFitsTier(template, tier) {
+    return template.chords.every(
+      (c) => tier.progressionPool.indexOf(c.root) !== -1 && tier.qualityPool.indexOf(c.quality) !== -1
+    );
+  }
+
   // Flattens PROGRESSION_TEMPLATES into { progressionName, context, target }
-  // candidates usable at this tier — every chord in the template (root AND
-  // quality) must fit within tier.progressionPool/qualityPool, so harder
-  // progressions (blues' dominant7, jazz's V7/Imaj7) naturally only surface
-  // at the difficulty tiers that already unlock those chord qualities.
-  // `context` is the chord heard just before `target` in the progression
-  // (or the implicit tonic I, for a template's very first chord).
+  // candidates usable at this tier. `context` is the chord heard just
+  // before `target` in the progression (or the implicit tonic I, for a
+  // template's very first chord).
   function progressionCandidatesForTier(tier) {
     const candidates = [];
     PROGRESSION_TEMPLATES.forEach((template) => {
-      const fits = template.chords.every(
-        (c) => tier.progressionPool.indexOf(c.root) !== -1 && tier.qualityPool.indexOf(c.quality) !== -1
-      );
-      if (!fits) return;
+      if (!templateFitsTier(template, tier)) return;
       template.chords.forEach((chord, i) => {
         const context = i === 0 ? { root: 0, quality: "major" } : template.chords[i - 1];
         candidates.push({ progressionName: template.name, context, target: chord });
       });
     });
     return candidates;
+  }
+
+  // Chord-tone scale-degree indices for a chord rooted `root` semitones
+  // above the tonic, folded back into the practice octave (0..12) so every
+  // tone is always answerable on the existing degree keypad/piano — root
+  // first, then 3rd, 5th, [7th], matching CHORD_QUALITIES' interval order,
+  // so "take the first k tones" always starts from the most recognizable
+  // note. (These chords are all built from correct diatonic qualities on
+  // diatonic roots, so every folded tone always lands on a DIATONIC_INDICES
+  // slot — never a chromatic one, regardless of the includeChromatic
+  // setting.)
+  function chordToneDegrees(root, quality) {
+    return CHORD_QUALITIES[quality].intervals.map((iv) => {
+      const v = root + iv;
+      return v > 12 ? v - 12 : v;
+    });
+  }
+
+  // Splits `totalNotes` across `chordCount` chords as evenly as possible,
+  // front-loading any remainder onto the earlier chords (6 notes over 4
+  // chords -> [2,2,1,1]) rather than padding the end.
+  function distributeNoteCounts(totalNotes, chordCount) {
+    const base = Math.floor(totalNotes / chordCount);
+    const remainder = totalNotes % chordCount;
+    const counts = [];
+    for (let i = 0; i < chordCount; i++) {
+      counts.push(base + (i < remainder ? 1 : 0));
+    }
+    return counts;
+  }
+
+  // Builds a `length`-note melody by picking a random progression template
+  // (gated to `difficulty` via chordTierFor, reusing the exact same
+  // pool/quality gating chord-mode questions use) and arpeggiating it:
+  // each chord gets a share of the notes (see distributeNoteCounts),
+  // cycling through that chord's own tones in root/3rd/5th/[7th] order —
+  // so a chord holding more notes than it has distinct tones just repeats
+  // the pattern (a completely normal arpeggio-drill shape). Falls back to
+  // "1-4-5 三和弦搖滾" (major triads only, fits every tier) if nothing else
+  // fits, so this never comes back empty.
+  function buildMelodyFromProgression(length, difficulty) {
+    const chordTier = chordTierFor(difficulty);
+    const usable = PROGRESSION_TEMPLATES.filter((t) => templateFitsTier(t, chordTier));
+    const template =
+      usable.length > 0
+        ? usable[Math.floor(Math.random() * usable.length)]
+        : PROGRESSION_TEMPLATES.find((t) => t.name === "1-4-5 三和弦搖滾");
+    const counts = distributeNoteCounts(length, template.chords.length);
+    const melody = [];
+    template.chords.forEach((chord, i) => {
+      const tones = chordToneDegrees(chord.root, chord.quality);
+      for (let j = 0; j < counts[i]; j++) {
+        melody.push(tones[j % tones.length]);
+      }
+    });
+    return { melody, progressionName: template.name };
   }
 
   // -- 弱點強化：依歷史正確率加權選取 -------------------------------------------
@@ -474,13 +540,10 @@ var RelativePitchGame = (function () {
   function startMelodyRound() {
     if (!state || state.mode !== "melody") return;
     const tier = melodyTierFor(state.difficulty);
-    const pool = effectivePool(tier.diatonicPool, state.settings.includeChromatic);
-    const melody = [];
-    for (let i = 0; i < tier.length; i++) {
-      melody.push(weightedPool(pool, "melody"));
-    }
+    const built = buildMelodyFromProgression(tier.length, state.difficulty);
     state.tonicMidi = pickTonicMidi();
-    state.melody = melody;
+    state.melody = built.melody;
+    state.progressionName = built.progressionName;
     state.playerAttempt = [];
     state.melodyResult = null;
     state.status = "melody-intro";
@@ -644,6 +707,7 @@ var RelativePitchGame = (function () {
       currentChord: null,
       lastChordResult: null,
       melody: [],
+      progressionName: null,
       tonicMidi: 60,
       playerAttempt: [],
       melodyResult: null,

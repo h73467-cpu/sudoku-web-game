@@ -8,7 +8,7 @@
   const DIFFICULTY_LABELS = { superEasy: "超簡單", easy: "簡單", medium: "中等", hard: "困難", expert: "專家" };
   const MODE_DESCRIPTIONS = {
     singleDegree: "先聽 do，再聽一個音，猜猜是第幾級（1~7、i，或加開半音階的 #1 #2 #4 #5 #6）。",
-    melody: "先聽 do，再聽一小段旋律，用鋼琴鍵盤或簡譜鍵盤依序點出你聽到的音。",
+    melody: "先聽 do，再聽一小段取自真實和弦走向的旋律，用鋼琴鍵盤或簡譜鍵盤依序點出你聽到的音。",
     chord: "先聽 do，「級數聽辨」再聽 I 級和弦當參考、接著聽目標和弦猜級數；「色彩聽辨」直接猜和弦的大小/色彩。",
   };
   const CHORD_SUB_MODE_LABELS = { progression: "級數聽辨", quality: "色彩聽辨" };
@@ -766,7 +766,9 @@
     ensureInputBuilt("melody", state);
     clearInputMarks(melodyPianoKeyboard);
     clearInputMarks(melodyDegreeKeypad);
-    melodyHintText.textContent = "🔊 播放中：先報 do，答答兩拍後開始旋律…（共 " + state.melody.length + " 個音）";
+    const progressionTag = state.progressionName ? "《" + state.progressionName + "》" : "";
+    melodyHintText.textContent =
+      "🔊 播放中：先報 do，答答兩拍後開始旋律…（共 " + state.melody.length + " 個音，取自" + progressionTag + "的和弦琶音）";
     renderLiveAttemptTrack(state);
     melodyResultBanner.textContent = "";
     melodyResultBanner.className = "result-banner";
@@ -789,6 +791,7 @@
 
   function onMelodyReplay(state) {
     melodyHintText.textContent = "🔊 播放中：答答兩拍後開始旋律…（共 " + state.melody.length + " 個音）";
+    // (progression name already shown once at round start; replay keeps it brief)
     enableInputContainer(melodyPianoKeyboard, false);
     enableInputContainer(melodyDegreeKeypad, false);
     playMelodyBtn.disabled = true;
