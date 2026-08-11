@@ -20,7 +20,7 @@
 //     | sed 's|^\./||' | sort
 //   (plus icons/*.png) — re-run that and diff before hand-editing this
 // array for anything beyond a one-off addition.
-const CACHE_VERSION = "2026-08-11-1545";
+const CACHE_VERSION = "2026-08-11-1632";
 const CACHE_NAME = "sudo-hub-" + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -106,6 +106,7 @@ const PRECACHE_URLS = [
   "relativePitch/js/sound.js",
   "relativePitch/js/ui.js",
   "relativePitch/style.css",
+  "shared/js/aspect-ratio-fallback.js",
   "shared/js/games.js",
   "shared/js/hub.js",
   "shared/js/pwa.js",
