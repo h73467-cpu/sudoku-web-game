@@ -908,6 +908,11 @@ var WordGameDictionary = (function () {
   "venom": "毒液", "verbose": "冗長的", "version": "版本", "vertebrate": "脊椎動物", "villa": "別墅", "vintage": "復古的",
   "wardrobe": "衣櫥", "warehouse": "倉庫", "warrant": "逮捕令", "weave": "編織", "webcam": "網路攝影機", "wheat": "小麥",
   "whisker": "鬍鬚", "widget": "小工具", "yield": "收成讓步", "zest": "果皮屑熱情",
+  "late": "遲到的；晚的", "soon": "不久；快地", "tonight": "今晚", "already": "已經", "yet": "然而；尚未", "later": "稍後",
+  "finally": "最後；終於", "eventually": "最終", "immediately": "立刻", "meanwhile": "同時；與此同時", "afterward": "之後", "until": "直到",
+  "while": "當...的時候", "meantime": "同時", "usually": "通常", "often": "經常", "frequently": "頻繁地", "regularly": "定期地",
+  "once": "一次；曾經", "twice": "兩次", "yearly": "每年的", "constantly": "不斷地", "repeatedly": "反覆地", "mad": "生氣的；瘋狂的",
+  "punctual": "準時的", "prompt": "迅速的", "overdue": "過期的", "timely": "及時的", "lengthy": "冗長的", "quick": "快的",
   };
 
   var WORDS = Object.keys(TRANSLATIONS);
