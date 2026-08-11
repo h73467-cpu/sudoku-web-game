@@ -4,14 +4,16 @@
    is adapted from pitchTrain/style.css (itself adapted from shellGame). */
 
 .mode-tabs,
-.input-mode-tabs {
+.input-mode-tabs,
+.octave-range-tabs {
   width: 100%;
   display: flex;
   gap: 10px;
 }
 
 .mode-tab,
-.input-mode-tab {
+.input-mode-tab,
+.octave-range-tab {
   flex: 1;
   font-weight: 700;
 }
@@ -35,6 +37,48 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* -- weakness analytics view ---------------------------------------------- */
+
+.weakness-bars {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weakness-bar-row {
+  display: grid;
+  grid-template-columns: 3em 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.weakness-bar-label {
+  font-weight: 700;
+  text-align: center;
+}
+
+.weakness-bar-track {
+  height: 14px;
+  border-radius: 7px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.weakness-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f43f5e, #f59e0b 55%, #22c55e);
+  border-radius: 7px 0 0 7px;
+}
+
+.weakness-bar-value {
+  opacity: 0.8;
+  white-space: nowrap;
+  font-size: 0.85rem;
 }
 
 /* -- practice board shell ------------------------------------------------ */
@@ -146,6 +190,47 @@
   border-color: #dc2626;
 }
 .degree-btn.reveal-correct {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
+}
+
+/* -- 和弦作答格：跟簡譜按鈕共用 picked-correct/picked-wrong/reveal-correct 狀態樣式 */
+
+.chord-answer-grid {
+  width: 100%;
+  max-width: 460px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.chord-answer-btn {
+  min-height: 54px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+.chord-answer-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chord-answer-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.chord-answer-btn.picked-correct {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}
+.chord-answer-btn.picked-wrong {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+.chord-answer-btn.reveal-correct {
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.3);
 }

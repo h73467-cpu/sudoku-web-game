@@ -25,6 +25,20 @@ var RelativePitchGame = (function () {
   const MILESTONE_EVERY = 5;
   const DIFFICULTY_ORDER = ["superEasy", "easy", "medium", "hard", "expert"];
 
+  // -- 音域設定：練習用的主音 MIDI 範圍 -----------------------------------------
+  // "mid" is exactly today's old hardcoded 55+rand(13) (G3..G4 inclusive) —
+  // players who never touch this setting see zero behavior change.
+  const OCTAVE_RANGES = {
+    low: { min: 48, max: 60 }, // C3..C4
+    mid: { min: 55, max: 67 }, // G3..G4
+    high: { min: 60, max: 72 }, // C4..C5
+  };
+  // Highest MIDI note any generated tone (melody note or chord voice) may
+  // land on before we drop the whole thing an octave — keeps "high" range
+  // + a wide chord voicing or the melody's +12 octave leap from turning
+  // into a shrill oscillator screech.
+  const AUDIBLE_CEILING_MIDI = 84;
+
   // -- 單音辨識 (single-degree recognition) tiers ------------------------------
   // diatonicPool: which scale degrees can be asked (superEasy restricts to
   // a gentle stepwise-friendly subset, same reasoning as pitchTrain's
@@ -49,6 +63,145 @@ var RelativePitchGame = (function () {
     expert: { length: 16, diatonicPool: DIATONIC_INDICES, tempoMs: 420, replayLimit: 0 },
   };
 
+  // -- 和弦練習 (chord) theory data ---------------------------------------------
+  // intervals are semitone offsets from the chord's own root (not the
+  // practice tonic) — same "index = semitone" convention as
+  // FULL_DEGREE_LABELS, so chord tones reuse midiToFreq directly.
+  const CHORD_QUALITIES = {
+    major: { label: "大三和弦", intervals: [0, 4, 7] },
+    minor: { label: "小三和弦", intervals: [0, 3, 7] },
+    diminished: { label: "減三和弦", intervals: [0, 3, 6] },
+    dominant7: { label: "屬七和弦", intervals: [0, 4, 7, 10] },
+    major7: { label: "大七和弦", intervals: [0, 4, 7, 11] },
+    minor7: { label: "小七和弦", intervals: [0, 3, 7, 10] },
+  };
+  // Major-key diatonic harmony (I ii iii IV V vi vii°), keyed by the same
+  // semitone-offset-from-tonic convention DIATONIC_INDICES uses.
+  const DIATONIC_CHORD_MAP = {
+    0: { roman: "I", quality: "major" },
+    2: { roman: "ii", quality: "minor" },
+    4: { roman: "iii", quality: "minor" },
+    5: { roman: "IV", quality: "major" },
+    7: { roman: "V", quality: "major" },
+    9: { roman: "vi", quality: "minor" },
+    11: { roman: "vii°", quality: "diminished" },
+  };
+  const CHORD_TIERS = {
+    superEasy: { progressionPool: [0, 5, 7], qualityPool: ["major", "minor"], timbre: ["sine"] },
+    easy: { progressionPool: [0, 5, 7, 9], qualityPool: ["major", "minor"], timbre: ["sine"] },
+    medium: {
+      progressionPool: [0, 2, 4, 5, 7, 9],
+      qualityPool: ["major", "minor", "diminished"],
+      timbre: ["sine", "triangle"],
+    },
+    hard: {
+      progressionPool: [0, 2, 4, 5, 7, 9, 11],
+      qualityPool: ["major", "minor", "diminished", "dominant7"],
+      timbre: ["triangle"],
+    },
+    expert: {
+      progressionPool: [0, 2, 4, 5, 7, 9, 11],
+      qualityPool: ["major", "minor", "diminished", "dominant7", "major7", "minor7"],
+      timbre: ["triangle", "square"],
+    },
+  };
+
+  // -- 經典歌曲提示：答錯單音辨識題目時，可播放對應音級的經典歌曲片段輔助 -------
+  // noteSequence is expressed in the SONG'S OWN scale degrees (its own
+  // tonic = degree 0, matching FULL_DEGREE_LABELS' semitone-offset
+  // convention but allowed to exceed 12 for notes above the song's own
+  // octave) so ui.js can transpose it onto whatever tonic the current
+  // practice question randomized to. targetIndex marks which noteSequence
+  // entry demonstrates the taught degree.
+  //
+  // Coverage note: only the 6 diatonic degrees (2,3,4,5,6,7) have an entry
+  // here — see the plan's feasibility assessment for why the 5 chromatic
+  // degrees (#1 #2 #4 #5 #6) don't have a solid public-domain "classic
+  // song" candidate yet (they're exactly the tones a plain major-scale
+  // song excludes). The hint button simply doesn't appear for degrees
+  // without an entry.
+  const INTERVAL_SONG_HINTS = {
+    // 小星星：do do sol sol / la la sol- / fa fa mi mi / re re do- —
+    // targets the "re re" near the end (do -> re relationship).
+    2: {
+      name: "小星星",
+      tempo: 480,
+      noteSequence: [
+        { degree: 0, duration: 1 }, { degree: 0, duration: 1 },
+        { degree: 7, duration: 1 }, { degree: 7, duration: 1 },
+        { degree: 9, duration: 1 }, { degree: 9, duration: 1 }, { degree: 7, duration: 2 },
+        { degree: 5, duration: 1 }, { degree: 5, duration: 1 },
+        { degree: 4, duration: 1 }, { degree: 4, duration: 1 },
+        { degree: 2, duration: 1 }, { degree: 2, duration: 1 }, { degree: 0, duration: 2 },
+      ],
+      targetIndex: 11,
+    },
+    // 兩隻老虎：do re mi do 開頭就是 do -> mi 的完美示範。
+    4: {
+      name: "兩隻老虎",
+      tempo: 460,
+      noteSequence: [
+        { degree: 0, duration: 1 }, { degree: 2, duration: 1 }, { degree: 4, duration: 1 }, { degree: 0, duration: 1 },
+        { degree: 0, duration: 1 }, { degree: 2, duration: 1 }, { degree: 4, duration: 1 }, { degree: 0, duration: 1 },
+        { degree: 4, duration: 1 }, { degree: 5, duration: 1 }, { degree: 7, duration: 2 },
+        { degree: 4, duration: 1 }, { degree: 5, duration: 1 }, { degree: 7, duration: 2 },
+      ],
+      targetIndex: 2,
+    },
+    // 生日快樂歌「Happy birthday dear...」樂句觸及 fa。
+    5: {
+      name: "生日快樂歌",
+      tempo: 480,
+      noteSequence: [
+        { degree: 7, duration: 1 }, { degree: 7, duration: 1 }, { degree: 12, duration: 1 }, { degree: 9, duration: 1 },
+        { degree: 5, duration: 1 }, { degree: 4, duration: 2 },
+        { degree: 11, duration: 1 }, { degree: 11, duration: 1 }, { degree: 9, duration: 1 }, { degree: 5, duration: 1 },
+        { degree: 7, duration: 1 }, { degree: 5, duration: 2 },
+        { degree: 2, duration: 1 }, { degree: 4, duration: 1 }, { degree: 5, duration: 2 },
+      ],
+      targetIndex: 4,
+    },
+    // 倫敦鐵橋：開頭就是 sol，純五度的直接示範。
+    7: {
+      name: "倫敦鐵橋",
+      tempo: 460,
+      noteSequence: [
+        { degree: 7, duration: 1 }, { degree: 9, duration: 1 }, { degree: 7, duration: 1 }, { degree: 5, duration: 1 },
+        { degree: 4, duration: 1 }, { degree: 5, duration: 1 }, { degree: 7, duration: 2 },
+        { degree: 2, duration: 1 }, { degree: 4, duration: 1 }, { degree: 5, duration: 2 },
+        { degree: 4, duration: 1 }, { degree: 5, duration: 1 }, { degree: 7, duration: 2 },
+      ],
+      targetIndex: 0,
+    },
+    // 小星星「la la sol」是 do-re-mi-fa-sol-LA 裡最好認的 la。
+    9: {
+      name: "小星星",
+      tempo: 480,
+      noteSequence: [
+        { degree: 0, duration: 1 }, { degree: 0, duration: 1 },
+        { degree: 7, duration: 1 }, { degree: 7, duration: 1 },
+        { degree: 9, duration: 1 }, { degree: 9, duration: 1 }, { degree: 7, duration: 2 },
+        { degree: 5, duration: 1 }, { degree: 5, duration: 1 },
+        { degree: 4, duration: 1 }, { degree: 4, duration: 1 },
+        { degree: 2, duration: 1 }, { degree: 2, duration: 1 }, { degree: 0, duration: 2 },
+      ],
+      targetIndex: 4,
+    },
+    // 生日快樂歌「Happy birthday to you」句尾的 ti，導音示範。
+    11: {
+      name: "生日快樂歌",
+      tempo: 480,
+      noteSequence: [
+        { degree: 7, duration: 1 }, { degree: 7, duration: 1 }, { degree: 9, duration: 1 }, { degree: 7, duration: 1 },
+        { degree: 12, duration: 1 }, { degree: 11, duration: 2 },
+        { degree: 7, duration: 1 }, { degree: 7, duration: 1 }, { degree: 9, duration: 1 }, { degree: 7, duration: 1 },
+        { degree: 14, duration: 1 }, { degree: 12, duration: 2 },
+        { degree: 9, duration: 1 }, { degree: 7, duration: 1 }, { degree: 12, duration: 2 },
+      ],
+      targetIndex: 5,
+    },
+  };
+
   let state = null;
   let changeListener = null;
 
@@ -65,10 +218,23 @@ var RelativePitchGame = (function () {
   function isMilestone(streak) {
     return streak > 0 && streak % MILESTONE_EVERY === 0;
   }
-  // Always random (G3..G4) — no fixed-tonic option, unlike pitchTrain's
-  // pickTonicMidi(randomKey). This is what makes the game "relative".
+  // Always random within the player's chosen 音域 — no fixed-tonic option,
+  // unlike pitchTrain's pickTonicMidi(randomKey). This is what makes the
+  // game "relative". Defaults to the "mid" range (today's old hardcoded
+  // G3..G4) when state/settings aren't available yet.
   function pickTonicMidi() {
-    return 55 + Math.floor(Math.random() * 13);
+    const rangeKey = (state && state.settings && state.settings.octaveRange) || "mid";
+    const range = OCTAVE_RANGES[rangeKey] || OCTAVE_RANGES.mid;
+    return range.min + Math.floor(Math.random() * (range.max - range.min + 1));
+  }
+
+  // Drops a whole tone/chord block down an octave if its highest voice
+  // would land above AUDIBLE_CEILING_MIDI, rather than silently altering
+  // the tonic that was already announced to the player.
+  function clampMidiList(midiList) {
+    const highest = Math.max.apply(null, midiList);
+    if (highest <= AUDIBLE_CEILING_MIDI) return midiList;
+    return midiList.map((m) => m - 12);
   }
   // includeChromatic is a player-facing toggle orthogonal to the 5
   // difficulty tiers — when on, it unconditionally adds all 5 chromatic
@@ -84,13 +250,56 @@ var RelativePitchGame = (function () {
   function melodyTierFor(difficulty) {
     return MELODY_TIERS[difficulty] || MELODY_TIERS.easy;
   }
+  function chordTierFor(difficulty) {
+    return CHORD_TIERS[difficulty] || CHORD_TIERS.easy;
+  }
+
+  // MIDI notes for a chord rooted `rootDegreeIndex` semitones above
+  // `tonicMidi`, clamped down an octave as a block if it would otherwise
+  // reach into shrill territory (see AUDIBLE_CEILING_MIDI / clampMidiList).
+  function chordMidiNotes(tonicMidi, rootDegreeIndex, quality) {
+    const midiList = CHORD_QUALITIES[quality].intervals.map((iv) => tonicMidi + rootDegreeIndex + iv);
+    return clampMidiList(midiList);
+  }
+
+  // -- 弱點強化：依歷史正確率加權選取 -------------------------------------------
+  const WEAKNESS_MIN_SAMPLE = 5;
+  const WEAKNESS_MAX_WEIGHT_BONUS = 4;
+  // Picks one item from `items`. Uniform random unless
+  // state.settings.weaknessFocus is on, in which case items with a lower
+  // historical accuracy (via getEntry(item) -> {attempts, correct} | null,
+  // needs >=WEAKNESS_MIN_SAMPLE attempts to count) get picked more often —
+  // items with too little data stay at neutral weight so early sessions
+  // behave like plain random. Shared by degree selection (single/melody)
+  // and chord selection (progression/quality), just with different
+  // getEntry lookups against different storage stats buckets.
+  function weightedChoice(items, getEntry) {
+    if (!state.settings.weaknessFocus) return items[Math.floor(Math.random() * items.length)];
+    const weights = items.map((item) => {
+      const entry = getEntry(item);
+      if (!entry || entry.attempts < WEAKNESS_MIN_SAMPLE) return 1;
+      const accuracy = entry.correct / entry.attempts;
+      return 1 + (1 - accuracy) * WEAKNESS_MAX_WEIGHT_BONUS;
+    });
+    const total = weights.reduce((sum, w) => sum + w, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < items.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return items[i];
+    }
+    return items[items.length - 1];
+  }
+  function weightedPool(pool, mode) {
+    const stats = RelativePitchStorage.getDegreeStats();
+    return weightedChoice(pool, (index) => stats[mode + ":" + index]);
+  }
 
   // -- 單音辨識 -----------------------------------------------------------------
   function nextSingleQuestion() {
     if (!state || state.mode !== "singleDegree") return;
     const tier = singleTierFor(state.difficulty);
     const pool = effectivePool(tier.diatonicPool, state.settings.includeChromatic);
-    const index = pool[Math.floor(Math.random() * pool.length)];
+    const index = weightedPool(pool, "singleDegree");
     state.tonicMidi = pickTonicMidi();
     state.currentDegree = { index, midi: state.tonicMidi + index, label: FULL_DEGREE_LABELS[index] };
     state.lastResult = null;
@@ -112,6 +321,7 @@ var RelativePitchGame = (function () {
     const milestone = correct && isMilestone(state.streak);
     state.lastResult = { correct, pickedIndex, correctIndex: state.currentDegree.index };
     state.status = "answered";
+    RelativePitchStorage.recordDegreeAttempt("singleDegree", state.currentDegree.index, pickedIndex);
     notify("single-answer", { correct, milestone });
   }
 
@@ -122,7 +332,7 @@ var RelativePitchGame = (function () {
     const pool = effectivePool(tier.diatonicPool, state.settings.includeChromatic);
     const melody = [];
     for (let i = 0; i < tier.length; i++) {
-      melody.push(pool[Math.floor(Math.random() * pool.length)]);
+      melody.push(weightedPool(pool, "melody"));
     }
     state.tonicMidi = pickTonicMidi();
     state.melody = melody;
@@ -169,6 +379,11 @@ var RelativePitchGame = (function () {
     const perNote = state.melody.map((degree, i) => state.playerAttempt[i] === degree);
     const matched = perNote.filter(Boolean).length;
     const fullyCorrect = state.playerAttempt.length === total && matched === total;
+    state.melody.forEach((degree, i) => {
+      if (state.playerAttempt[i] != null) {
+        RelativePitchStorage.recordDegreeAttempt("melody", degree, state.playerAttempt[i]);
+      }
+    });
 
     state.sessionAnswered += total;
     state.sessionCorrect += matched;
@@ -184,6 +399,62 @@ var RelativePitchGame = (function () {
     notify("melody-result", { fullyCorrect, milestone });
   }
 
+  // -- 和弦練習 -----------------------------------------------------------------
+  function nextChordQuestion() {
+    if (!state || state.mode !== "chord") return;
+    const tier = chordTierFor(state.difficulty);
+    state.tonicMidi = pickTonicMidi();
+    if (state.chordSubMode === "quality") {
+      const stats = RelativePitchStorage.getChordStats();
+      const quality = weightedChoice(tier.qualityPool, (q) => stats["quality:" + q]);
+      state.currentChord = {
+        rootDegreeIndex: 0,
+        quality,
+        roman: null,
+        midiNotes: chordMidiNotes(state.tonicMidi, 0, quality),
+        contextMidiNotes: null,
+      };
+    } else {
+      const stats = RelativePitchStorage.getChordStats();
+      const rootDegreeIndex = weightedChoice(
+        tier.progressionPool,
+        (root) => stats["progression:" + DIATONIC_CHORD_MAP[root].roman]
+      );
+      const chordInfo = DIATONIC_CHORD_MAP[rootDegreeIndex];
+      state.currentChord = {
+        rootDegreeIndex,
+        quality: chordInfo.quality,
+        roman: chordInfo.roman,
+        midiNotes: chordMidiNotes(state.tonicMidi, rootDegreeIndex, chordInfo.quality),
+        // I-chord harmonic context played just before the target chord —
+        // gives progression questions something to hear the motion FROM.
+        contextMidiNotes: chordMidiNotes(state.tonicMidi, 0, "major"),
+      };
+    }
+    state.lastChordResult = null;
+    state.status = "chord-question";
+    notify("chord-question");
+  }
+
+  function answerChord(pickedValue) {
+    if (!state || state.mode !== "chord" || state.status !== "chord-question") return;
+    const correctKey = state.chordSubMode === "quality" ? state.currentChord.quality : state.currentChord.roman;
+    const correct = pickedValue === correctKey;
+    state.sessionAnswered += 1;
+    if (correct) {
+      state.sessionCorrect += 1;
+      state.streak += 1;
+      if (state.streak > state.bestStreakThisSession) state.bestStreakThisSession = state.streak;
+    } else {
+      state.streak = 0;
+    }
+    const milestone = correct && isMilestone(state.streak);
+    state.lastChordResult = { correct, pickedValue, correctKey };
+    state.status = "chord-answered";
+    RelativePitchStorage.recordChordAttempt(state.chordSubMode, correctKey, pickedValue);
+    notify("chord-answer", { correct, milestone });
+  }
+
   // -- session lifecycle --------------------------------------------------
   function startSession(mode, difficulty) {
     state = {
@@ -192,7 +463,10 @@ var RelativePitchGame = (function () {
       settings: {
         inputMode: RelativePitchStorage.getSettings().inputMode,
         includeChromatic: RelativePitchStorage.getSettings().includeChromatic,
+        octaveRange: RelativePitchStorage.getSettings().octaveRange,
+        weaknessFocus: RelativePitchStorage.getSettings().weaknessFocus,
       },
+      chordSubMode: RelativePitchStorage.getSettings().chordSubMode,
       status: null,
       streak: 0,
       bestStreakThisSession: 0,
@@ -200,6 +474,8 @@ var RelativePitchGame = (function () {
       sessionCorrect: 0,
       currentDegree: null,
       lastResult: null,
+      currentChord: null,
+      lastChordResult: null,
       melody: [],
       tonicMidi: 60,
       playerAttempt: [],
@@ -207,6 +483,7 @@ var RelativePitchGame = (function () {
       melodyResult: null,
     };
     if (mode === "singleDegree") nextSingleQuestion();
+    else if (mode === "chord") nextChordQuestion();
     else startMelodyRound();
     notify("session-start");
   }
@@ -267,6 +544,9 @@ var RelativePitchGame = (function () {
     tapMelodyDegree,
     undoMelodyTap,
     submitMelodyAttempt,
+    // chord
+    nextChordQuestion,
+    answerChord,
     // shared helpers/constants for ui.js
     FULL_DEGREE_LABELS,
     DIATONIC_INDICES,
@@ -275,10 +555,15 @@ var RelativePitchGame = (function () {
     MILESTONE_EVERY,
     SINGLE_TIERS,
     MELODY_TIERS,
+    CHORD_TIERS,
+    CHORD_QUALITIES,
+    DIATONIC_CHORD_MAP,
+    INTERVAL_SONG_HINTS,
     midiToFreq,
     isMilestone,
     singleTierFor,
     melodyTierFor,
+    chordTierFor,
     effectivePool,
   };
 })();

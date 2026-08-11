@@ -50,6 +50,14 @@ var RelativePitchSound = (function () {
     playNote(freq, 0.7, ["sine"], 0.16, startOffset || 0);
   }
 
+  // Thin generalization of playNote to N simultaneous frequencies (a
+  // chord) — divides volume by chord size so a 4-note 7th chord isn't
+  // just louder than a triad, same spirit as playNote's per-type split.
+  function playChord(freqs, duration, types, volume, startOffset) {
+    const perNoteVolume = volume / freqs.length;
+    freqs.forEach((freq) => playNote(freq, duration, types, perNoteVolume, startOffset));
+  }
+
   function beep(freq, duration, type, volume, startOffset) {
     playNote(freq, duration, [type], volume, startOffset);
   }
@@ -100,6 +108,7 @@ var RelativePitchSound = (function () {
   return {
     playNote,
     playReference,
+    playChord,
     play,
     setEnabled: (v) => {
       enabled = v;

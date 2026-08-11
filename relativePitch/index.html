@@ -34,8 +34,14 @@
     <div class="mode-tabs">
       <button class="btn mode-tab" data-mode="singleDegree" aria-pressed="true">🎯 單音辨識</button>
       <button class="btn mode-tab" data-mode="melody" aria-pressed="false">🎼 旋律回奏</button>
+      <button class="btn mode-tab" data-mode="chord" aria-pressed="false">🎹 和弦練習</button>
     </div>
     <p id="modeDescription" class="mode-description"></p>
+
+    <div id="chordSubModeTabs" class="input-mode-tabs hidden">
+      <button class="btn chord-sub-mode-tab" data-chord-sub-mode="progression" aria-pressed="true">🔢 級數聽辨</button>
+      <button class="btn chord-sub-mode-tab" data-chord-sub-mode="quality" aria-pressed="false">🎨 色彩聽辨</button>
+    </div>
 
     <h2 class="section-title">選擇作答方式</h2>
     <div class="input-mode-tabs">
@@ -47,6 +53,18 @@
     <label class="key-toggle">
       <input type="checkbox" id="includeChromaticToggle" />
       包含半音階（進階挑戰，會多出 #1 #2 #4 #5 #6 五個黑鍵音，可以跟任何難度一起開）
+    </label>
+
+    <h2 class="section-title">選擇練習音域</h2>
+    <div class="octave-range-tabs">
+      <button class="btn octave-range-tab" data-octave-range="low">🔉 低音域</button>
+      <button class="btn octave-range-tab" data-octave-range="mid" aria-pressed="true">🔊 中音域</button>
+      <button class="btn octave-range-tab" data-octave-range="high">🔊 高音域</button>
+    </div>
+
+    <label class="key-toggle">
+      <input type="checkbox" id="weaknessFocusToggle" />
+      弱點強化（出題會加重你答錯較多的音級，需要先累積一些作答紀錄才會有效果）
     </label>
 
     <h2 class="section-title">選擇難度</h2>
@@ -61,6 +79,7 @@
     <div class="home-nav-row">
       <button id="historyBtn" class="btn">遊玩紀錄</button>
       <button id="careerBtn" class="btn">生涯總覽</button>
+      <button id="weaknessBtn" class="btn">📊 弱點分析</button>
     </div>
     <div class="home-nav-row">
       <a href="../index.html" class="btn">← 回遊戲集</a>
@@ -106,6 +125,7 @@
       <div id="singleDegreeKeypad" class="degree-keypad"></div>
 
       <div id="singleDegreeResultBanner" class="result-banner"></div>
+      <button id="songHintBtn" class="btn hidden">🎵 聽經典歌提示</button>
       <button id="nextDegreeBtn" class="btn btn-primary hidden">▶️ 下一題</button>
     </div>
 
@@ -129,6 +149,21 @@
       <div id="melodyResultBanner" class="result-banner"></div>
       <div id="melodyResultTrack" class="melody-attempt-track hidden"></div>
       <button id="nextMelodyBtn" class="btn btn-primary hidden">▶️ 下一題</button>
+    </div>
+
+    <!-- 和弦練習 -->
+    <div id="chordBoard" class="practice-board hidden">
+      <div class="note-visual">🎹</div>
+      <p id="chordHintText" class="practice-hint-text"></p>
+      <div class="single-controls">
+        <button id="playChordReferenceAgainBtn" class="btn">🎯 再聽一次 Do</button>
+        <button id="playChordAgainBtn" class="btn btn-primary play-btn">🔊 再聽一次和弦</button>
+      </div>
+
+      <div id="chordAnswerGrid" class="chord-answer-grid"></div>
+
+      <div id="chordResultBanner" class="result-banner"></div>
+      <button id="nextChordBtn" class="btn btn-primary hidden">▶️ 下一題</button>
     </div>
   </div>
 
@@ -159,6 +194,27 @@
       </thead>
       <tbody id="careerTableMelody"></tbody>
     </table>
+    <h3 class="section-title">🎹 和弦練習</h3>
+    <table class="career-table">
+      <thead>
+        <tr><th>難度</th><th>最佳連續</th><th>最佳正確率</th><th>累計作答</th></tr>
+      </thead>
+      <tbody id="careerTableChord"></tbody>
+    </table>
+  </div>
+
+  <div id="weaknessView" class="view hidden">
+    <div class="toolbar">
+      <button id="weaknessBackBtn" class="btn">← 返回首頁</button>
+      <h2 class="page-title">📊 弱點分析</h2>
+    </div>
+    <p class="board-hint-text">依照每個音級的歷史答對率排序，答對率越低排越前面。首頁可以打開「弱點強化」，出題時會更常出現你比較弱的音級。</p>
+    <h3 class="section-title">🎯 單音辨識</h3>
+    <div id="weaknessBarsSingle" class="weakness-bars"></div>
+    <h3 class="section-title">🎼 旋律回奏</h3>
+    <div id="weaknessBarsMelody" class="weakness-bars"></div>
+    <h3 class="section-title">🔀 常見混淆</h3>
+    <div id="weaknessConfusionList" class="record-list"></div>
   </div>
 
 </div>
@@ -189,8 +245,11 @@
         <li><strong>🎼 旋律回奏</strong>：先播放 do，答答兩拍倒數後才開始播放旋律；用鋼琴鍵盤或簡譜鍵盤依序點出你聽到的音，點滿整段會自動送出，逐格顯示對錯。「🎯 再聽一次 Do」可以隨時重播主音、不限次數；「🔊 播放旋律」是重播題目本身（答答兩拍+旋律），有難度對應的次數上限。</li>
         <li>作答方式（鋼琴鍵盤／簡譜按鈕）在首頁選好、整輪練習固定使用，練習中途不會切換。</li>
         <li>「包含半音階」關閉時，鋼琴鍵盤上的黑鍵只是裝飾，不能按、也不會出現在題目裡；打開後黑鍵會變成可以按的真正選項（標上 #1 #2 #4 #5 #6），題目也會可能出現半音，任何難度都能加開，會讓該難度變得更難。</li>
+        <li><strong>🎹 和弦練習</strong>：先播 do，「級數聽辨」會再播 I 級和弦當參考、接著播目標和弦，猜是 I/ii/iii/IV/V/vi/vii° 哪一級；「色彩聽辨」直接在主音上播一個和弦，猜是大三、小三、減三、屬七、大七還是小七和弦。</li>
+        <li>「選擇練習音域」可以切換低/中/高音域，影響每題隨機到的主音範圍，三種練習模式都會套用。</li>
+        <li>「弱點強化」打開後，出題會更常挑你歷史答對率較低的音級（需要先累積一些作答紀錄才會有效果），可以在「📊 弱點分析」查看每個音級的答對率與常見混淆組合。</li>
         <li>連續答對達 5、10、15…的倍數會有特效慶祝；工具列可以隨時看目前這輪的連續次數、正確率、已作答題數，也能關閉音效。</li>
-        <li>「生涯總覽」分別記錄兩種模式、五種難度各自的最佳連續紀錄、最佳正確率（單輪作答數需累積到 20 題以上才會納入比較）。</li>
+        <li>「生涯總覽」分別記錄三種模式、五種難度各自的最佳連續紀錄、最佳正確率（單輪作答數需累積到 20 題以上才會納入比較）。</li>
       </ul>
     </div>
     <div class="win-actions">

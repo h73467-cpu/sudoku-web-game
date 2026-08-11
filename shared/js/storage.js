@@ -3693,7 +3693,7 @@ if (typeof window !== "undefined") {
 // ---------------------------------------------------------------------------
 var RelativePitchStorage = (function () {
   const DIFFICULTIES = ["superEasy", "easy", "medium", "hard", "expert"];
-  const MODES = ["singleDegree", "melody"];
+  const MODES = ["singleDegree", "melody", "chord"];
   const MIN_ANSWERED_FOR_ACCURACY = 20;
 
   function defaultCareerEntry() {
@@ -3706,13 +3706,32 @@ var RelativePitchStorage = (function () {
     return career;
   }
 
+  const OCTAVE_RANGE_KEYS = ["low", "mid", "high"];
+
   function defaultData() {
     const career = {};
     for (const m of MODES) career[m] = defaultModeCareer();
     return {
       history: [],
       career,
-      settings: { soundEnabled: true, inputMode: "piano", includeChromatic: false },
+      settings: {
+        soundEnabled: true,
+        inputMode: "piano",
+        includeChromatic: false,
+        octaveRange: "mid",
+        weaknessFocus: false,
+        chordSubMode: "progression",
+      },
+      // Per-degree / per-chord-quality attempt stats, keyed by a caller-chosen
+      // string (e.g. "singleDegree:6", "quality:dominant7") — see recordStat.
+      // Not part of `career` because these track *which specific thing* a
+      // player struggles with, not aggregate session performance.
+      degreeStats: {},
+      chordStats: {},
+      // Confusion pairs: "wrongKey→pickedKey" -> count, shared across both
+      // stats buckets above (a degree confusion and a chord confusion never
+      // collide since their keys are namespaced differently).
+      confusion: {},
     };
   }
 
@@ -3735,7 +3754,16 @@ var RelativePitchStorage = (function () {
         data.settings.soundEnabled != null ? !!data.settings.soundEnabled : true;
       merged.settings.inputMode = data.settings.inputMode === "degree" ? "degree" : "piano";
       merged.settings.includeChromatic = !!data.settings.includeChromatic;
+      merged.settings.octaveRange = OCTAVE_RANGE_KEYS.includes(data.settings.octaveRange)
+        ? data.settings.octaveRange
+        : "mid";
+      merged.settings.weaknessFocus = !!data.settings.weaknessFocus;
+      merged.settings.chordSubMode =
+        data.settings.chordSubMode === "quality" ? "quality" : "progression";
     }
+    if (data.degreeStats && typeof data.degreeStats === "object") merged.degreeStats = data.degreeStats;
+    if (data.chordStats && typeof data.chordStats === "object") merged.chordStats = data.chordStats;
+    if (data.confusion && typeof data.confusion === "object") merged.confusion = data.confusion;
     return merged;
   }
 
@@ -3837,6 +3865,79 @@ var RelativePitchStorage = (function () {
     }
   }
 
+  // -- generic per-key stats bucket (weakness analytics + chord-quality
+  // stats both use this) ---------------------------------------------------
+  function defaultStatsEntry() {
+    return { attempts: 0, correct: 0 };
+  }
+  // bucketName is "degreeStats" or "chordStats"; key is a caller-namespaced
+  // string so unrelated buckets' keys never collide in `confusion`.
+  function recordStat(bucketName, key, wasCorrect, confusedWithKey) {
+    try {
+      const data = loadAll();
+      if (!data[bucketName]) data[bucketName] = {};
+      const entry = Object.assign(defaultStatsEntry(), data[bucketName][key] || {});
+      entry.attempts += 1;
+      if (wasCorrect) entry.correct += 1;
+      data[bucketName][key] = entry;
+      if (confusedWithKey) {
+        if (!data.confusion) data.confusion = {};
+        const pairKey = key + "→" + confusedWithKey;
+        data.confusion[pairKey] = (data.confusion[pairKey] || 0) + 1;
+      }
+      saveAll(data);
+    } catch (e) {
+      /* no-op */
+    }
+  }
+  function getStats(bucketName) {
+    try {
+      return loadAll()[bucketName] || {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function getConfusion() {
+    try {
+      return loadAll().confusion || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  // -- weakness analytics (單音辨識/旋律回奏 per-degree accuracy) ------------
+  // key = "<mode>:<degreeIndex>" — kept mode-separate because the same
+  // degree is a different skill in isolation (單音) vs embedded in a
+  // melody's context (旋律), see relativePitch's expansion plan.
+  function recordDegreeAttempt(mode, correctIndex, pickedIndex) {
+    const wasCorrect = pickedIndex === correctIndex;
+    recordStat(
+      "degreeStats",
+      mode + ":" + correctIndex,
+      wasCorrect,
+      wasCorrect ? null : mode + ":" + pickedIndex
+    );
+  }
+  function getDegreeStats() {
+    return getStats("degreeStats");
+  }
+
+  // -- chord-quality analytics (和弦模組) ------------------------------------
+  // key = "<chordSubMode>:<roman-or-quality>", e.g. "progression:V",
+  // "quality:dominant7".
+  function recordChordAttempt(subMode, correctKey, pickedKey) {
+    const wasCorrect = pickedKey === correctKey;
+    recordStat(
+      "chordStats",
+      subMode + ":" + correctKey,
+      wasCorrect,
+      wasCorrect ? null : subMode + ":" + pickedKey
+    );
+  }
+  function getChordStats() {
+    return getStats("chordStats");
+  }
+
   return {
     DIFFICULTIES,
     MODES,
@@ -3846,6 +3947,11 @@ var RelativePitchStorage = (function () {
     recordSession,
     getSettings,
     saveSettings,
+    recordDegreeAttempt,
+    getDegreeStats,
+    recordChordAttempt,
+    getChordStats,
+    getConfusion,
   };
 })();
 
