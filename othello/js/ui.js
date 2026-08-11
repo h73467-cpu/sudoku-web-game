@@ -149,6 +149,13 @@
     const size = OthelloGame.getBoardSize();
     boardEl.style.setProperty("--cols", size.cols);
     boardEl.style.setProperty("--rows", size.rows);
+    // Also set the literal computed value directly (not just the --cols/--rows
+    // custom properties the CSS repeat(var(...)) rule reads) -- a browser that
+    // doesn't support custom properties inside repeat()'s count position (pre-2021
+    // engines) would otherwise silently fall back to a single column/row. Setting
+    // the resolved string via inline style works unconditionally on any browser.
+    boardEl.style.gridTemplateColumns = "repeat(" + size.cols + ", 1fr)";
+    boardEl.style.gridTemplateRows = "repeat(" + size.rows + ", 1fr)";
     const legal = state.status === "playing" && !state.aiThinking ? new Set(OthelloGame.getLegalMoves()) : new Set();
     const canClick = state.status === "playing" && !state.aiThinking && (state.mode === "local" || state.currentPlayer === 1);
 

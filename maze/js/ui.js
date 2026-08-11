@@ -134,6 +134,13 @@
   function renderBoard(state) {
     boardEl.style.setProperty("--cols", state.cols);
     boardEl.style.setProperty("--rows", state.rows);
+    // Also set the literal computed value directly (not just the --cols/--rows
+    // custom properties the CSS repeat(var(...)) rule reads) -- a browser that
+    // doesn't support custom properties inside repeat()'s count position (pre-2021
+    // engines) would otherwise silently fall back to a single column/row. Setting
+    // the resolved string via inline style works unconditionally on any browser.
+    boardEl.style.gridTemplateColumns = "repeat(" + state.cols + ", 1fr)";
+    boardEl.style.gridTemplateRows = "repeat(" + state.rows + ", 1fr)";
 
     const hintSet = new Set(state.hintPath || []);
     const frag = document.createDocumentFragment();

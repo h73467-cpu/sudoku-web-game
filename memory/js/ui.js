@@ -129,6 +129,11 @@
   // -- game view rendering ------------------------------------------------
   function renderBoard(state) {
     boardEl.style.setProperty("--cols", state.cols);
+    // Also set the literal computed value directly — a browser that doesn't
+    // support custom properties inside repeat()'s count position (pre-2021
+    // engines) would otherwise silently fall back to a single column,
+    // collapsing the whole board. Inline style works on any browser.
+    boardEl.style.gridTemplateColumns = "repeat(" + state.cols + ", 1fr)";
     const frag = document.createDocumentFragment();
     state.cards.forEach((card) => {
       const btn = document.createElement("button");
