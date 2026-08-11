@@ -20,7 +20,10 @@ var GAMES = [
   { id: "wordGame", title: "拼字遊戲", icon: "🔤", path: "wordGame/index.html", status: "ready" },
   { id: "shellGame", title: "三個杯子", icon: "🎩", path: "shellGame/index.html", status: "ready" },
   { id: "frogger", title: "青蛙過河", icon: "🐸", path: "frog/index.html", status: "ready" },
-  { id: "smokeCar", title: "迷魂車", icon: "🏎️", path: "smokeCar/index.html", status: "ready" },
+  // 迷魂車 (smokeCar) removed from the hub listing 2026-08-11 — controls
+  // felt hard to use per user feedback. Files/code left in place under
+  // smokeCar/, just delisted here; re-add the entry above to bring it back
+  // once the controls are reworked.
   { id: "pitchTrain", title: "絕對音感", icon: "🎧", path: "pitchTrain/index.html", status: "ready" },
   { id: "relativePitch", title: "相對音感", icon: "🎹", path: "relativePitch/index.html", status: "ready" },
 ];

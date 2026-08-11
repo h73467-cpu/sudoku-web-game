@@ -20,7 +20,7 @@
 //     | sed 's|^\./||' | sort
 //   (plus icons/*.png) — re-run that and diff before hand-editing this
 // array for anything beyond a one-off addition.
-const CACHE_VERSION = "2026-08-11-1637";
+const CACHE_VERSION = "2026-08-11-1644";
 const CACHE_NAME = "sudo-hub-" + CACHE_VERSION;
 
 const PRECACHE_URLS = [
