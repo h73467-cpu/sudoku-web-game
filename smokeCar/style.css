@@ -71,15 +71,28 @@
   grid-row: 3;
 }
 
-#smokeBtn {
-  min-width: 96px;
-  min-height: 96px;
+/* Sits in the dpad's own center cell (between ⬅️ and ➡️, same row) rather
+   than as a separate element after the dpad — otherwise on a narrow phone
+   .controls-row's flex-wrap pushes it onto its own row below the dpad,
+   which on a short viewport can land past the fold even once the dpad
+   itself has been scrolled into view. */
+.dpad-smoke {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
   border-radius: 50%;
-  font-size: 1.05rem;
+  font-size: 0.7rem;
   font-weight: 700;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0;
+  padding: 0;
+  line-height: 1.1;
+}
+
+.dpad-smoke span {
+  font-size: 0.65rem;
 }

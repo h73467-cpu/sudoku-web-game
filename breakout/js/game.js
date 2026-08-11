@@ -16,7 +16,15 @@ var BreakoutGame = (function () {
   const BRICK_H = 22;
   const BRICK_GAP = 5;
   const BRICK_TOP = 46;
-  const PADDLE_Y = BOARD_H - 44;
+  // Raised well clear of the bottom edge (was BOARD_H-44=516, i.e. ~92% of
+  // the way down) — on a short mobile viewport the canvas itself often
+  // can't fully fit above the fold (see shared/style.css's #board sizing),
+  // so a paddle sitting that close to the very bottom edge was one of the
+  // first things to scroll out of view, especially once paddleGrow made it
+  // visually wider/more noticeable to be missing. Even the hardest ramp
+  // (MAX_ROWS=10 bricks) only reaches y≈316, so this still leaves >100px
+  // of clearance from the lowest possible brick row.
+  const PADDLE_Y = BOARD_H - 140;
   const PADDLE_H = 16;
   const BALL_R = 8;
   const MAX_DT = 0.05; // clamp huge gaps (e.g. tab was backgrounded)

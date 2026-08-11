@@ -597,8 +597,36 @@ select.btn {
 @media (max-width: 480px) {
   .toolbar {
     justify-content: space-between;
+    gap: 5px;
+    padding: 6px 8px;
   }
   .info {
-    min-width: 60px;
+    min-width: 52px;
+    padding: 2px 6px;
+  }
+  .info-label {
+    font-size: 0.75rem;
+  }
+  .info-value {
+    font-size: 1.05rem;
+  }
+  /* Toolbar buttons only — a compact touch target here (still within
+     reach of common real-world minimums) trades a few px of tap comfort
+     for meaningfully fewer wrapped rows, which is what actually keeps the
+     game board itself on-screen without scrolling on short phones. Primary
+     gameplay buttons (difficulty pickers, in-board controls, etc.) are not
+     `.toolbar .btn` and keep their full min-height. */
+  .toolbar .btn {
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: 1rem;
+  }
+  .page-title {
+    font-size: 1.15rem;
+  }
+  .difficulty-label,
+  .badge {
+    font-size: 0.9rem;
+    padding: 3px 6px;
   }
 }
