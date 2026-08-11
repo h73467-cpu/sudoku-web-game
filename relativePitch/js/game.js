@@ -53,14 +53,16 @@ var RelativePitchGame = (function () {
   };
 
   // -- 旋律回奏 (melody echo) tiers ---------------------------------------------
-  // length/tempoMs/replayLimit same shape as pitchTrain's MELODY_TIERS;
-  // diatonicPool grows narrower->wider the same way SINGLE_TIERS does.
+  // length/tempoMs same shape as pitchTrain's MELODY_TIERS; diatonicPool
+  // grows narrower->wider the same way SINGLE_TIERS does. Replay is
+  // unlimited at every tier (see requestMelodyReplay) — difficulty comes
+  // from length/tempo, not from rationing how many times you can re-hear it.
   const MELODY_TIERS = {
-    superEasy: { length: 4, diatonicPool: [0, 2, 4, 7, 9], tempoMs: 700, replayLimit: 3 },
-    easy: { length: 6, diatonicPool: DIATONIC_INDICES.slice(0, 7), tempoMs: 620, replayLimit: 3 },
-    medium: { length: 8, diatonicPool: DIATONIC_INDICES, tempoMs: 550, replayLimit: 2 },
-    hard: { length: 12, diatonicPool: DIATONIC_INDICES, tempoMs: 480, replayLimit: 1 },
-    expert: { length: 16, diatonicPool: DIATONIC_INDICES, tempoMs: 420, replayLimit: 0 },
+    superEasy: { length: 4, diatonicPool: [0, 2, 4, 7, 9], tempoMs: 700 },
+    easy: { length: 6, diatonicPool: DIATONIC_INDICES.slice(0, 7), tempoMs: 620 },
+    medium: { length: 8, diatonicPool: DIATONIC_INDICES, tempoMs: 550 },
+    hard: { length: 12, diatonicPool: DIATONIC_INDICES, tempoMs: 480 },
+    expert: { length: 16, diatonicPool: DIATONIC_INDICES, tempoMs: 420 },
   };
 
   // -- 和弦練習 (chord) theory data ---------------------------------------------
@@ -105,6 +107,127 @@ var RelativePitchGame = (function () {
       timbre: ["triangle", "square"],
     },
   };
+
+  // -- 和弦級數聽辨：知名和弦走向，出題時優先參考這些「主音」而非完全隨機亂選 ---
+  // Each chord is { root: <semitone offset from tonic, matches
+  // DIATONIC_CHORD_MAP keys>, quality: <CHORD_QUALITIES key> }. quality is
+  // spelled out explicitly per chord (not derived from DIATONIC_CHORD_MAP)
+  // because some progressions deliberately deviate from plain diatonic
+  // triads (blues' dominant7 throughout, jazz ii-V-I's V7/Imaj7) — the
+  // *roman numeral* shown to the player still comes from
+  // DIATONIC_CHORD_MAP[root].roman regardless, since that's about scale
+  // position, not chord color.
+  const PROGRESSION_TEMPLATES = [
+    {
+      name: "J-Pop 王道進行",
+      chords: [
+        { root: 5, quality: "major" }, // IV
+        { root: 7, quality: "major" }, // V
+        { root: 4, quality: "minor" }, // iii
+        { root: 9, quality: "minor" }, // vi
+      ],
+    },
+    {
+      name: "卡農進行",
+      chords: [
+        { root: 0, quality: "major" }, // I
+        { root: 7, quality: "major" }, // V
+        { root: 9, quality: "minor" }, // vi
+        { root: 4, quality: "minor" }, // iii
+        { root: 5, quality: "major" }, // IV
+        { root: 0, quality: "major" }, // I
+        { root: 5, quality: "major" }, // IV
+        { root: 7, quality: "major" }, // V
+      ],
+    },
+    {
+      name: "2-5-3-6 收束變體",
+      chords: [
+        { root: 2, quality: "minor" }, // ii
+        { root: 7, quality: "major" }, // V
+        { root: 4, quality: "minor" }, // iii
+        { root: 9, quality: "minor" }, // vi
+      ],
+    },
+    {
+      name: "4-5-1 完結變體",
+      chords: [
+        { root: 5, quality: "major" }, // IV
+        { root: 7, quality: "major" }, // V
+        { root: 0, quality: "major" }, // I
+      ],
+    },
+    {
+      name: "黃金四和弦",
+      chords: [
+        { root: 0, quality: "major" }, // I
+        { root: 7, quality: "major" }, // V
+        { root: 9, quality: "minor" }, // vi
+        { root: 5, quality: "major" }, // IV
+      ],
+    },
+    {
+      name: "暗黑抒情進行",
+      chords: [
+        { root: 9, quality: "minor" }, // vi
+        { root: 5, quality: "major" }, // IV
+        { root: 0, quality: "major" }, // I
+        { root: 7, quality: "major" }, // V
+      ],
+    },
+    {
+      name: "Doo-Wop 進行",
+      chords: [
+        { root: 0, quality: "major" }, // I
+        { root: 9, quality: "minor" }, // vi
+        { root: 5, quality: "major" }, // IV
+        { root: 7, quality: "major" }, // V
+      ],
+    },
+    {
+      name: "2-5-1 爵士進行",
+      chords: [
+        { root: 2, quality: "minor" }, // ii
+        { root: 7, quality: "dominant7" }, // V7
+        { root: 0, quality: "major7" }, // Imaj7
+      ],
+    },
+    {
+      name: "五度圈下行",
+      chords: [
+        { root: 4, quality: "minor" }, // iii
+        { root: 9, quality: "minor" }, // vi
+        { root: 2, quality: "minor" }, // ii
+        { root: 7, quality: "dominant7" }, // V7
+        { root: 0, quality: "major" }, // I
+      ],
+    },
+    {
+      name: "12 小節藍調",
+      chords: [
+        { root: 0, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 5, quality: "dominant7" },
+        { root: 5, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 7, quality: "dominant7" },
+        { root: 5, quality: "dominant7" },
+        { root: 0, quality: "dominant7" },
+        { root: 7, quality: "dominant7" },
+      ],
+    },
+    {
+      name: "1-4-5 三和弦搖滾",
+      chords: [
+        { root: 0, quality: "major" },
+        { root: 5, quality: "major" },
+        { root: 7, quality: "major" },
+      ],
+    },
+  ];
 
   // -- 經典歌曲提示：答錯單音辨識題目時，可播放對應音級的經典歌曲片段輔助 -------
   // noteSequence is expressed in the SONG'S OWN scale degrees (its own
@@ -262,6 +385,28 @@ var RelativePitchGame = (function () {
     return clampMidiList(midiList);
   }
 
+  // Flattens PROGRESSION_TEMPLATES into { progressionName, context, target }
+  // candidates usable at this tier — every chord in the template (root AND
+  // quality) must fit within tier.progressionPool/qualityPool, so harder
+  // progressions (blues' dominant7, jazz's V7/Imaj7) naturally only surface
+  // at the difficulty tiers that already unlock those chord qualities.
+  // `context` is the chord heard just before `target` in the progression
+  // (or the implicit tonic I, for a template's very first chord).
+  function progressionCandidatesForTier(tier) {
+    const candidates = [];
+    PROGRESSION_TEMPLATES.forEach((template) => {
+      const fits = template.chords.every(
+        (c) => tier.progressionPool.indexOf(c.root) !== -1 && tier.qualityPool.indexOf(c.quality) !== -1
+      );
+      if (!fits) return;
+      template.chords.forEach((chord, i) => {
+        const context = i === 0 ? { root: 0, quality: "major" } : template.chords[i - 1];
+        candidates.push({ progressionName: template.name, context, target: chord });
+      });
+    });
+    return candidates;
+  }
+
   // -- 弱點強化：依歷史正確率加權選取 -------------------------------------------
   const WEAKNESS_MIN_SAMPLE = 5;
   const WEAKNESS_MAX_WEIGHT_BONUS = 4;
@@ -337,7 +482,6 @@ var RelativePitchGame = (function () {
     state.tonicMidi = pickTonicMidi();
     state.melody = melody;
     state.playerAttempt = [];
-    state.replaysUsed = 0;
     state.melodyResult = null;
     state.status = "melody-intro";
     notify("melody-round-start");
@@ -349,11 +493,9 @@ var RelativePitchGame = (function () {
     notify("melody-input-ready");
   }
 
+  // Unlimited — the only gate is being in the input phase of a round.
   function requestMelodyReplay() {
-    if (!state || state.mode !== "melody") return false;
-    const tier = melodyTierFor(state.difficulty);
-    if (state.replaysUsed >= tier.replayLimit) return false;
-    state.replaysUsed += 1;
+    if (!state || state.mode !== "melody" || state.status !== "melody-input") return false;
     notify("melody-replay");
     return true;
   }
@@ -413,22 +555,47 @@ var RelativePitchGame = (function () {
         roman: null,
         midiNotes: chordMidiNotes(state.tonicMidi, 0, quality),
         contextMidiNotes: null,
+        progressionName: null,
       };
     } else {
       const stats = RelativePitchStorage.getChordStats();
-      const rootDegreeIndex = weightedChoice(
-        tier.progressionPool,
-        (root) => stats["progression:" + DIATONIC_CHORD_MAP[root].roman]
-      );
-      const chordInfo = DIATONIC_CHORD_MAP[rootDegreeIndex];
+      // Prefer real, named progressions (J-Pop 王道, 卡農, 黃金四和弦...) over
+      // an isolated random root — each candidate is "this chord, heard right
+      // after that one, inside this progression", which is both more
+      // musical and a better test of in-context recognition than a bare
+      // I-then-target pair. Falls back to the old isolated-root behavior
+      // only if no template's chords fit within this tier (shouldn't
+      // happen in practice — even superEasy fits "1-4-5"/"4-5-1").
+      const candidates = progressionCandidatesForTier(tier);
+      let contextChord, targetChord, progressionName;
+      if (candidates.length > 0) {
+        const picked = weightedChoice(
+          candidates,
+          (c) => stats["progression:" + DIATONIC_CHORD_MAP[c.target.root].roman]
+        );
+        contextChord = picked.context;
+        targetChord = picked.target;
+        progressionName = picked.progressionName;
+      } else {
+        const rootDegreeIndex = weightedChoice(
+          tier.progressionPool,
+          (root) => stats["progression:" + DIATONIC_CHORD_MAP[root].roman]
+        );
+        contextChord = { root: 0, quality: "major" };
+        targetChord = { root: rootDegreeIndex, quality: DIATONIC_CHORD_MAP[rootDegreeIndex].quality };
+        progressionName = null;
+      }
+      const chordInfo = DIATONIC_CHORD_MAP[targetChord.root];
       state.currentChord = {
-        rootDegreeIndex,
-        quality: chordInfo.quality,
+        rootDegreeIndex: targetChord.root,
+        quality: targetChord.quality,
         roman: chordInfo.roman,
-        midiNotes: chordMidiNotes(state.tonicMidi, rootDegreeIndex, chordInfo.quality),
-        // I-chord harmonic context played just before the target chord —
-        // gives progression questions something to hear the motion FROM.
-        contextMidiNotes: chordMidiNotes(state.tonicMidi, 0, "major"),
+        midiNotes: chordMidiNotes(state.tonicMidi, targetChord.root, targetChord.quality),
+        // Harmonic context played just before the target chord — the
+        // actual preceding chord in the chosen progression, or a plain I
+        // when there's no "previous chord" (template's first chord).
+        contextMidiNotes: chordMidiNotes(state.tonicMidi, contextChord.root, contextChord.quality),
+        progressionName,
       };
     }
     state.lastChordResult = null;
@@ -479,7 +646,6 @@ var RelativePitchGame = (function () {
       melody: [],
       tonicMidi: 60,
       playerAttempt: [],
-      replaysUsed: 0,
       melodyResult: null,
     };
     if (mode === "singleDegree") nextSingleQuestion();

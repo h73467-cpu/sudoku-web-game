@@ -704,17 +704,15 @@
 
   // Replay of just the question (答答 count-in -> melody, no "do" —
   // there's now a separate always-available button for replaying "do"
-  // alone, see playMelodyReferenceBtn below). This is what consumes one of
-  // the tier's replayLimit uses.
+  // alone, see playMelodyReferenceBtn below). Unlimited, same as "再聽一次
+  // Do" — the only gate is being in the input phase of the round.
   function scheduleMelodyReplay(state, onDone) {
     scheduleCountInAndMelody(state, 0, onDone);
   }
 
   function updateReplayLabel(state) {
-    const tier = RelativePitchGame.melodyTierFor(state.difficulty);
-    const remaining = tier.replayLimit - state.replaysUsed;
-    replayCountLabel.textContent = tier.replayLimit === 0 ? "（只播放一次）" : "剩餘重播次數：" + Math.max(0, remaining);
-    playMelodyBtn.disabled = state.status !== "melody-input" || remaining <= 0;
+    replayCountLabel.textContent = "可重播不限次數";
+    playMelodyBtn.disabled = state.status !== "melody-input";
   }
 
   function renderLiveAttemptTrack(state) {
@@ -934,16 +932,19 @@
     chordResultBanner.textContent = "";
     chordResultBanner.className = "result-banner";
     nextChordBtn.classList.add("hidden");
+    const progressionTag = state.currentChord.progressionName ? "《" + state.currentChord.progressionName + "》" : "";
     chordHintText.textContent =
       state.chordSubMode === "progression"
-        ? "🔊 播放中：先報 do，再聽 I 級和弦當參考，最後聽目標和弦…猜猜是第幾級"
+        ? "🔊 播放中：先報 do，再聽" + (progressionTag || "I 級") + "和弦當參考，最後聽目標和弦…猜猜是第幾級"
         : "🔊 播放中：先報 do，再聽和弦…猜猜是什麼和弦色彩";
     playChordAgainBtn.disabled = true;
     scheduleChordPlayback(state, () => {
       enableChordAnswerGrid(true);
       playChordAgainBtn.disabled = false;
       chordHintText.textContent =
-        state.chordSubMode === "progression" ? "這是哪一個級數的和弦？" : "這是什麼色彩的和弦？";
+        state.chordSubMode === "progression"
+          ? "這是哪一個級數的和弦？" + (progressionTag ? "（來自" + progressionTag + "）" : "")
+          : "這是什麼色彩的和弦？";
     });
   }
 
