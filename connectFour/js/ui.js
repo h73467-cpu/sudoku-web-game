@@ -169,7 +169,15 @@
       colBtn.className = "c4-column";
       colBtn.dataset.col = String(c);
       const colFull = state.board[c] !== 0; // row0 of this column occupied => full
-      colBtn.disabled = state.status !== "playing" || state.aiThinking || colFull;
+      // pendingDrops.size>0 blocks taps for the whole time any disc is still
+      // visually falling — without this, local two-player mode (which has
+      // no aiThinking gate) lets a fast/impatient tap register a second
+      // drop before the first one has landed, which on a touchscreen reads
+      // as "my tap put a piece in the wrong place" (a real race: the game
+      // logic accepts the second column press immediately, using
+      // already-updated heights, so it's not actually wrong per se — it's
+      // just resolved before the player saw the first piece finish landing).
+      colBtn.disabled = state.status !== "playing" || state.aiThinking || colFull || pendingDrops.size > 0;
       for (let r = 0; r < size.rows; r++) {
         const idx = r * size.cols + c;
         const v = pendingDrops.has(dropKey(r, c)) ? 0 : state.board[idx];

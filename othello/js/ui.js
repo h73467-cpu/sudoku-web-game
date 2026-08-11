@@ -193,6 +193,15 @@
       turnIndicator.textContent = state.winner === 1 ? "⚫ 黑方獲勝！" : state.mode === "ai" ? "🤖 電腦獲勝" : "⚪ 白方獲勝！";
     } else if (state.status === "draw") {
       turnIndicator.textContent = "🤝 平手";
+    } else if (state.passInfo) {
+      // Makes an auto-skip visible — otherwise the board/score don't
+      // change and it just looks like nothing happened (see game.js's
+      // advanceTurn comment). Shown even if aiThinking is about to flip
+      // true right after (a skipped AI re-thinks immediately), since it's
+      // still useful context for the render(s) in between.
+      const skipped = state.passInfo.skippedPlayer;
+      const label = skipped === 1 ? "⚫ 黑方" : state.mode === "ai" ? "🤖 電腦" : "⚪ 白方";
+      turnIndicator.textContent = label + "沒有地方可下，跳過一輪";
     } else if (state.aiThinking) {
       turnIndicator.textContent = "🤖 電腦思考中…";
     } else if (state.mode === "ai") {

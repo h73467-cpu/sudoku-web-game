@@ -297,6 +297,7 @@ var OthelloGame = (function () {
       winner: saved.winner || null,
       aiThinking: false,
       lastMoveIndex: null,
+      passInfo: null,
     };
   }
 
@@ -321,6 +322,7 @@ var OthelloGame = (function () {
       winner: null,
       aiThinking: false,
       lastMoveIndex: null,
+      passInfo: null,
     };
     startTimer();
     persist();
@@ -381,8 +383,14 @@ var OthelloGame = (function () {
   }
 
   // Advances turn from `player` onward, auto-skipping any side with no
-  // legal moves. Ends the game if neither side can move.
+  // legal moves. Ends the game if neither side can move. `state.passInfo`
+  // records who just got skipped (cleared on every non-pass turn change)
+  // purely so ui.js can show a "⚪ 白方沒有地方可下，跳過" style message —
+  // without it, an auto-skip is otherwise invisible (the board/score don't
+  // change), which reads as the game having silently frozen even though
+  // it's working correctly.
   function advanceTurn(fromPlayer) {
+    state.passInfo = null;
     const next = opponentOf(fromPlayer);
     if (legalMoves(state.board, next).length > 0) {
       state.currentPlayer = next;
@@ -391,6 +399,7 @@ var OthelloGame = (function () {
     if (legalMoves(state.board, fromPlayer).length > 0) {
       // Opponent has no moves; same player goes again (a "pass" for next).
       state.currentPlayer = fromPlayer;
+      state.passInfo = { skippedPlayer: next };
       notify("pass");
       return;
     }
@@ -444,6 +453,16 @@ var OthelloGame = (function () {
       return;
     }
     placePiece(move.index, WHITE);
+    // advanceTurn() (called inside placePiece) keeps currentPlayer at WHITE
+    // when BLACK has no legal reply — i.e. the AI must move again. Without
+    // re-arming aiThinking here, nothing else would ever call runAiTurn()
+    // again (ui.js only schedules it off aiThinking flipping true), so the
+    // game would silently freeze on WHITE's turn forever. Mirrors the same
+    // check playCell() does right after the human's own move.
+    if (state.status === "playing" && state.currentPlayer === WHITE) {
+      state.aiThinking = true;
+      notify("ai-thinking");
+    }
   }
 
   function undo() {
