@@ -20,7 +20,7 @@
 //     | sed 's|^\./||' | sort
 //   (plus icons/*.png) — re-run that and diff before hand-editing this
 // array for anything beyond a one-off addition.
-const CACHE_VERSION = "2026-08-11-1644";
+const CACHE_VERSION = "2026-08-11-1710";
 const CACHE_NAME = "sudo-hub-" + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -146,7 +146,28 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
+  // NOT cache.addAll(PRECACHE_URLS) — that convenience method does a plain
+  // fetch() per URL, which is still subject to the browser's own HTTP
+  // cache. A device with an old cached response for, say,
+  // shared/js/games.js would get that STALE copy baked into the brand-new
+  // SW cache even though CACHE_VERSION itself updated correctly — this is
+  // exactly what caused one real device (an old Android WebView) to keep
+  // showing already-removed content and a stale bugfix while another
+  // device on the same deploy was fine, purely because their HTTP caches
+  // held different old bytes. `{ cache: "reload" }` forces every one of
+  // these fetches to bypass HTTP cache and revalidate with the network, so
+  // "new SW version" always actually means "genuinely fresh files".
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        PRECACHE_URLS.map((url) =>
+          fetch(url, { cache: "reload" }).then((response) => {
+            if (response && response.ok) return cache.put(url, response);
+          })
+        )
+      )
+    )
+  );
   // Deliberately NOT calling self.skipWaiting() here — a new version stays
   // "waiting" until every open tab on the old version closes, or the page
   // explicitly tells it to take over (see the "message" handler below,
@@ -177,7 +198,11 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
-      return fetch(event.request)
+      // { cache: "reload" } here too, same reasoning as install() above —
+      // anything opportunistically cached at runtime should be a genuinely
+      // fresh fetch, not whatever the browser's own HTTP cache had lying
+      // around.
+      return fetch(event.request, { cache: "reload" })
         .then((response) => {
           if (response && response.ok) {
             const clone = response.clone();
