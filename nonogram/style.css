@@ -9,11 +9,20 @@
 
 .nono-board {
   display: grid;
-  grid-template-columns: repeat(var(--cols, 8), 1fr);
-  grid-template-rows: repeat(var(--rows, 8), 1fr);
+  /* 實際的 grid-template-columns/rows 與 aspect-ratio 由 ui.js 用 HEADER_WEIGHT
+     算好literal字串直接寫進 inline style（因為要跟 --header-w 常數同步），這裡
+     只是沒有 JS 時的備援值，2fr 對應 HEADER_WEIGHT=2。 */
+  grid-template-columns: 2fr repeat(var(--cols, 8), 1fr);
+  grid-template-rows: 2fr repeat(var(--rows, 8), 1fr);
   gap: 2px;
-  width: min(96vw, 560px);
-  aspect-ratio: var(--cols, 8) / var(--rows, 8);
+  /* --board-size 放到極限：97vw 幾乎滿版，82vh 確保直向盤面（如小尺寸手機）
+     不會撐爆螢幕高度。--cell 是「一般格子」的實際邊長，供下面數字/叉號的
+     字級公式直接參照，而不是用固定 vw 比例（欄數一多，固定比例完全不夠看）。
+     已放棄舊手機相容性，這些 calc()/min() 疊加可以放心用。 */
+  --board-size: min(97vw, 82vh, 680px);
+  --cell: calc(var(--board-size) / (var(--header-w, 2) + var(--cols, 8)));
+  width: var(--board-size);
+  aspect-ratio: calc(var(--header-w, 2) + var(--cols, 8)) / calc(var(--header-w, 2) + var(--rows, 8));
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
   border-radius: 10px;
@@ -31,8 +40,10 @@
   background: var(--color-panel);
   border-radius: 3px;
   font-weight: 700;
-  /* 銀髮族/老花友善：提示數字放大，上限從 0.8rem 提高到 1.1rem */
-  font-size: clamp(0.65rem, 2.2vw, 1.1rem);
+  /* 銀髮族/老花友善：提示數字大幅放大——表頭列/欄本身也比一般格子寬 2 倍
+     （--header-w，見上面 .nono-board 與 ui.js 的 HEADER_WEIGHT），才有空間
+     讓最多疊 3 個提示數字時仍然夠大、不會被擠壓成小字。 */
+  font-size: clamp(0.85rem, calc(var(--cell) * 0.6), 1.9rem);
   color: var(--color-text);
 }
 
@@ -57,6 +68,30 @@
   overflow: hidden;
 }
 
+/* 提示數字疊越多個，單一數字就要跟著縮小，不然會被 overflow:hidden 吃掉
+   （橫向擠不下）或疊出表頭格外（縱向疊不下）——3 個以上才會啟動的安全網，
+   平常最常見的 1-2 個提示數字維持上面的大字級不受影響。用 :has() 而非固定
+   猜測「最多幾個提示數字」，因為出題是隨機的，理論上沒有嚴格上限。 */
+.nono-row-clue:has(> span:nth-child(3)) {
+  font-size: clamp(0.7rem, calc(var(--cell) * 0.42), 1.5rem);
+}
+.nono-row-clue:has(> span:nth-child(4)) {
+  font-size: clamp(0.6rem, calc(var(--cell) * 0.32), 1.2rem);
+}
+.nono-row-clue:has(> span:nth-child(5)) {
+  font-size: clamp(0.5rem, calc(var(--cell) * 0.25), 1rem);
+}
+
+.nono-col-clue:has(> span:nth-child(3)) {
+  font-size: clamp(0.7rem, calc(var(--cell) * 0.48), 1.6rem);
+}
+.nono-col-clue:has(> span:nth-child(4)) {
+  font-size: clamp(0.6rem, calc(var(--cell) * 0.38), 1.3rem);
+}
+.nono-col-clue:has(> span:nth-child(5)) {
+  font-size: clamp(0.5rem, calc(var(--cell) * 0.3), 1.05rem);
+}
+
 .nono-col-clue.satisfied,
 .nono-row-clue.satisfied {
   opacity: 0.32;
@@ -78,8 +113,8 @@
   justify-content: center;
   font-weight: 700;
   color: #dc2626;
-  /* 銀髮族/老花友善：格內叉號放大，上限從 1rem 提高到 1.4rem */
-  font-size: clamp(0.75rem, 2.8vw, 1.4rem);
+  /* 銀髮族/老花友善：格內叉號放到接近格子上限（--cell 是實際格邊長） */
+  font-size: clamp(1rem, calc(var(--cell) * 0.78), 2.4rem);
   touch-action: manipulation;
   padding: 0;
 }
@@ -97,7 +132,7 @@
 }
 
 .nono-loading {
-  width: min(96vw, 560px);
+  width: min(97vw, 82vh, 680px);
   padding: 48px 0;
   text-align: center;
   font-size: 1.1rem;

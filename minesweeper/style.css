@@ -12,7 +12,12 @@
   grid-template-columns: repeat(var(--cols, 8), 1fr);
   grid-template-rows: repeat(var(--rows, 8), 1fr);
   gap: 2px;
-  width: min(96vw, 560px);
+  /* 放到極限：97vw 幾乎滿版，82vh 確保不會撐爆螢幕高度。--cell 是實際格邊長，
+     供下面數字/旗子字級公式直接參照——固定 vw 比例在專家 14x14 這種高難度
+     盤面上完全不夠大。已放棄舊手機相容性，calc()/min() 疊加可以放心用。 */
+  --board-size: min(97vw, 82vh, 640px);
+  --cell: calc(var(--board-size) / var(--cols, 8));
+  width: var(--board-size);
   aspect-ratio: 1 / 1;
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
@@ -31,8 +36,8 @@
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  /* 銀髮族/老花友善：格內數字放大，上限從 1.1rem 提高到 1.5rem */
-  font-size: clamp(0.8rem, 3.2vw, 1.5rem);
+  /* 銀髮族/老花友善：格內數字放到接近格子上限 */
+  font-size: clamp(1rem, calc(var(--cell) * 0.72), 2.4rem);
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -51,7 +56,7 @@
 }
 
 .ms-cell.flagged {
-  font-size: clamp(0.8rem, 3.6vw, 1.6rem);
+  font-size: clamp(1rem, calc(var(--cell) * 0.8), 2.6rem);
 }
 
 .ms-cell.n1 {

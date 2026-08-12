@@ -169,18 +169,28 @@
     return "";
   }
 
+  // Header row/column (holding the col/row clue numbers) gets extra grid
+  // weight vs. a plain puzzle cell — a same-size header cell can only fit
+  // ~1 stacked clue number legibly, but a real clue column/row can stack up
+  // to 3 numbers deep (verified via a 15-sample probe at expert 13x13:
+  // max 3). Giving the header HEADER_WEIGHT fr (puzzle cells stay 1fr each)
+  // means the header track is HEADER_WEIGHT x taller/wider than a normal
+  // cell, so its clue numbers can actually be enlarged instead of being
+  // capped by the same tiny footprint as a single fill-mark cell.
+  const HEADER_WEIGHT = 2;
+
   function renderBoard(state) {
     const rows = state.rows;
     const cols = state.cols;
-    boardEl.style.setProperty("--cols", cols + 1);
-    boardEl.style.setProperty("--rows", rows + 1);
-    // Also set the literal computed value directly (not just the --cols/--rows
-    // custom properties the CSS repeat(var(...)) rule reads) -- a browser that
-    // doesn't support custom properties inside repeat()'s count position (pre-2021
-    // engines) would otherwise silently fall back to a single column/row. Setting
-    // the resolved string via inline style works unconditionally on any browser.
-    boardEl.style.gridTemplateColumns = "repeat(" + (cols + 1) + ", 1fr)";
-    boardEl.style.gridTemplateRows = "repeat(" + (rows + 1) + ", 1fr)";
+    boardEl.style.setProperty("--cols", cols);
+    boardEl.style.setProperty("--rows", rows);
+    boardEl.style.setProperty("--header-w", HEADER_WEIGHT);
+    // Literal computed value set directly (not just custom properties) so
+    // the grid track sizes never depend on a browser resolving var()/calc()
+    // inside grid-template-columns/rows or aspect-ratio at all.
+    boardEl.style.gridTemplateColumns = HEADER_WEIGHT + "fr repeat(" + cols + ", 1fr)";
+    boardEl.style.gridTemplateRows = HEADER_WEIGHT + "fr repeat(" + rows + ", 1fr)";
+    boardEl.style.aspectRatio = (HEADER_WEIGHT + cols) + " / " + (HEADER_WEIGHT + rows);
     const frag = document.createDocumentFragment();
 
     const corner = document.createElement("div");

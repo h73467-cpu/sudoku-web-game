@@ -12,7 +12,12 @@
   grid-template-columns: repeat(var(--cols, 6), 1fr);
   grid-template-rows: repeat(var(--rows, 6), 1fr);
   gap: 2px;
-  width: min(94vw, 500px);
+  /* 放到極限：96vw 幾乎滿版，82vh 確保不會撐爆螢幕高度。--cell 是實際格邊長，
+     供下面人物/箱子字級公式直接參照。已放棄舊手機相容性，calc()/min() 疊加
+     可以放心用。 */
+  --board-size: min(96vw, 82vh, 620px);
+  --cell: calc(var(--board-size) / var(--cols, 6));
+  width: var(--board-size);
   aspect-ratio: var(--cols, 6) / var(--rows, 6);
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
@@ -60,8 +65,8 @@
 .cell-icon {
   position: relative;
   z-index: 1;
-  /* 銀髮族/老花友善：箱子/人物/目標圖示放大，上限從 1.7rem 提高到 2.3rem */
-  font-size: clamp(1.1rem, 5.6vw, 2.3rem);
+  /* 銀髮族/老花友善：人物/箱子圖示放到接近格子上限 */
+  font-size: clamp(1.3rem, calc(var(--cell) * 0.78), 3.6rem);
   line-height: 1;
 }
 
