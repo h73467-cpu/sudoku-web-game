@@ -12,7 +12,7 @@
   grid-template-columns: repeat(var(--cols, 6), 1fr);
   grid-template-rows: repeat(var(--rows, 6), 1fr);
   gap: 2px;
-  width: min(92vw, 420px);
+  width: min(94vw, 500px);
   aspect-ratio: var(--cols, 6) / var(--rows, 6);
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
@@ -60,7 +60,8 @@
 .cell-icon {
   position: relative;
   z-index: 1;
-  font-size: clamp(0.9rem, 4.6vw, 1.7rem);
+  /* 銀髮族/老花友善：箱子/人物/目標圖示放大，上限從 1.7rem 提高到 2.3rem */
+  font-size: clamp(1.1rem, 5.6vw, 2.3rem);
   line-height: 1;
 }
 

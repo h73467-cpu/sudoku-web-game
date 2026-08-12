@@ -11,7 +11,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols, 8), 1fr);
   grid-template-rows: repeat(var(--rows, 8), 1fr);
-  width: min(94vw, 480px);
+  width: min(96vw, 560px);
   aspect-ratio: 1 / 1;
   background: var(--color-panel);
   border: 3px solid var(--color-border-strong);
@@ -24,7 +24,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(0.5rem, 2.4vw, 1.1rem);
+  /* 銀髮族/老花友善：玩家/出口圖示放大，上限從 1.1rem 提高到 1.6rem */
+  font-size: clamp(0.7rem, 3.4vw, 1.6rem);
   line-height: 1;
 }
 

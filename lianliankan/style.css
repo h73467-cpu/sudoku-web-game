@@ -1,6 +1,12 @@
 /* 連連看 specific styles. Shared tokens/components (buttons, toolbar, modal
    shell, difficulty grid, record list) come from ../shared/style.css. */
 
+/* 連連看盤面本來就比其他遊戲寬（最多 12 欄），共用的 .app 640px 上限會把盤面
+   夾住、吃不到視窗寬度——只在這頁放寬容器，不影響其他遊戲。 */
+.app {
+  max-width: 960px;
+}
+
 .board-area {
   width: 100%;
   display: flex;
@@ -12,7 +18,10 @@
   grid-template-columns: repeat(var(--cols, 6), 1fr);
   grid-template-rows: repeat(var(--rows, 4), 1fr);
   gap: 3px;
-  width: min(94vw, 560px);
+  /* 盡量滿版：寬度優先吃滿視窗，但也不能讓寬盤（如 expert 7x12）撐爆螢幕高度，
+     所以同時用 82vh 換算出的等效寬度封頂，兩者取小的那個。已不需要顧慮舊瀏覽器
+     不支援 min()/calc() 疊加的問題（見 project memory：已放棄舊手機相容性）。 */
+  width: min(98vw, calc(82vh * var(--cols, 6) / var(--rows, 4)), 900px);
   aspect-ratio: var(--cols, 6) / var(--rows, 4);
   background: var(--color-border-strong);
   border: 3px solid var(--color-border-strong);
@@ -29,7 +38,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(0.9rem, 3.2vw, 1.7rem);
+  /* 銀髮族/老花友善：圖示放大，上限從 1.7rem 提高到 2.3rem */
+  font-size: clamp(1.1rem, 4.4vw, 2.3rem);
   cursor: pointer;
   touch-action: manipulation;
 }
