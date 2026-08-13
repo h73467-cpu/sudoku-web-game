@@ -26,6 +26,7 @@ var GAMES = [
   // once the controls are reworked.
   { id: "pitchTrain", title: "絕對音感", icon: "🎧", path: "pitchTrain/index.html", status: "ready" },
   { id: "relativePitch", title: "相對音感", icon: "🎹", path: "relativePitch/index.html", status: "ready" },
+  { id: "tangguoqi", title: "甜粿棋", icon: "🐶", path: "tangguoqi/index.html", status: "ready" },
 ];
 
 if (typeof window !== "undefined") {
