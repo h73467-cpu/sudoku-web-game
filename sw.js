@@ -1,4 +1,4 @@
-// sudo/ hub — offline-capable service worker. Whole-site precache (this
+﻿// sudo/ hub — offline-capable service worker. Whole-site precache (this
 // repo is pure text: HTML/JS/CSS/JSON, well under 2MB total, zero images/
 // audio/fonts fetched at runtime — every sound is synthesized via Web
 // Audio, every icon is emoji), so caching the entire hub is cheap and
@@ -20,7 +20,7 @@
 //     | sed 's|^\./||' | sort
 //   (plus icons/*.png) — re-run that and diff before hand-editing this
 // array for anything beyond a one-off addition.
-const CACHE_VERSION = "2026-08-12-1022";
+const CACHE_VERSION = "2026-08-14-0827";
 const CACHE_NAME = "sudo-hub-" + CACHE_VERSION;
 
 const PRECACHE_URLS = [
@@ -133,6 +133,7 @@ const PRECACHE_URLS = [
   "sudoku/js/sudoku.js",
   "sudoku/js/ui.js",
   "sudoku/style.css",
+  "tangguoqi/index.html",
   "wordGame/index.html",
   "wordGame/js/dictionary.js",
   "wordGame/js/game.js",
