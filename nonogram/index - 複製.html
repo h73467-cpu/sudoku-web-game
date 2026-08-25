@@ -6,7 +6,7 @@
 <link rel="manifest" href="../manifest.json" />
 <meta name="theme-color" content="#2563eb" />
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
-<title>2048</title>
+<title>數織</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,7 +15,7 @@
 
   <div id="homeView" class="view">
     <div class="home-top">
-      <h1>🔢 2048</h1>
+      <h1>🧩 數織</h1>
       <div class="theme-picker">
         <label for="themeSelect" class="theme-label">背景主題</label>
         <select id="themeSelect" class="btn">
@@ -37,10 +37,16 @@
 
     <h2 class="section-title">選擇難度開新局</h2>
     <div class="difficulty-grid">
-      <button class="btn btn-primary difficulty-btn" data-difficulty="easy">簡單（5×5，目標 256）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（4×4，目標 1024）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（4×4，目標 2048）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（3×3，目標 512）</button>
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（7×7）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（9×9）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（11×11）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（13×13）</button>
     </div>
 
     <div class="home-nav-row">
@@ -51,7 +57,7 @@
       <a href="../index.html" class="btn">← 回遊戲集</a>
     </div>
 
-    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>. Gameplay mechanics based on original puzzle game concepts created by others.</p>
+    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>.</p>
   </div>
 
   <div id="gameView" class="view hidden">
@@ -60,20 +66,21 @@
       <span id="difficultyLabel" class="difficulty-label"></span>
 
       <div class="info">
-        <span class="info-label">分數</span>
-        <span id="scoreDisplay" class="info-value">0</span>
-      </div>
-
-      <div class="info">
-        <span class="info-label">目標</span>
-        <span id="targetDisplay" class="info-value">2048</span>
-      </div>
-
-      <div class="info">
         <span class="info-label">時間</span>
         <span id="timerDisplay" class="info-value">00:00</span>
       </div>
 
+      <div class="info">
+        <span class="info-label">最佳步數</span>
+        <span id="bestMovesDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">步數</span>
+        <span id="movesDisplay" class="info-value">0</span>
+      </div>
+
+      <button id="paintModeBtn" class="btn" aria-pressed="false">✏️ 模式：塗黑</button>
       <button id="undoBtn" class="btn">復原</button>
       <button id="resetBtn" class="btn">重新開始</button>
       <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
@@ -81,17 +88,10 @@
     </div>
 
     <div class="board-area">
-      <div id="board" class="g2048-board"></div>
+      <div id="board" class="nono-board" role="grid" aria-label="數織棋盤"></div>
     </div>
 
-    <div class="dpad">
-      <button id="dpadUp" class="btn dpad-btn dpad-up" aria-label="上">⬆️</button>
-      <button id="dpadLeft" class="btn dpad-btn dpad-left" aria-label="左">⬅️</button>
-      <button id="dpadRight" class="btn dpad-btn dpad-right" aria-label="右">➡️</button>
-      <button id="dpadDown" class="btn dpad-btn dpad-down" aria-label="下">⬇️</button>
-    </div>
-
-    <div class="board-hint-text">用方向鍵或下方按鈕把所有數字往同一個方向推，相同數字碰在一起會合併成兩倍。合併到目標數字就過關；棋盤滿了又推不動就結束。</div>
+    <div class="board-hint-text">列/欄的數字代表該行連續塗黑的長度（塊與塊之間至少留一格空白）。點格子塗黑或打叉（用上方按鈕切換模式），把所有格子正確標示完成即過關。</div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -109,7 +109,7 @@
     </div>
     <table class="career-table">
       <thead>
-        <tr><th>難度</th><th>最高分數</th><th>最高數字</th><th>達標次數</th></tr>
+        <tr><th>難度</th><th>最佳時間</th><th>最少步數</th><th>完成次數</th></tr>
       </thead>
       <tbody id="careerTableBody"></tbody>
     </table>
@@ -119,7 +119,7 @@
 
 <div id="winModal" class="modal-overlay hidden">
   <div class="modal">
-    <h2 id="winTitle">🎉 達到目標！</h2>
+    <h2 id="winTitle">🎉 完成！</h2>
     <p id="winSubtitle"></p>
     <div id="winStats" class="win-stats"></div>
     <div class="win-actions">
@@ -134,11 +134,12 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
-        <li>用方向鍵、鍵盤 WASD、或畫面下方的箭頭按鈕，把棋盤上所有數字方塊往同一個方向推到底。</li>
-        <li>推動時，兩個「數字相同」的方塊如果撞在一起，會合併成一個兩倍大的方塊（例如 2+2=4、8+8=16）。每次移動後，空格裡會隨機出現一個新的 2 或 4。</li>
-        <li>只要棋盤上曾經出現「目標數字」的方塊就過關；如果棋盤已經滿了、往任何方向推都不會有變化，遊戲就結束。</li>
-        <li>點「復原」可以回到上一步，不限次數。</li>
-        <li>難度差異：這款遊戲跟其他遊戲相反，棋盤越小反而越難（可以周旋的空間變少），數字目標也會跟著調整；「困難」是最原始的經典玩法（4×4、目標 2048）。</li>
+        <li>棋盤每一列、每一欄上方/左側的數字，代表那一行「連續塗黑格」的長度，依序排列；數字之間至少要留一格空白分隔。例如某列標「3 1」，表示先連續塗黑 3 格、留至少一格空白、再塗黑 1 格。</li>
+        <li>點格子會依照目前模式塗黑或打叉；用工具列的「模式」按鈕切換塗黑／打叉（打叉是拿來標記「確定不塗黑」的格子，方便推理，不影響過關判定）。同一個模式下再點一次會清空格子。</li>
+        <li>當某一列或欄目前塗黑的格子已經符合上面的數字提示，該列/欄的提示數字會變淡，方便確認進度；如果目前塗的格子已經不可能符合提示（例如塗太多格），提示數字會變成紅色，提醒你這一列/欄有塗錯的地方，需要清掉重塗。</li>
+        <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新出一題新的圖案。</li>
+        <li>把所有格子正確塗黑（跟打叉沒有關係，只看塗黑的部分）跟提示完全吻合即過關。</li>
+        <li>難度差異：棋盤越大、圖案越複雜就越難；「超簡單」的棋盤大小會隨自行輸入的百分比縮小，百分比越高棋盤越小、圖案也越簡單。</li>
       </ul>
     </div>
     <div class="win-actions">

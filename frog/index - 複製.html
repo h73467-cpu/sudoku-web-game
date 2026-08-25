@@ -6,7 +6,7 @@
 <link rel="manifest" href="../manifest.json" />
 <meta name="theme-color" content="#2563eb" />
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
-<title>2048</title>
+<title>青蛙過河</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,7 +15,7 @@
 
   <div id="homeView" class="view">
     <div class="home-top">
-      <h1>🔢 2048</h1>
+      <h1>🐸 青蛙過河</h1>
       <div class="theme-picker">
         <label for="themeSelect" class="theme-label">背景主題</label>
         <select id="themeSelect" class="btn">
@@ -28,19 +28,22 @@
     </div>
 
     <div class="home-row">
-      <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
-      <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
-    </div>
-    <div class="home-row">
+      <button id="instructionsBtn" class="btn btn-primary home-card-btn">📖 玩法說明</button>
       <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
     </div>
 
-    <h2 class="section-title">選擇難度開新局</h2>
+    <h2 class="section-title">選擇起始難度（過關後會自動變快，無限關卡）</h2>
     <div class="difficulty-grid">
-      <button class="btn btn-primary difficulty-btn" data-difficulty="easy">簡單（5×5，目標 256）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（4×4，目標 1024）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（4×4，目標 2048）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（3×3，目標 512）</button>
+      <div class="difficulty-item difficulty-recommended">
+        <button class="btn btn-primary difficulty-btn" data-difficulty="superEasy">超簡單（推薦）</button>
+        <label class="super-easy-input">
+          比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
+        </label>
+      </div>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家</button>
     </div>
 
     <div class="home-nav-row">
@@ -51,13 +54,13 @@
       <a href="../index.html" class="btn">← 回遊戲集</a>
     </div>
 
-    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>. Gameplay mechanics based on original puzzle game concepts created by others.</p>
+    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>.</p>
   </div>
 
   <div id="gameView" class="view hidden">
     <div class="toolbar">
       <button id="backHomeBtn" class="btn">← 返回首頁</button>
-      <span id="difficultyLabel" class="difficulty-label"></span>
+      <span id="levelLabel" class="difficulty-label"></span>
 
       <div class="info">
         <span class="info-label">分數</span>
@@ -65,8 +68,8 @@
       </div>
 
       <div class="info">
-        <span class="info-label">目標</span>
-        <span id="targetDisplay" class="info-value">2048</span>
+        <span class="info-label">生命</span>
+        <span id="livesDisplay" class="info-value">❤️❤️❤️</span>
       </div>
 
       <div class="info">
@@ -74,14 +77,21 @@
         <span id="timerDisplay" class="info-value">00:00</span>
       </div>
 
-      <button id="undoBtn" class="btn">復原</button>
-      <button id="resetBtn" class="btn">重新開始</button>
+      <button id="pauseBtn" class="btn">暫停 (Esc)</button>
       <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
       <button id="gameInstructionsBtn" class="btn">📖 說明</button>
     </div>
 
     <div class="board-area">
-      <div id="board" class="g2048-board"></div>
+      <canvas id="board" width="400" height="560"></canvas>
+
+      <div id="canvasOverlay" class="canvas-overlay hidden">
+        <div class="canvas-overlay-card">
+          <h2 id="overlayTitle"></h2>
+          <p id="overlayText"></p>
+          <button id="overlayActionBtn" class="btn btn-primary"></button>
+        </div>
+      </div>
     </div>
 
     <div class="dpad">
@@ -91,7 +101,7 @@
       <button id="dpadDown" class="btn dpad-btn dpad-down" aria-label="下">⬇️</button>
     </div>
 
-    <div class="board-hint-text">用方向鍵或下方按鈕把所有數字往同一個方向推，相同數字碰在一起會合併成兩倍。合併到目標數字就過關；棋盤滿了又推不動就結束。</div>
+    <div class="board-hint-text">用方向鍵、WASD、下方按鈕，或直接在畫面上滑動（手指拖曳或滑鼠/觸控板拖曳）操控青蛙。先跳過馬路閃避車子，再跳上木頭或烏龜過河（掉進水裡會死），跳到最上面空的荷葉才算過關。</div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -109,7 +119,7 @@
     </div>
     <table class="career-table">
       <thead>
-        <tr><th>難度</th><th>最高分數</th><th>最高數字</th><th>達標次數</th></tr>
+        <tr><th>難度</th><th>最佳分數</th><th>最高關卡</th><th>遊玩次數</th></tr>
       </thead>
       <tbody id="careerTableBody"></tbody>
     </table>
@@ -119,11 +129,11 @@
 
 <div id="winModal" class="modal-overlay hidden">
   <div class="modal">
-    <h2 id="winTitle">🎉 達到目標！</h2>
+    <h2 id="winTitle">💥 遊戲結束</h2>
     <p id="winSubtitle"></p>
     <div id="winStats" class="win-stats"></div>
     <div class="win-actions">
-      <button id="winCloseBtn" class="btn btn-primary">新遊戲</button>
+      <button id="winCloseBtn" class="btn btn-primary">再玩一次</button>
       <button id="winHomeBtn" class="btn">返回首頁</button>
     </div>
   </div>
@@ -134,11 +144,12 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
-        <li>用方向鍵、鍵盤 WASD、或畫面下方的箭頭按鈕，把棋盤上所有數字方塊往同一個方向推到底。</li>
-        <li>推動時，兩個「數字相同」的方塊如果撞在一起，會合併成一個兩倍大的方塊（例如 2+2=4、8+8=16）。每次移動後，空格裡會隨機出現一個新的 2 或 4。</li>
-        <li>只要棋盤上曾經出現「目標數字」的方塊就過關；如果棋盤已經滿了、往任何方向推都不會有變化，遊戲就結束。</li>
-        <li>點「復原」可以回到上一步，不限次數。</li>
-        <li>難度差異：這款遊戲跟其他遊戲相反，棋盤越小反而越難（可以周旋的空間變少），數字目標也會跟著調整；「困難」是最原始的經典玩法（4×4、目標 2048）。</li>
+        <li>用方向鍵、WASD、畫面下方的箭頭按鈕，或直接在畫面上滑動（手指拖曳、滑鼠/觸控板拖曳皆可）操控青蛙一格一格往上跳。</li>
+        <li>先要跳過馬路：躲開來回行駛的車子與貨車，被撞到會扣一命。</li>
+        <li>過了馬路中間的安全草地後要跳上河面：只能站在木頭或烏龜背上，一旦跳進沒有東西承載的水裡就會扣一命；站在木頭/烏龜上時青蛙會跟著它們一起漂移，被沖出畫面外一樣算掉進水裡。</li>
+        <li>抵達最上面那排時，要跳進空的荷葉（缺口是草叢，跳進去一樣算失敗）；每跳進一個空荷葉就會停一隻青蛙在那裡，並換一隻新的青蛙從起點出發，要把所有荷葉都停滿才算過關。已經停了青蛙的荷葉沒辦法再跳進去。全部停滿後自動進入下一關，車速、水流速度會越來越快，關卡沒有上限。</li>
+        <li>生命歸零遊戲結束；隨時可按「暫停」休息，工具列可以關閉音效（包含背景音樂）。</li>
+        <li>起始難度差異：車道/河道數量、車速水流越高越難，「超簡單」可自行輸入百分比讓遊戲更輕鬆。</li>
       </ul>
     </div>
     <div class="win-actions">

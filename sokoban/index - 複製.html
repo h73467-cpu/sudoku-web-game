@@ -6,7 +6,7 @@
 <link rel="manifest" href="../manifest.json" />
 <meta name="theme-color" content="#2563eb" />
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
-<title>2048</title>
+<title>推箱子</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,7 +15,7 @@
 
   <div id="homeView" class="view">
     <div class="home-top">
-      <h1>🔢 2048</h1>
+      <h1>📦 推箱子</h1>
       <div class="theme-picker">
         <label for="themeSelect" class="theme-label">背景主題</label>
         <select id="themeSelect" class="btn">
@@ -37,10 +37,10 @@
 
     <h2 class="section-title">選擇難度開新局</h2>
     <div class="difficulty-grid">
-      <button class="btn btn-primary difficulty-btn" data-difficulty="easy">簡單（5×5，目標 256）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（4×4，目標 1024）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（4×4，目標 2048）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（3×3，目標 512）</button>
+      <button class="btn btn-primary difficulty-btn" data-difficulty="easy">簡單（1 箱，推薦）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（2 箱）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（3 箱）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（4 箱）</button>
     </div>
 
     <div class="home-nav-row">
@@ -51,7 +51,7 @@
       <a href="../index.html" class="btn">← 回遊戲集</a>
     </div>
 
-    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>. Gameplay mechanics based on original puzzle game concepts created by others.</p>
+    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>.</p>
   </div>
 
   <div id="gameView" class="view hidden">
@@ -60,18 +60,18 @@
       <span id="difficultyLabel" class="difficulty-label"></span>
 
       <div class="info">
-        <span class="info-label">分數</span>
-        <span id="scoreDisplay" class="info-value">0</span>
-      </div>
-
-      <div class="info">
-        <span class="info-label">目標</span>
-        <span id="targetDisplay" class="info-value">2048</span>
-      </div>
-
-      <div class="info">
         <span class="info-label">時間</span>
         <span id="timerDisplay" class="info-value">00:00</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">最佳步數</span>
+        <span id="bestMovesDisplay" class="info-value">--</span>
+      </div>
+
+      <div class="info">
+        <span class="info-label">步數</span>
+        <span id="movesDisplay" class="info-value">0</span>
       </div>
 
       <button id="undoBtn" class="btn">復原</button>
@@ -81,7 +81,7 @@
     </div>
 
     <div class="board-area">
-      <div id="board" class="g2048-board"></div>
+      <div id="board" class="sokoban-board" role="grid" aria-label="推箱子棋盤"></div>
     </div>
 
     <div class="dpad">
@@ -91,7 +91,7 @@
       <button id="dpadDown" class="btn dpad-btn dpad-down" aria-label="下">⬇️</button>
     </div>
 
-    <div class="board-hint-text">用方向鍵或下方按鈕把所有數字往同一個方向推，相同數字碰在一起會合併成兩倍。合併到目標數字就過關；棋盤滿了又推不動就結束。</div>
+    <div class="board-hint-text">用方向鍵或下方按鈕移動；走到箱子旁邊再往箱子方向走就會推動它。把所有箱子都推到目標點（虛線圈）上即過關。</div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -109,7 +109,7 @@
     </div>
     <table class="career-table">
       <thead>
-        <tr><th>難度</th><th>最高分數</th><th>最高數字</th><th>達標次數</th></tr>
+        <tr><th>難度</th><th>最佳時間</th><th>最少步數</th><th>完成次數</th></tr>
       </thead>
       <tbody id="careerTableBody"></tbody>
     </table>
@@ -119,7 +119,7 @@
 
 <div id="winModal" class="modal-overlay hidden">
   <div class="modal">
-    <h2 id="winTitle">🎉 達到目標！</h2>
+    <h2 id="winTitle">🎉 過關！</h2>
     <p id="winSubtitle"></p>
     <div id="winStats" class="win-stats"></div>
     <div class="win-actions">
@@ -134,11 +134,11 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
-        <li>用方向鍵、鍵盤 WASD、或畫面下方的箭頭按鈕，把棋盤上所有數字方塊往同一個方向推到底。</li>
-        <li>推動時，兩個「數字相同」的方塊如果撞在一起，會合併成一個兩倍大的方塊（例如 2+2=4、8+8=16）。每次移動後，空格裡會隨機出現一個新的 2 或 4。</li>
-        <li>只要棋盤上曾經出現「目標數字」的方塊就過關；如果棋盤已經滿了、往任何方向推都不會有變化，遊戲就結束。</li>
-        <li>點「復原」可以回到上一步，不限次數。</li>
-        <li>難度差異：這款遊戲跟其他遊戲相反，棋盤越小反而越難（可以周旋的空間變少），數字目標也會跟著調整；「困難」是最原始的經典玩法（4×4、目標 2048）。</li>
+        <li>用方向鍵或畫面下方的箭頭按鈕移動人物；不能穿牆、也不能穿過箱子。</li>
+        <li>走到箱子旁邊、往箱子方向再走一步，就會把箱子推到下一格（箱子後面要是空地才推得動，牆壁或另一個箱子會擋住）。</li>
+        <li>只能「推」不能「拉」，把所有箱子都推到虛線圈標示的目標點上即過關。</li>
+        <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新生成一局新的關卡。</li>
+        <li>難度差異：棋盤越大、箱子越多、牆壁越多、關卡打亂程度越高。</li>
       </ul>
     </div>
     <div class="win-actions">

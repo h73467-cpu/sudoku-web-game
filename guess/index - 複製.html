@@ -6,7 +6,7 @@
 <link rel="manifest" href="../manifest.json" />
 <meta name="theme-color" content="#2563eb" />
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
-<title>數織</title>
+<title>1A2B 猜數字</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,7 +15,7 @@
 
   <div id="homeView" class="view">
     <div class="home-top">
-      <h1>🧩 數織</h1>
+      <h1>🔢 1A2B 猜數字</h1>
       <div class="theme-picker">
         <label for="themeSelect" class="theme-label">背景主題</label>
         <select id="themeSelect" class="btn">
@@ -31,9 +31,6 @@
       <button id="continueBtn" class="btn btn-primary home-card-btn" disabled>繼續上次遊戲</button>
       <button id="instructionsBtn" class="btn home-card-btn">📖 玩法說明</button>
     </div>
-    <div class="home-row">
-      <button id="soundToggleBtn" class="btn home-card-btn" aria-pressed="true">🔊 音效：開</button>
-    </div>
 
     <h2 class="section-title">選擇難度開新局</h2>
     <div class="difficulty-grid">
@@ -43,10 +40,10 @@
           比簡單少 <input type="number" id="superEasyPercent" min="10" max="90" step="5" value="30" /> %
         </label>
       </div>
-      <button class="btn difficulty-btn" data-difficulty="easy">簡單（7×7）</button>
-      <button class="btn difficulty-btn" data-difficulty="medium">中等（9×9）</button>
-      <button class="btn difficulty-btn" data-difficulty="hard">困難（11×11）</button>
-      <button class="btn difficulty-btn" data-difficulty="expert">專家（13×13）</button>
+      <button class="btn difficulty-btn" data-difficulty="easy">簡單（3 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="medium">中等（4 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="hard">困難（5 位數字）</button>
+      <button class="btn difficulty-btn" data-difficulty="expert">專家（6 位數字）</button>
     </div>
 
     <div class="home-nav-row">
@@ -57,7 +54,7 @@
       <a href="../index.html" class="btn">← 回遊戲集</a>
     </div>
 
-    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>. Gameplay mechanics based on original puzzle game concepts created by others.</p>
+    <p class="page-credit">The interaction design of this page — envisioned by <span class="credit-name">Pony Ferng</span>, engineered in collaboration with <span class="credit-name">Claude</span>.</p>
   </div>
 
   <div id="gameView" class="view hidden">
@@ -71,27 +68,42 @@
       </div>
 
       <div class="info">
-        <span class="info-label">最佳步數</span>
-        <span id="bestMovesDisplay" class="info-value">--</span>
+        <span class="info-label">最少猜測</span>
+        <span id="bestAttemptsDisplay" class="info-value">--</span>
       </div>
 
       <div class="info">
-        <span class="info-label">步數</span>
-        <span id="movesDisplay" class="info-value">0</span>
+        <span class="info-label">猜測次數</span>
+        <span id="attemptsDisplay" class="info-value">0</span>
       </div>
 
-      <button id="paintModeBtn" class="btn" aria-pressed="false">✏️ 模式：塗黑</button>
-      <button id="undoBtn" class="btn">復原</button>
-      <button id="resetBtn" class="btn">重新開始</button>
-      <button id="gameSoundToggleBtn" class="btn" aria-pressed="true">🔊</button>
+      <button id="hintBtn" class="btn">提示 (<span id="hintCount">3</span>/3)</button>
+      <button id="notesToggleBtn" class="btn" aria-pressed="true">筆記</button>
       <button id="gameInstructionsBtn" class="btn">📖 說明</button>
     </div>
 
-    <div class="board-area">
-      <div id="board" class="nono-board" role="grid" aria-label="數織棋盤"></div>
-    </div>
+    <div class="guess-board">
+      <div class="guess-hint-text">點一格選取，再從下方數字鍵盤點選要填入的數字</div>
+      <div id="guessSlots" class="guess-slots"></div>
 
-    <div class="board-hint-text">列/欄的數字代表該行連續塗黑的長度（塊與塊之間至少留一格空白）。點格子塗黑或打叉（用上方按鈕切換模式），把所有格子正確標示完成即過關。</div>
+      <div id="digitPad" class="digit-pad"></div>
+
+      <div class="guess-actions">
+        <button id="clearSlotBtn" class="btn">清除選取格</button>
+        <button id="clearAllBtn" class="btn">清除全部</button>
+        <button id="submitGuessBtn" class="btn btn-primary" disabled>送出猜測</button>
+      </div>
+
+      <div id="hintLog" class="hint-log hidden"></div>
+
+      <div class="section-title">猜測紀錄</div>
+      <div id="guessHistory" class="record-list"></div>
+
+      <div id="notesPanel" class="notes-panel">
+        <div class="notes-panel-label">筆記：每欄對應上面同一個位置，點數字可記錄「這格可能是」的候選數字，可以記錄一個以上，不影響遊戲判定</div>
+        <div id="notesTable" class="notes-table"></div>
+      </div>
+    </div>
   </div>
 
   <div id="historyView" class="view hidden">
@@ -109,7 +121,7 @@
     </div>
     <table class="career-table">
       <thead>
-        <tr><th>難度</th><th>最佳時間</th><th>最少步數</th><th>完成次數</th></tr>
+        <tr><th>難度</th><th>最佳時間</th><th>最少猜測次數</th><th>完成次數</th></tr>
       </thead>
       <tbody id="careerTableBody"></tbody>
     </table>
@@ -134,12 +146,14 @@
     <h2>📖 玩法說明</h2>
     <div class="instructions-body">
       <ul>
-        <li>棋盤每一列、每一欄上方/左側的數字，代表那一行「連續塗黑格」的長度，依序排列；數字之間至少要留一格空白分隔。例如某列標「3 1」，表示先連續塗黑 3 格、留至少一格空白、再塗黑 1 格。</li>
-        <li>點格子會依照目前模式塗黑或打叉；用工具列的「模式」按鈕切換塗黑／打叉（打叉是拿來標記「確定不塗黑」的格子，方便推理，不影響過關判定）。同一個模式下再點一次會清空格子。</li>
-        <li>當某一列或欄目前塗黑的格子已經符合上面的數字提示，該列/欄的提示數字會變淡，方便確認進度；如果目前塗的格子已經不可能符合提示（例如塗太多格），提示數字會變成紅色，提醒你這一列/欄有塗錯的地方，需要清掉重塗。</li>
-        <li>點「復原」可以回到上一步，不限次數；「重新開始」會用同樣難度重新出一題新的圖案。</li>
-        <li>把所有格子正確塗黑（跟打叉沒有關係，只看塗黑的部分）跟提示完全吻合即過關。</li>
-        <li>難度差異：棋盤越大、圖案越複雜就越難；「超簡單」的棋盤大小會隨自行輸入的百分比縮小，百分比越高棋盤越小、圖案也越簡單。</li>
+        <li>電腦會隨機選一組「不重複的數字」當作答案，長度依難度而定（例如中等難度是 4 位數字）。</li>
+        <li>點一下上方格子選取該位置，再從數字鍵盤點選要填入的數字；點別的格子可以直接改選，不用整組重打。</li>
+        <li>填完所有格子後按「送出猜測」。</li>
+        <li><strong>A</strong>：猜對數字、也猜對位置。<strong>B</strong>：猜對數字，但位置不對。</li>
+        <li>當結果是「幾 A」等於位數（例如 4A0B）就代表完全猜中，遊戲結束。</li>
+        <li>「超簡單」難度可自行輸入百分比，數字越大代表可用的數字範圍越小，越容易猜中。</li>
+        <li>「筆記」表格每一欄對應同一個位置的格子，點數字可以記錄這個位置「可能是」的候選數字，一格可以記錄一個以上，方便推理，不影響遊戲判定。</li>
+        <li>每局有 3 次「提示」機會，會直接告訴你某一位的正確數字。</li>
       </ul>
     </div>
     <div class="win-actions">
@@ -151,7 +165,6 @@
 <script src="../shared/js/aspect-ratio-fallback.js"></script>
 <script src="../shared/js/storage.js"></script>
 <script src="js/game.js"></script>
-<script src="js/sound.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>
