@@ -18,8 +18,37 @@ if (-not (Test-Path $swPath)) {
     exit 1
 }
 
+# Retries a read/write action a few times if the file is briefly locked by
+# another process (cloud sync, antivirus scan, an editor's file watcher,
+# etc). Only retries IOException - anything else fails immediately.
+function Invoke-WithRetry {
+    param(
+        [scriptblock]$Action,
+        [int]$MaxAttempts = 6,
+        [int]$DelayMs = 500
+    )
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            return & $Action
+        } catch [System.IO.IOException] {
+            if ($attempt -eq $MaxAttempts) {
+                throw
+            }
+            Write-Host "[WARN] sw.js is locked by another process (attempt $attempt/$MaxAttempts). Retrying in $($DelayMs)ms..." -ForegroundColor Yellow
+            Start-Sleep -Milliseconds $DelayMs
+        }
+    }
+}
+
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmm"
-$content = Get-Content -Raw -Path $swPath -Encoding UTF8
+
+try {
+    $content = Invoke-WithRetry { Get-Content -Raw -Path $swPath -Encoding UTF8 }
+} catch {
+    Write-Host "[ERROR] Could not read sw.js after several retries - it stayed locked by another process." -ForegroundColor Red
+    Write-Host "        Close any program that might have it open (editor, OneDrive/Dropbox sync, antivirus scan) and try again." -ForegroundColor Red
+    exit 1
+}
 
 if ($content -notmatch 'const CACHE_VERSION = "[^"]+";') {
     Write-Host "[ERROR] Could not find the CACHE_VERSION line in sw.js. Its format may have changed - check manually." -ForegroundColor Red
@@ -27,6 +56,13 @@ if ($content -notmatch 'const CACHE_VERSION = "[^"]+";') {
 }
 
 $newContent = $content -replace 'const CACHE_VERSION = "[^"]+";', "const CACHE_VERSION = `"$timestamp`";"
-Set-Content -Path $swPath -Value $newContent -NoNewline -Encoding UTF8
+
+try {
+    Invoke-WithRetry { Set-Content -Path $swPath -Value $newContent -NoNewline -Encoding UTF8 }
+} catch {
+    Write-Host "[ERROR] Could not write sw.js after several retries - it stayed locked by another process." -ForegroundColor Red
+    Write-Host "        Close any program that might have it open (editor, OneDrive/Dropbox sync, antivirus scan) and try again." -ForegroundColor Red
+    exit 1
+}
 
 Write-Host "CACHE_VERSION updated to $timestamp" -ForegroundColor Green

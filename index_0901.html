@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#2563eb" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<title>益智遊戲集</title>
+<link rel="stylesheet" href="shared/style.css" />
+</head>
+<body>
+<div class="app">
+
+  <div class="home-top">
+    <h1>🎮 益智遊戲集</h1>
+    <div class="theme-picker">
+      <label for="themeSelect" class="theme-label">背景主題</label>
+      <select id="themeSelect" class="btn">
+        <option value="blue_light">晴空藍（淺色模式）</option>
+        <option value="blue_dark">深邃夜藍（深色模式）</option>
+        <option value="green_light">森林綠（淺色模式）</option>
+        <option value="green_dark">暗夜森林（深色模式）</option>
+      </select>
+    </div>
+  </div>
+
+  <p id="buildVersionText" class="build-version-text hidden"></p>
+
+  <h2 id="favoritesTitle" class="section-title hidden">⭐ 我的最愛</h2>
+  <div id="favoritesGrid" class="game-grid hidden"></div>
+
+  <h2 class="section-title">選擇遊戲</h2>
+  <div id="gameGrid" class="game-grid"></div>
+
+  <div id="pwaUpdateBanner" class="pwa-update-banner hidden">
+    <span>🔄 有新版本可用</span>
+    <button id="pwaUpdateBtn" class="btn">立即更新</button>
+  </div>
+
+  <div id="pwaInstallHint" class="pwa-install-hint hidden">
+    <p id="pwaInstallText" class="pwa-install-text"></p>
+    <button id="pwaInstallBtn" class="btn hidden">📲 加入主畫面，離線也能玩</button>
+  </div>
+
+</div>
+
+<script src="shared/js/storage.js"></script>
+<script src="shared/js/games.js"></script>
+<script src="shared/js/hub.js"></script>
+<script src="shared/js/pwa.js"></script>
+</body>
+</html>

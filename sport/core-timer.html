@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>核心運動計時器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161A;
+    --surface:#1C1F25;
+    --surface-2:#22262D;
+    --text:#EDEDED;
+    --muted:#868C96;
+    --line: rgba(255,255,255,0.08);
+    --work:#FF5A36;
+    --work-dim: rgba(255,90,54,0.14);
+    --rest:#35C9C9;
+    --rest-dim: rgba(53,201,201,0.14);
+    --prep:#F2C230;
+    --prep-dim: rgba(242,194,48,0.14);
+    --done:#8CE07A;
+    --phase-color: var(--muted);
+    --phase-dim: rgba(255,255,255,0.06);
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg); color:var(--text);
+    font-family:'Inter', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body{
+    display:flex; flex-direction:column;
+    min-height:100dvh;
+    overflow-x:hidden;
+  }
+  .app{
+    flex:1; display:flex; flex-direction:column;
+    max-width:640px; width:100%; margin:0 auto;
+    padding: env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0);
+    min-height:100dvh;
+  }
+  .screen{ display:none; flex:1; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  /* ---------- Settings screen ---------- */
+  .settings-header{ padding: 32px 0 8px; }
+  .settings-header h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size: clamp(1.6rem, 5vw, 2.1rem);
+    margin:0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .settings-header p{
+    margin:0; color:var(--muted); font-size:0.92rem; line-height:1.5;
+  }
+  .settings-body{ flex:1; padding: 20px 0 12px; display:flex; flex-direction:column; gap:14px; }
+
+  .field-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .field-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .field-label{ font-size:0.95rem; font-weight:500; }
+  .field-sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+
+  .stepper{
+    display:flex; align-items:center; gap:10px;
+  }
+  .stepper button{
+    width:34px; height:34px; border-radius:9px;
+    border:1px solid var(--line); background:var(--surface-2);
+    color:var(--text); font-size:1.1rem; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .stepper button:active{ background:#2A2F37; }
+  .stepper input{
+    width:64px; text-align:center;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.15rem;
+    background:transparent; border:none; color:var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .stepper input:focus{ outline: 1px solid var(--muted); border-radius:6px; }
+
+  .row-divider{ height:1px; background:var(--line); margin:12px 0; }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+  .toggle{
+    position:relative; width:46px; height:26px; border-radius:999px;
+    background:var(--surface-2); border:1px solid var(--line);
+    cursor:pointer; flex-shrink:0;
+  }
+  .toggle .knob{
+    position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:var(--muted); transition: left 0.15s ease, background 0.15s ease;
+  }
+  .toggle[data-on="true"] .knob{ left:22px; background:var(--text); }
+  .toggle[data-on="true"]{ background:#3A3F47; }
+
+  .segmented{
+    display:flex; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:10px; padding:3px; gap:3px;
+  }
+  .segmented button{
+    flex:1; border:none; background:transparent; color:var(--muted);
+    padding:8px 6px; border-radius:8px; font-size:0.85rem; font-weight:500;
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .segmented button[data-active="true"]{
+    background:#33383F; color:var(--text);
+  }
+
+  .music-grid{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .music-grid button{
+    padding:9px 15px; border-radius:999px; border:1px solid var(--line);
+    background:var(--surface-2); color:var(--muted); font-size:0.82rem;
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .music-grid button[data-active="true"]{
+    background:#3A3F47; color:var(--text); border-color:#565C66;
+  }
+
+  .start-btn{
+    margin-top:8px;
+    width:100%; padding:17px; border:none; border-radius:14px;
+    background:var(--work); color:#1A0E09;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1.1rem;
+    cursor:pointer;
+  }
+  .start-btn:active{ background:#e64f2c; }
+
+  .hint{
+    font-size:0.76rem; color:var(--muted); text-align:center;
+    padding: 12px 8px 0; line-height:1.5;
+  }
+
+  /* ---------- Run screen ---------- */
+  .run-screen{ align-items:center; justify-content:center; position:relative; padding-top:16px; padding-bottom:16px; }
+  .phase-label{
+    font-size:1.05rem; font-weight:600; letter-spacing:0.02em;
+    color: var(--phase-color);
+    margin-bottom: 6px;
+    transition: color 0.4s ease;
+  }
+  .rep-progress{
+    font-family:'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums;
+    color:var(--muted); font-size:1rem; margin-bottom: 18px;
+  }
+  .timer-ring{
+    width: min(72vw, 320px); height: min(72vw, 320px);
+    border-radius:50%;
+    border: 6px solid var(--phase-dim);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0 0 0 0 var(--phase-dim);
+    position:relative;
+  }
+  .timer-ring.pulse{ border-color: var(--phase-color); box-shadow: 0 0 28px 2px var(--phase-dim); }
+  .big-number{
+    font-family:'Space Grotesk', sans-serif; font-weight:700;
+    font-size: clamp(4.2rem, 22vw, 6.5rem);
+    font-variant-numeric: tabular-nums;
+    line-height:1;
+  }
+  .status-text{
+    margin-top:22px; color:var(--muted); font-size:0.9rem; min-height:1.3em; text-align:center;
+  }
+
+  .controls{
+    display:flex; gap:12px; margin-top:34px; width:100%; max-width:340px;
+  }
+  .ctrl-btn{
+    flex:1; padding:14px; border-radius:12px; border:1px solid var(--line);
+    background:var(--surface); color:var(--text); font-size:0.95rem; font-weight:500;
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .ctrl-btn.primary{ background:var(--surface-2); }
+  .ctrl-btn:active{ background:#2A2F37; }
+
+  .done-emoji{ font-size:3rem; margin-bottom:8px; }
+
+  footer{
+    text-align:center; padding:14px 8px calc(14px + env(safe-area-inset-bottom,0));
+    font-size:0.7rem; color: #545860; line-height:1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .toggle .knob, .timer-ring, .phase-label{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SETTINGS SCREEN ============ -->
+  <section class="screen active" id="screen-settings">
+    <div class="settings-header">
+      <h1>核心運動計時器</h1>
+      <p>設定每下時間、休息時間與總次數，開始你的核心訓練。</p>
+    </div>
+
+    <div class="settings-body">
+
+      <div class="field-card">
+        <div class="field-row">
+          <div>
+            <div class="field-label">每下持續時間</div>
+            <div class="field-sub">秒</div>
+          </div>
+          <div class="stepper">
+            <button type="button" data-step="workDur" data-delta="-1">−</button>
+            <input type="number" id="input-workDur" min="1" value="10" inputmode="numeric">
+            <button type="button" data-step="workDur" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="row-divider"></div>
+        <div class="toggle-row">
+          <div>
+            <div class="field-label">顯示方式</div>
+            <div class="field-sub" id="label-workCountdown">倒數顯示</div>
+          </div>
+          <div class="toggle" id="toggle-workCountdown" data-on="true"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-row">
+          <div>
+            <div class="field-label">每次休息時間</div>
+            <div class="field-sub">秒</div>
+          </div>
+          <div class="stepper">
+            <button type="button" data-step="restDur" data-delta="-1">−</button>
+            <input type="number" id="input-restDur" min="0" value="20" inputmode="numeric">
+            <button type="button" data-step="restDur" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="row-divider"></div>
+        <div class="toggle-row">
+          <div>
+            <div class="field-label">顯示方式</div>
+            <div class="field-sub" id="label-restCountdown">倒數顯示</div>
+          </div>
+          <div class="toggle" id="toggle-restCountdown" data-on="true"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-row">
+          <div>
+            <div class="field-label">總共要做幾下</div>
+            <div class="field-sub">下</div>
+          </div>
+          <div class="stepper">
+            <button type="button" data-step="totalReps" data-delta="-1">−</button>
+            <input type="number" id="input-totalReps" min="1" value="30" inputmode="numeric">
+            <button type="button" data-step="totalReps" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="row-divider"></div>
+        <div class="toggle-row">
+          <div>
+            <div class="field-label">進度顯示方式</div>
+            <div class="field-sub" id="label-repCountdown">倒數剩餘次數</div>
+          </div>
+          <div class="toggle" id="toggle-repCountdown" data-on="false"><div class="knob"></div></div>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label" style="margin-bottom:10px;">提示音方式</div>
+        <div class="segmented" id="audio-mode">
+          <button type="button" data-mode="voice" data-active="true">語音報數</button>
+          <button type="button" data-mode="beep">嗶聲</button>
+          <button type="button" data-mode="both">語音＋嗶聲</button>
+        </div>
+      </div>
+
+      <div class="field-card">
+        <div class="field-label" style="margin-bottom:10px;">背景音樂</div>
+        <div class="music-grid" id="music-grid">
+          <button type="button" data-track="0" data-active="true">無</button>
+          <button type="button" data-track="1">動感節拍</button>
+          <button type="button" data-track="2">電音衝刺</button>
+          <button type="button" data-track="3">強力驅動</button>
+          <button type="button" data-track="4">節奏心跳</button>
+          <button type="button" data-track="5">極速能量</button>
+        </div>
+        <div class="row-divider"></div>
+        <div class="field-label" style="margin-bottom:10px;">音樂音量</div>
+        <div class="segmented" id="music-volume">
+          <button type="button" data-vol="0.11">小</button>
+          <button type="button" data-vol="0.22" data-active="true">中</button>
+          <button type="button" data-vol="0.34">大</button>
+          <button type="button" data-vol="0.46">最大</button>
+        </div>
+      </div>
+
+      <button class="start-btn" id="btn-start">開始運動</button>
+      <p class="hint">開始後會有 5 秒預備時間。若放在口袋搭配藍牙耳機使用，建議保持螢幕開啟，以確保語音與計時持續運作。</p>
+    </div>
+  </section>
+
+  <!-- ============ RUN SCREEN ============ -->
+  <section class="screen run-screen" id="screen-run">
+    <div class="phase-label" id="phase-label">準備</div>
+    <div class="rep-progress" id="rep-progress">0 / 30</div>
+    <div class="timer-ring" id="timer-ring">
+      <div class="big-number" id="big-number">5</div>
+    </div>
+    <div class="status-text" id="status-text">即將開始</div>
+    <div class="controls">
+      <button class="ctrl-btn primary" id="btn-pause">暫停</button>
+      <button class="ctrl-btn" id="btn-stop">結束</button>
+    </div>
+  </section>
+
+  <!-- ============ DONE SCREEN ============ -->
+  <section class="screen run-screen" id="screen-done">
+    <div class="done-emoji">✅</div>
+    <div class="phase-label" style="color:var(--done);">完成！</div>
+    <div class="status-text" id="done-summary">你完成了全部次數</div>
+    <div class="controls">
+      <button class="ctrl-btn primary" id="btn-restart">再做一輪</button>
+      <button class="ctrl-btn" id="btn-back-settings">回到設定</button>
+    </div>
+  </section>
+
+  <footer>
+    This game's mechanics and concept were solely created by Pony Ferng, engineered in collaboration with Claude
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- state ----------------
+  const cfg = {
+    workDur: 10,
+    restDur: 20,
+    totalReps: 30,
+    workCountdown: true,
+    restCountdown: true,
+    repCountdown: false,
+    audioMode: 'voice', // 'voice' | 'beep' | 'both'
+    musicTrack: 0, // 0 = 無, 1-5 = 音樂曲目
+    musicVolume: 0.22
+  };
+
+  const session = {
+    phase: 'idle',      // idle | prep | work | rest | done
+    currentRep: 0,       // 1-based index of rep in progress
+    secondsElapsed: 0,
+    phaseDuration: 0,
+    timerHandle: null,
+    paused: false,
+    wakeLock: null,
+    nextPhaseAfterPause: null
+  };
+
+  // ---------------- element refs ----------------
+  const screens = {
+    settings: document.getElementById('screen-settings'),
+    run: document.getElementById('screen-run'),
+    done: document.getElementById('screen-done')
+  };
+  const el = {
+    phaseLabel: document.getElementById('phase-label'),
+    repProgress: document.getElementById('rep-progress'),
+    timerRing: document.getElementById('timer-ring'),
+    bigNumber: document.getElementById('big-number'),
+    statusText: document.getElementById('status-text'),
+    btnPause: document.getElementById('btn-pause'),
+    btnStop: document.getElementById('btn-stop'),
+    doneSummary: document.getElementById('done-summary'),
+    btnRestart: document.getElementById('btn-restart'),
+    btnBackSettings: document.getElementById('btn-back-settings')
+  };
+
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // ---------------- settings screen wiring ----------------
+  function clampInt(v, min){
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = min;
+    return Math.max(min, v);
+  }
+
+  function bindStepper(key, min){
+    const input = document.getElementById('input-' + key);
+    input.addEventListener('change', () => {
+      cfg[key] = clampInt(input.value, min);
+      input.value = cfg[key];
+    });
+    document.querySelectorAll(`[data-step="${key}"]`).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delta = parseInt(btn.dataset.delta, 10);
+        cfg[key] = clampInt(cfg[key] + delta, min);
+        input.value = cfg[key];
+      });
+    });
+  }
+  bindStepper('workDur', 1);
+  bindStepper('restDur', 0);
+  bindStepper('totalReps', 1);
+
+  function bindToggle(key, labelId, onText, offText){
+    const toggle = document.getElementById('toggle-' + key);
+    const label = document.getElementById(labelId);
+    toggle.addEventListener('click', () => {
+      cfg[key] = !cfg[key];
+      toggle.dataset.on = cfg[key];
+      label.textContent = cfg[key] ? onText : offText;
+    });
+  }
+  bindToggle('workCountdown', 'label-workCountdown', '倒數顯示', '正數顯示');
+  bindToggle('restCountdown', 'label-restCountdown', '倒數顯示', '正數顯示');
+  bindToggle('repCountdown', 'label-repCountdown', '倒數剩餘次數', '正數累計次數');
+
+  document.querySelectorAll('#audio-mode button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#audio-mode button').forEach(b => b.dataset.active = "false");
+      btn.dataset.active = "true";
+      cfg.audioMode = btn.dataset.mode;
+    });
+  });
+
+  document.querySelectorAll('#music-grid button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#music-grid button').forEach(b => b.dataset.active = "false");
+      btn.dataset.active = "true";
+      cfg.musicTrack = parseInt(btn.dataset.track, 10);
+    });
+  });
+
+  document.querySelectorAll('#music-volume button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#music-volume button').forEach(b => b.dataset.active = "false");
+      btn.dataset.active = "true";
+      cfg.musicVolume = parseFloat(btn.dataset.vol);
+      if (musicPlayer.gainNode) musicPlayer.gainNode.gain.value = cfg.musicVolume;
+    });
+  });
+
+  document.getElementById('btn-start').addEventListener('click', () => {
+    startSession();
+  });
+
+  // ---------------- audio: speech ----------------
+  let voicesReady = false;
+  let zhVoice = null;
+  function loadVoices(){
+    const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    zhVoice = voices.find(v => /zh-TW|zh_TW/i.test(v.lang)) ||
+              voices.find(v => /zh/i.test(v.lang)) || null;
+    voicesReady = true;
+  }
+  if ('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function speak(text, pitch){
+    if (!('speechSynthesis' in window)) return;
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-TW';
+      if (zhVoice) u.voice = zhVoice;
+      u.rate = 1.05;
+      u.pitch = pitch || 1;
+      window.speechSynthesis.speak(u);
+    }catch(e){ /* speech not available, ignore */ }
+  }
+
+  // ---------------- audio: beep ----------------
+  let audioCtx = null;
+  function ensureAudioCtx(){
+    if (!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function beep(freq, duration, type){
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration + 0.02);
+  }
+
+  // ---------------- transition cues ----------------
+  // 5 秒預備結束、進入核心動作時的 2 秒長音
+  function playStartTone(){
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const dur = 2;
+    const osc1 = ctx.createOscillator(); osc1.type = 'sawtooth';
+    const osc2 = ctx.createOscillator(); osc2.type = 'square';
+    const gain = ctx.createGain();
+    osc1.frequency.setValueAtTime(392, t);
+    osc1.frequency.exponentialRampToValueAtTime(784, t + dur * 0.5);
+    osc2.frequency.setValueAtTime(393, t);
+    osc2.frequency.exponentialRampToValueAtTime(786, t + dur * 0.5);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.26, t + 0.15);
+    gain.gain.setValueAtTime(0.26, t + dur - 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc1.start(t); osc2.start(t);
+    osc1.stop(t + dur + 0.05); osc2.stop(t + dur + 0.05);
+  }
+
+  // 核心動作結束、進入休息前的 2 秒放鬆鈴聲
+  function playRestBell(){
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const dur = 2;
+    const fundamental = 523.25; // C5
+    const partials = [1, 2.01, 3.0, 4.2, 5.4];
+    const gains = [0.3, 0.18, 0.12, 0.08, 0.05];
+    partials.forEach((mult, idx) => {
+      const osc = ctx.createOscillator(); osc.type = 'sine';
+      osc.frequency.value = fundamental * mult;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(gains[idx], t);
+      g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t + dur + 0.05);
+    });
+  }
+
+  // ---------------- background music (procedurally generated, 5 tracks) ----------------
+  const SCALES = {
+    minorPent: [0, 3, 5, 7, 10],
+    dorian: [0, 2, 3, 5, 7, 9, 10],
+    majorPent: [0, 2, 4, 7, 9]
+  };
+  const TRACK_META = [
+    { name:'動感節拍', bpm:140, root:220,    scale:'minorPent', kickPattern:'four',   hat:'med',  kickStyle:'synth' },
+    { name:'電音衝刺', bpm:150, root:246.94, scale:'dorian',    kickPattern:'syncop', hat:'high', kickStyle:'big'   },
+    { name:'強力驅動', bpm:132, root:196,    scale:'minorPent', kickPattern:'driving',hat:'med',  kickStyle:'big'   },
+    { name:'節奏心跳', bpm:126, root:220,    scale:'majorPent', kickPattern:'four',   hat:'low',  kickStyle:'synth' },
+    { name:'極速能量', bpm:144, root:261.63, scale:'dorian',    kickPattern:'syncop', hat:'high', kickStyle:'big'   }
+  ];
+  function buildTrack(meta){
+    const scaleArr = SCALES[meta.scale];
+    const steps = 16;
+    const kick = new Array(steps).fill(0);
+    const hat = new Array(steps).fill(0);
+    const bass = new Array(steps).fill(null);
+    const lead = new Array(steps).fill(null);
+
+    if (meta.kickPattern === 'four'){ [0,4,8,12].forEach(i => kick[i]=1); }
+    else if (meta.kickPattern === 'driving'){ for(let i=0;i<steps;i+=2) kick[i]=1; }
+    else { [0,3,6,10,12].forEach(i => kick[i]=1); }
+
+    if (meta.hat === 'low'){ [2,6,10,14].forEach(i => hat[i]=1); }
+    else if (meta.hat === 'med'){ for(let i=1;i<steps;i+=2) hat[i]=1; }
+    else { for(let i=0;i<steps;i++) hat[i]=1; }
+
+    for(let i=0;i<steps;i++){ if (kick[i]) bass[i] = meta.root/2; }
+    for(let i=0;i<steps;i+=2){
+      const degIdx = (i/2) % scaleArr.length;
+      lead[i] = meta.root*2*Math.pow(2, scaleArr[degIdx]/12);
+    }
+    return { kick, hat, bass, lead, bpm: meta.bpm, name: meta.name, kickStyle: meta.kickStyle || 'synth' };
+  }
+  const TRACKS = TRACK_META.map(buildTrack);
+
+  // shared saturation curve for the "big drum" kick (adds warm, non-digital harmonic content)
+  function makeDistortionCurve(amount){
+    const n = 8192;
+    const curve = new Float32Array(n);
+    for (let i=0;i<n;i++){
+      const x = i*2/n - 1;
+      curve[i] = (3+amount)*x*20*(Math.PI/180) / (Math.PI + amount*Math.abs(x));
+    }
+    return curve;
+  }
+  const KICK_SATURATION_CURVE = makeDistortionCurve(18);
+
+  const musicPlayer = { stepIndex:0, timerId:null, gainNode:null, playing:false };
+
+  function musicKick(t){
+    const ctx = ensureAudioCtx(); if (!ctx || !musicPlayer.gainNode) return;
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    gain.gain.setValueAtTime(0.5, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.connect(gain); gain.connect(musicPlayer.gainNode);
+    osc.start(t); osc.stop(t + 0.2);
+  }
+
+  // Big, punchy acoustic-style kick: sub boom + mid body tone (both saturated for warmth)
+  // plus a filtered-noise beater transient — closer to a disco / Taiwanese big-drum (大鼓) hit
+  // than a plain synth blip.
+  function musicBigKick(t){
+    const ctx = ensureAudioCtx(); if (!ctx || !musicPlayer.gainNode) return;
+
+    const shaper = ctx.createWaveShaper();
+    shaper.curve = KICK_SATURATION_CURVE;
+    shaper.oversample = '2x';
+    shaper.connect(musicPlayer.gainNode);
+
+    // sub boom (the deep "thud" body of the drum)
+    const sub = ctx.createOscillator(); sub.type = 'sine';
+    const subGain = ctx.createGain();
+    sub.frequency.setValueAtTime(155, t);
+    sub.frequency.exponentialRampToValueAtTime(48, t + 0.22);
+    subGain.gain.setValueAtTime(0.001, t);
+    subGain.gain.exponentialRampToValueAtTime(0.85, t + 0.008);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.46);
+    sub.connect(subGain); subGain.connect(shaper);
+    sub.start(t); sub.stop(t + 0.5);
+
+    // mid punch (gives it shape so it isn't just a sine sweep)
+    const body = ctx.createOscillator(); body.type = 'triangle';
+    const bodyGain = ctx.createGain();
+    body.frequency.setValueAtTime(125, t);
+    body.frequency.exponentialRampToValueAtTime(62, t + 0.13);
+    bodyGain.gain.setValueAtTime(0.001, t);
+    bodyGain.gain.exponentialRampToValueAtTime(0.5, t + 0.006);
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    body.connect(bodyGain); bodyGain.connect(shaper);
+    body.start(t); body.stop(t + 0.22);
+
+    // beater/mallet attack transient (short filtered noise "click" so the hit feels struck, not synthesized)
+    const bufferSize = Math.floor(ctx.sampleRate * 0.03);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
+    const noise = ctx.createBufferSource(); noise.buffer = buffer;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 0.7;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.4, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+    noise.connect(bp); bp.connect(noiseGain); noiseGain.connect(shaper);
+    noise.start(t); noise.stop(t + 0.05);
+  }
+  function musicHat(t){
+    const ctx = ensureAudioCtx(); if (!ctx || !musicPlayer.gainNode) return;
+    const bufferSize = Math.floor(ctx.sampleRate * 0.05);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
+    const noise = ctx.createBufferSource(); noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter(); filter.type='highpass'; filter.frequency.value=6000;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    noise.connect(filter); filter.connect(gain); gain.connect(musicPlayer.gainNode);
+    noise.start(t); noise.stop(t + 0.06);
+  }
+  function musicSynthNote(freq, t, dur, type, vol){
+    const ctx = ensureAudioCtx(); if (!ctx || !musicPlayer.gainNode) return;
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain); gain.connect(musicPlayer.gainNode);
+    osc.start(t); osc.stop(t + dur + 0.02);
+  }
+
+  function startMusic(trackIndex){
+    if (!trackIndex || trackIndex < 1) return;
+    const ctx = ensureAudioCtx();
+    if (!ctx) return;
+    stopMusic();
+    const track = TRACKS[trackIndex-1];
+    musicPlayer.gainNode = ctx.createGain();
+    musicPlayer.gainNode.gain.value = cfg.musicVolume;
+    musicPlayer.gainNode.connect(ctx.destination);
+    musicPlayer.stepIndex = 0;
+    musicPlayer.playing = true;
+    const stepDur = 60/track.bpm/4;
+    function playStep(){
+      if (!musicPlayer.playing) return;
+      const i = musicPlayer.stepIndex % 16;
+      const t = ctx.currentTime;
+      if (track.kick[i]) { track.kickStyle === 'big' ? musicBigKick(t) : musicKick(t); }
+      if (track.hat[i]) musicHat(t);
+      if (track.bass[i]) musicSynthNote(track.bass[i], t, stepDur*1.8, 'sawtooth', 0.45);
+      if (track.lead[i]) musicSynthNote(track.lead[i], t, stepDur*1.6, 'square', 0.2);
+      musicPlayer.stepIndex++;
+    }
+    playStep();
+    musicPlayer.timerId = setInterval(playStep, stepDur*1000);
+  }
+  function stopMusic(){
+    musicPlayer.playing = false;
+    if (musicPlayer.timerId){ clearInterval(musicPlayer.timerId); musicPlayer.timerId = null; }
+    if (musicPlayer.gainNode){
+      try{ musicPlayer.gainNode.disconnect(); }catch(e){}
+      musicPlayer.gainNode = null;
+    }
+  }
+
+  function announce(phaseType, number){
+    // phaseType: 'prep' | 'work' | 'rest'
+    if (cfg.audioMode === 'voice' || cfg.audioMode === 'both'){
+      speak(String(number), phaseType === 'rest' ? 0.85 : (phaseType === 'prep' ? 1.15 : 1));
+    }
+    if (cfg.audioMode === 'beep' || cfg.audioMode === 'both'){
+      if (phaseType === 'work') beep(880, 0.12, 'square');
+      else if (phaseType === 'rest') beep(440, 0.16, 'sine');
+      else beep(660, 0.1, 'triangle');
+    }
+  }
+
+  // ---------------- wake lock ----------------
+  async function requestWakeLock(){
+    try{
+      if ('wakeLock' in navigator){
+        session.wakeLock = await navigator.wakeLock.request('screen');
+      }
+    }catch(e){ /* not available, ignore */ }
+  }
+  function releaseWakeLock(){
+    if (session.wakeLock){
+      session.wakeLock.release().catch(()=>{});
+      session.wakeLock = null;
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && session.phase !== 'idle' && session.phase !== 'done' && !session.paused){
+      requestWakeLock();
+    }
+  });
+
+  // ---------------- phase colors / labels ----------------
+  const PHASE_META = {
+    prep: { color: 'var(--prep)', dim: 'var(--prep-dim)', label: '準備' },
+    work: { color: 'var(--work)', dim: 'var(--work-dim)', label: '核心運動中' },
+    rest: { color: 'var(--rest)', dim: 'var(--rest-dim)', label: '休息中' }
+  };
+
+  function applyPhaseVisual(phase){
+    const meta = PHASE_META[phase];
+    if (!meta) return;
+    el.timerRing.style.setProperty('--phase-color', meta.color);
+    el.timerRing.style.setProperty('--phase-dim', meta.dim);
+    document.documentElement.style.setProperty('--phase-color', meta.color);
+    document.documentElement.style.setProperty('--phase-dim', meta.dim);
+    el.phaseLabel.textContent = meta.label;
+  }
+
+  function pulseRing(){
+    el.timerRing.classList.remove('pulse');
+    void el.timerRing.offsetWidth; // reflow to restart transition
+    el.timerRing.classList.add('pulse');
+  }
+
+  function updateRepProgress(){
+    const total = cfg.totalReps;
+    let shown;
+    if (cfg.repCountdown){
+      shown = Math.max(total - session.currentRep + 1, 0);
+    } else {
+      shown = session.currentRep;
+    }
+    el.repProgress.textContent = `${shown} / ${total}`;
+  }
+
+  // ---------------- session control ----------------
+  function startSession(){
+    session.currentRep = 1;
+    session.paused = false;
+    showScreen('run');
+    requestWakeLock();
+    startMusic(cfg.musicTrack);
+    updateRepProgress();
+    beginPhase('prep', 5, afterPrep);
+  }
+
+  // 5 秒預備倒數結束：播放 2 秒長音，稍停後才進入核心動作計時
+  function afterPrep(){
+    playStartTone();
+    applyPhaseVisual('work');
+    el.bigNumber.textContent = 'GO';
+    el.statusText.textContent = '開始！';
+    setTimeout(() => beginPhase('work', cfg.workDur, onWorkComplete), 2000);
+  }
+
+  function onWorkComplete(){
+    if (session.currentRep >= cfg.totalReps){
+      finishSession();
+      return;
+    }
+    if (cfg.restDur > 0){
+      // 核心動作結束、進入休息前：播放 2 秒放鬆鈴聲
+      playRestBell();
+      applyPhaseVisual('rest');
+      el.bigNumber.textContent = '🔔';
+      el.statusText.textContent = '準備休息';
+      setTimeout(() => {
+        beginPhase('rest', cfg.restDur, () => {
+          session.currentRep += 1;
+          updateRepProgress();
+          beginPhase('prep', 5, afterPrep);
+        });
+      }, 2000);
+    } else {
+      session.currentRep += 1;
+      updateRepProgress();
+      beginPhase('prep', 5, afterPrep);
+    }
+  }
+
+  function beginPhase(phase, duration, onComplete){
+    clearTimerHandle();
+    session.phase = phase;
+    session.phaseDuration = duration;
+    session.secondsElapsed = 0;
+    session.onPhaseComplete = onComplete;
+    applyPhaseVisual(phase === 'prep' ? 'prep' : phase);
+    updateRepProgress();
+    el.statusText.textContent = phase === 'work' ? `第 ${session.currentRep} 下`
+                              : phase === 'rest' ? '放鬆一下'
+                              : '即將開始';
+
+    // show first number immediately, then tick every second
+    tick(phase, duration);
+    session.timerHandle = setInterval(() => tick(phase, duration), 1000);
+  }
+
+  function tick(phase, duration){
+    session.secondsElapsed += 1;
+    const countdown = phase === 'work' ? cfg.workCountdown
+                     : phase === 'rest' ? cfg.restCountdown
+                     : true; // prep always counts down
+    const value = countdown ? (duration - session.secondsElapsed + 1) : session.secondsElapsed;
+    el.bigNumber.textContent = value;
+    pulseRing();
+    announce(phase === 'prep' ? 'prep' : phase, value);
+
+    if (session.secondsElapsed >= duration){
+      clearTimerHandle();
+      const cb = session.onPhaseComplete;
+      // brief pause so the last number is visible before switching phase
+      setTimeout(() => { if (cb) cb(); }, 250);
+    }
+  }
+
+  function clearTimerHandle(){
+    if (session.timerHandle){
+      clearInterval(session.timerHandle);
+      session.timerHandle = null;
+    }
+  }
+
+  function finishSession(){
+    clearTimerHandle();
+    session.phase = 'done';
+    releaseWakeLock();
+    stopMusic();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    el.doneSummary.textContent = `完成 ${cfg.totalReps} 下核心運動`;
+    showScreen('done');
+  }
+
+  function stopSession(){
+    clearTimerHandle();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    releaseWakeLock();
+    stopMusic();
+    session.phase = 'idle';
+    showScreen('settings');
+  }
+
+  // ---------------- pause / resume ----------------
+  el.btnPause.addEventListener('click', () => {
+    if (session.phase === 'idle' || session.phase === 'done') return;
+    if (!session.paused){
+      session.paused = true;
+      clearTimerHandle();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      el.btnPause.textContent = '繼續';
+      el.statusText.textContent = '已暫停';
+      releaseWakeLock();
+      stopMusic();
+    } else {
+      session.paused = false;
+      el.btnPause.textContent = '暫停';
+      el.statusText.textContent = session.phase === 'work' ? `第 ${session.currentRep} 下`
+                                : session.phase === 'rest' ? '放鬆一下' : '即將開始';
+      requestWakeLock();
+      startMusic(cfg.musicTrack);
+      const remaining = session.phaseDuration - session.secondsElapsed;
+      const phase = session.phase;
+      const onComplete = session.onPhaseComplete;
+      if (remaining > 0){
+        session.timerHandle = setInterval(() => tick(phase, session.phaseDuration), 1000);
+      } else {
+        onComplete && onComplete();
+      }
+    }
+  });
+
+  el.btnStop.addEventListener('click', () => {
+    stopSession();
+    el.btnPause.textContent = '暫停';
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    startSession();
+  });
+  document.getElementById('btn-back-settings').addEventListener('click', () => {
+    showScreen('settings');
+  });
+
+  // unlock audio context on first user gesture (mobile requirement)
+  document.addEventListener('click', function unlock(){
+    ensureAudioCtx();
+    document.removeEventListener('click', unlock);
+  }, { once: true });
+
+})();
+</script>
+</body>
+</html>
