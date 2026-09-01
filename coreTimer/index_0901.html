@@ -826,13 +826,13 @@
         beginPhase('rest', cfg.restDur, () => {
           session.currentRep += 1;
           updateRepProgress();
-          afterPrep();
+          beginPhase('prep', 5, afterPrep);
         });
       }, 2000);
     } else {
       session.currentRep += 1;
       updateRepProgress();
-      afterPrep();
+      beginPhase('prep', 5, afterPrep);
     }
   }
 
